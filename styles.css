@@ -214,14 +214,14 @@ body {
   box-shadow: 0 4px 18px rgba(23, 32, 51, 0.04);
 }
 
-.ad-banner {
+.ad-container {
   width: min(1180px, calc(100% - 2rem));
   margin: 1rem auto 0;
   border: 1px dashed var(--border-color);
   background: linear-gradient(135deg, rgba(23, 105, 224, 0.08), rgba(244, 185, 66, 0.12));
 }
 
-.leaderboard {
+.ad-leaderboard {
   min-height: 90px;
 }
 
@@ -500,7 +500,7 @@ body {
   gap: 1rem;
 }
 
-.sidebar-ad {
+.ad-sidebar {
   min-height: 250px;
   width: 100%;
   margin: 0;
