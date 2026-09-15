@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('searchInput');
   const cardsContainer = document.getElementById('cardsContainer');
   const filterButtons = document.querySelectorAll('.filter-btn');
+  const cookieConsentKey = 'miportal-cookie-consent';
   const maxQueryLength = 120;
   let activeController = null;
   let currentRequestId = 0;
@@ -14,7 +15,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const descriptionDocument = new DOMParser().parseFromString(html || '', 'text/html');
     descriptionDocument.querySelectorAll('script, style, ol, ul').forEach((element) => element.remove());
 
-    return (descriptionDocument.body.textContent || '')
+    let text = descriptionDocument.body.textContent || '';
+
+    if (/<\/?(?:ol|ul|li|a|p|br)\b/i.test(text)) {
+      const encodedMarkupDocument = new DOMParser().parseFromString(text, 'text/html');
+      encodedMarkupDocument.querySelectorAll('script, style, ol, ul').forEach((element) => element.remove());
+      text = encodedMarkupDocument.body.textContent || '';
+    }
+
+    return text
       .replace(/https?:\/\/\S+/g, '')
       .replace(/\s+/g, ' ')
       .trim();
@@ -40,6 +49,36 @@ document.addEventListener('DOMContentLoaded', () => {
     status.textContent = message;
     cardsContainer.replaceChildren(status);
   };
+
+  const setupCookieNotice = () => {
+    if (localStorage.getItem(cookieConsentKey)) {
+      return;
+    }
+
+    const notice = document.createElement('aside');
+    notice.className = 'cookie-notice';
+    notice.setAttribute('aria-label', 'Aviso sobre cookies');
+    notice.innerHTML = `
+      <div>
+        <h2>Uso de cookies</h2>
+        <p>Este sitio puede utilizar cookies para analizar el uso del portal y mostrar publicidad. No cargamos servicios de analítica o publicidad de terceros desde este sitio.</p>
+      </div>
+      <div class="cookie-notice-actions">
+        <button type="button" class="cookie-dismiss">Cerrar</button>
+        <button type="button" class="cookie-accept">Aceptar</button>
+      </div>`;
+
+    const closeNotice = (value) => {
+      localStorage.setItem(cookieConsentKey, value);
+      notice.remove();
+    };
+
+    notice.querySelector('.cookie-dismiss').addEventListener('click', () => closeNotice('dismissed'));
+    notice.querySelector('.cookie-accept').addEventListener('click', () => closeNotice('accepted'));
+    document.body.appendChild(notice);
+  };
+
+  setupCookieNotice();
 
   const loadGoogleNews = async (query) => {
     const normalizedQuery = query.trim().slice(0, maxQueryLength);
