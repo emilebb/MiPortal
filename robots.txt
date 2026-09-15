@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+Sitemap: https://mi-portal-seven.vercel.app/sitemap.xml
