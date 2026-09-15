@@ -128,15 +128,27 @@ body {
 
 .filter-section {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 2rem;
+  padding: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--card-bg);
+  box-shadow: 0 4px 14px rgba(23, 32, 51, 0.06);
+}
+
+#searchForm {
+  display: flex;
+  flex: 1 1 460px;
+  min-width: min(100%, 280px);
+  gap: 0.55rem;
 }
 
 #searchInput {
-  width: min(100%, 360px);
+  min-width: 0;
+  flex: 1;
   padding: 0.78rem 1rem;
   border: 1px solid var(--border-color);
   border-radius: 8px;
@@ -156,8 +168,24 @@ body {
   color: var(--muted-color);
 }
 
+.search-submit {
+  padding: 0.78rem 1rem;
+  border: 1px solid var(--primary-color);
+  border-radius: 8px;
+  background: var(--primary-color);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.search-submit:hover {
+  background: var(--primary-dark);
+}
+
 .category-filters {
   display: flex;
+  flex: 0 1 auto;
   flex-wrap: wrap;
   gap: 0.45rem;
 }
@@ -183,7 +211,19 @@ body {
   margin-top: 1.75rem;
 }
 
+.google-results {
+  grid-column: 1 / -1;
+  padding: 2rem;
+  border: 1px dashed var(--border-color);
+  border-radius: 12px;
+  color: var(--muted-color);
+  text-align: center;
+}
+
 .card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   background-color: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 12px;
@@ -205,7 +245,20 @@ body {
 }
 
 .card-body {
+  display: flex;
+  flex-grow: 1;
+  flex-direction: column;
   padding: 1.25rem;
+}
+
+.card-description {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--muted-color);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
 }
 
 .tag {
@@ -241,6 +294,11 @@ body {
   font-size: 0.88rem;
   font-weight: 800;
   text-decoration: none;
+}
+
+.card-body .read-more {
+  margin-top: auto;
+  padding-top: 1rem;
 }
 
 .read-more:hover {
@@ -336,6 +394,10 @@ body {
   }
 
   #searchInput {
+    width: 100%;
+  }
+
+  #searchForm {
     width: 100%;
   }
 
