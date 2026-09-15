@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mi Gran Portal Web</title>
+  <!-- Estilos globales y modulares -->
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Encabezado y Navegación Principal -->
+  <header class="main-header">
+    <div class="logo">
+      <h1>MiPortal<span>.com</span></h1>
+    </div>
+    <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">☰</button>
+    <nav class="main-nav" id="mainNav">
+      <ul>
+        <li><a href="#" class="active">Inicio</a></li>
+        <li><a href="#">Noticias</a></li>
+        <li><a href="#">Tecnología</a></li>
+        <li><a href="#">Recursos</a></li>
+        <li><a href="#">Contacto</a></li>
+      </ul>
+    </nav>
+    <button id="themeToggle" class="btn-theme">🌙</button>
+  </header>
+
+  <!-- Contenido Principal -->
+  <div class="container main-layout">
+    
+    <!-- Sección de Publicaciones/Artículos -->
+    <main class="content-area">
+      <section class="filter-section">
+        <input type="text" id="searchInput" placeholder="Buscar artículos...">
+        <div class="category-filters">
+          <button class="filter-btn active" data-category="all">Todos</button>
+          <button class="filter-btn" data-category="tech">Tecnología</button>
+          <button class="filter-btn" data-category="design">Diseño</button>
+        </div>
+      </section>
+
+      <section class="cards-grid" id="cardsContainer">
+        <!-- Tarjeta de ejemplo (Puedes agregar más o generarlas dinámicamente) -->
+        <article class="card" data-category="tech">
+          <img src="https://via.placeholder.com/400x200" alt="Imagen del artículo">
+          <div class="card-body">
+            <span class="tag">Tecnología</span>
+            <h3>Primer Artículo Scalable</h3>
+            <p>Este es el inicio de tu portal. Con el tiempo podrás cargar estos datos desde un archivo JSON o una API.</p>
+            <a href="#" class="read-more">Leer más &rarr;</a>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <!-- Barra Lateral Escalable -->
+    <aside class="sidebar">
+      <div class="widget">
+        <h3>Sobre el Sitio</h3>
+        <p>Plataforma modular construida paso a paso con HTML, CSS y JS puro.</p>
+      </div>
+      <div class="widget">
+        <h3>Lo más popular</h3>
+        <ul>
+          <li><a href="#">Guía de desarrollo HTML</a></li>
+          <li><a href="#">Aprende CSS Grid</a></li>
+        </ul>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- Pie de Página -->
+  <footer class="main-footer">
+    <p>&copy; 2026 MiPortal. Todos los derechos reservados.</p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="main.js"></script>
+</body>
+</html>
