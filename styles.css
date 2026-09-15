@@ -146,6 +146,12 @@ body {
   gap: 0.55rem;
 }
 
+.privacy-note {
+  flex-basis: 100%;
+  color: var(--muted-color);
+  font-size: 0.75rem;
+}
+
 #searchInput {
   min-width: 0;
   flex: 1;

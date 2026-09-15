@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://api.rss2json.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self';">
   <title>Mi Gran Portal Web</title>
   <!-- Estilos globales y modulares -->
   <link rel="stylesheet" href="styles.css">
@@ -34,9 +35,10 @@
     <main class="content-area">
       <section class="filter-section">
         <form id="searchForm">
-          <input type="search" id="searchInput" name="q" placeholder="Buscar en Google..." autocomplete="off" required>
+          <input type="search" id="searchInput" name="q" placeholder="Buscar en Google..." autocomplete="off" maxlength="120" required>
           <button type="submit" class="search-submit">Buscar noticias</button>
         </form>
+        <p class="privacy-note">Las búsquedas se consultan mediante Google News y un servicio RSS externo.</p>
         <div class="category-filters">
           <button type="button" class="filter-btn active" data-query="noticias">Todo</button>
           <button type="button" class="filter-btn" data-query="tecnología">Tecnología</button>

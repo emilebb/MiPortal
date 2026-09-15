@@ -6,6 +6,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('searchInput');
   const cardsContainer = document.getElementById('cardsContainer');
   const filterButtons = document.querySelectorAll('.filter-btn');
+  const maxQueryLength = 120;
+  let activeController = null;
+  let currentRequestId = 0;
 
   const cleanDescription = (html) => {
     const descriptionDocument = new DOMParser().parseFromString(html || '', 'text/html');
@@ -17,25 +20,66 @@ document.addEventListener('DOMContentLoaded', () => {
       .trim();
   };
 
+  const getSafeNewsUrl = (value) => {
+    try {
+      const url = new URL(value);
+
+      if (url.protocol !== 'https:' || url.hostname !== 'news.google.com') {
+        return null;
+      }
+
+      return url.href;
+    } catch {
+      return null;
+    }
+  };
+
+  const showStatus = (message) => {
+    const status = document.createElement('p');
+    status.className = 'google-results';
+    status.textContent = message;
+    cardsContainer.replaceChildren(status);
+  };
+
   const loadGoogleNews = async (query) => {
-    const feedUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=es-419`;
+    const normalizedQuery = query.trim().slice(0, maxQueryLength);
+
+    if (!normalizedQuery) {
+      showStatus('Escribí un tema para buscar noticias.');
+      return;
+    }
+
+    activeController?.abort();
+
+    const controller = new AbortController();
+    const requestId = ++currentRequestId;
+    activeController = controller;
+    const feedUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(normalizedQuery)}&hl=es-419`;
     const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`;
 
-    cardsContainer.innerHTML = '<p class="google-results">Cargando noticias...</p>';
+    showStatus('Cargando noticias...');
 
     try {
-      const response = await fetch(proxyUrl);
+      const response = await fetch(proxyUrl, {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+        signal: controller.signal
+      });
       if (!response.ok) {
         throw new Error('No se pudo consultar Google News');
       }
 
       const data = await response.json();
-      if (data.status !== 'ok' || !data.items?.length) {
+      if (requestId !== currentRequestId || data?.status !== 'ok' || !Array.isArray(data.items)) {
         throw new Error('No se encontraron noticias');
       }
 
-      cardsContainer.innerHTML = '';
+      const fragment = document.createDocumentFragment();
       data.items.slice(0, 12).forEach((item) => {
+        if (!item || typeof item.title !== 'string') {
+          return;
+        }
+
         const article = document.createElement('article');
         article.className = 'card news-card';
 
@@ -47,25 +91,45 @@ document.addEventListener('DOMContentLoaded', () => {
         tag.textContent = 'Google News';
 
         const title = document.createElement('h3');
-        title.textContent = item.title;
+        title.textContent = item.title.slice(0, 300);
 
         const description = document.createElement('p');
         description.className = 'card-description';
-        description.textContent = cleanDescription(item.description) || 'Lee la noticia completa en su fuente original.';
+        description.textContent = cleanDescription(item.description).slice(0, 600) || 'Lee la noticia completa en su fuente original.';
 
-        const link = document.createElement('a');
-        link.className = 'read-more';
-        link.href = item.link;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.textContent = 'Leer noticia →';
+        cardBody.append(tag, title, description);
 
-        cardBody.append(tag, title, description, link);
+        const safeUrl = getSafeNewsUrl(item.link);
+        if (safeUrl) {
+          const link = document.createElement('a');
+          link.className = 'read-more';
+          link.href = safeUrl;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.textContent = 'Leer noticia →';
+          cardBody.appendChild(link);
+        }
+
         article.appendChild(cardBody);
-        cardsContainer.appendChild(article);
+        fragment.appendChild(article);
       });
+
+      if (requestId !== currentRequestId) {
+        return;
+      }
+
+      cardsContainer.replaceChildren(fragment);
+      if (!cardsContainer.children.length) {
+        showStatus('No se encontraron noticias válidas.');
+      }
     } catch (error) {
-      cardsContainer.innerHTML = '<p class="google-results">No se pudieron cargar las noticias ahora. Probá nuevamente en unos segundos.</p>';
+      if (error.name === 'AbortError') {
+        return;
+      }
+
+      if (requestId === currentRequestId) {
+        showStatus('No se pudieron cargar las noticias ahora. Probá nuevamente en unos segundos.');
+      }
     }
   };
 
@@ -88,11 +152,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   filterButtons.forEach((button) => {
     button.addEventListener('click', () => {
-      searchInput.value = button.dataset.query;
+      searchInput.value = button.dataset.query || 'noticias';
       filterButtons.forEach((filterButton) => filterButton.classList.remove('active'));
       button.classList.add('active');
 
-      searchInput.value = searchInput.value || 'noticias';
       loadGoogleNews(searchInput.value);
     });
   });
