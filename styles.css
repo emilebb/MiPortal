@@ -214,6 +214,17 @@ body {
   box-shadow: 0 4px 18px rgba(23, 32, 51, 0.04);
 }
 
+.ad-banner {
+  width: min(1180px, calc(100% - 2rem));
+  margin: 1rem auto 0;
+  border: 1px dashed var(--border-color);
+  background: linear-gradient(135deg, rgba(23, 105, 224, 0.08), rgba(244, 185, 66, 0.12));
+}
+
+.leaderboard {
+  min-height: 90px;
+}
+
 .logo {
   margin-right: auto;
 }
@@ -432,7 +443,11 @@ body {
   font-size: 0.9rem;
   line-height: 1.5;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 3;
+}
+
+.card-body a {
+  word-break: break-word;
 }
 
 .tag {
@@ -483,6 +498,64 @@ body {
   display: grid;
   align-content: start;
   gap: 1rem;
+}
+
+.sidebar-ad {
+  min-height: 250px;
+  width: 100%;
+  margin: 0;
+}
+
+.newsletter-form {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.newsletter-form label {
+  color: var(--text-color);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.newsletter-form input {
+  width: 100%;
+  margin-top: 0.35rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--card-bg);
+  color: var(--text-color);
+  font: inherit;
+}
+
+.newsletter-form input:focus {
+  border-color: var(--primary-color);
+  outline: 3px solid rgba(23, 105, 224, 0.14);
+}
+
+.newsletter-form button {
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--primary-color);
+  border-radius: 8px;
+  background: var(--primary-color);
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.newsletter-form button:hover {
+  background: var(--primary-dark);
+}
+
+.newsletter-status {
+  min-height: 1.35rem;
+  color: var(--muted-color);
+  font-size: 0.78rem;
+}
+
+.newsletter-status.is-visible {
+  color: var(--primary-dark);
 }
 
 .widget {

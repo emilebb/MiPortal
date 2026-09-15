@@ -3,11 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://api.rss2json.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self'; connect-src https://api.rss2json.com; img-src 'self' data:; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
   <title>Recursos | MiPortal.com</title>
+  <meta name="description" content="Descubrí recursos y referencias recomendadas para seguir aprendiendo desarrollo web.">
+  <meta property="og:title" content="Recursos | MiPortal">
+  <meta property="og:description" content="Referencias seleccionadas de HTML, CSS, accesibilidad y desarrollo web.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="og-image.svg">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MRGDJ643" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
   <header class="main-header">
     <div class="logo"><h1>MiPortal<span>.com</span></h1></div>
     <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">☰</button>
@@ -21,6 +29,7 @@
     </nav>
     <button id="themeToggle" class="btn-theme" aria-label="Cambiar tema">🌙</button>
   </header>
+  <div class="ad-banner leaderboard"></div>
 
   <div class="container main-layout">
     <main class="content-area">
@@ -35,7 +44,18 @@
       </section>
     </main>
     <aside class="sidebar">
+      <div class="ad-banner sidebar-ad"></div>
       <div class="widget"><h3>Enlaces recomendados</h3><ul><li><a href="https://www.w3.org/" target="_blank" rel="noopener noreferrer">W3C</a></li><li><a href="https://web.dev/" target="_blank" rel="noopener noreferrer">web.dev</a></li></ul></div>
+      <div class="widget">
+        <h3>Recibí novedades</h3>
+        <form id="newsletterForm" class="newsletter-form" action="#" method="post">
+          <label for="newsletterEmail">Correo electrónico
+            <input id="newsletterEmail" name="email" type="email" autocomplete="email" required>
+          </label>
+          <button type="submit">Suscribirme</button>
+          <p id="newsletterStatus" class="newsletter-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
     </aside>
   </div>
 

@@ -3,12 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://api.rss2json.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self'; connect-src https://api.rss2json.com; img-src 'self' data:; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
   <title>Mi Gran Portal Web</title>
+  <meta name="description" content="MiPortal reúne noticias actuales y recursos de aprendizaje web en un portal simple y ordenado.">
+  <meta property="og:title" content="Mi Gran Portal Web | MiPortal">
+  <meta property="og:description" content="Noticias y recursos de aprendizaje web en un solo lugar.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="og-image.svg">
   <!-- Estilos globales y modulares -->
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MRGDJ643" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
 
   <!-- Encabezado y Navegación Principal -->
   <header class="main-header">
@@ -26,6 +34,7 @@
     </nav>
     <button id="themeToggle" class="btn-theme">🌙</button>
   </header>
+  <div class="ad-banner leaderboard"></div>
 
   <!-- Contenido Principal -->
   <main class="home-page container">

@@ -1,3 +1,46 @@
+const gtmContainerId = 'GTM-MRGDJ643';
+const cookieConsentKey = 'miportal-cookie-consent';
+
+const updateGtmConsent = (hasConsent) => {
+  if (typeof window.gtag !== 'function') {
+    return;
+  }
+
+  window.gtag('consent', 'update', {
+    ad_storage: hasConsent ? 'granted' : 'denied',
+    analytics_storage: hasConsent ? 'granted' : 'denied',
+    ad_user_data: hasConsent ? 'granted' : 'denied',
+    ad_personalization: hasConsent ? 'granted' : 'denied'
+  });
+};
+
+const initializeGoogleTagManager = () => {
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = window.gtag || function gtag() {
+    window.dataLayer.push(arguments);
+  };
+
+  window.gtag('consent', 'default', {
+    ad_storage: 'denied',
+    analytics_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    functionality_storage: 'granted',
+    security_storage: 'granted',
+    wait_for_update: 500
+  });
+
+  const savedConsent = window.localStorage.getItem(cookieConsentKey);
+  updateGtmConsent(savedConsent === 'accepted');
+
+  const script = document.createElement('script');
+  script.async = true;
+  script.src = `https://www.googletagmanager.com/gtm.js?id=${gtmContainerId}`;
+  document.head.appendChild(script);
+};
+
+initializeGoogleTagManager();
+
 document.addEventListener('DOMContentLoaded', () => {
   const themeToggleBtn = document.getElementById('themeToggle');
   const navToggleBtn = document.getElementById('navToggle');
@@ -6,7 +49,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('searchInput');
   const cardsContainer = document.getElementById('cardsContainer');
   const filterButtons = document.querySelectorAll('.filter-btn');
-  const cookieConsentKey = 'miportal-cookie-consent';
   const maxQueryLength = 120;
   let activeController = null;
   let currentRequestId = 0;
@@ -70,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const closeNotice = (value) => {
       localStorage.setItem(cookieConsentKey, value);
+      updateGtmConsent(value === 'accepted');
       notice.remove();
     };
 
@@ -78,7 +121,23 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.appendChild(notice);
   };
 
+  const setupNewsletterForm = () => {
+    const newsletterForm = document.getElementById('newsletterForm');
+    const newsletterStatus = document.getElementById('newsletterStatus');
+
+    if (!newsletterForm || !newsletterStatus) {
+      return;
+    }
+
+    newsletterForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      newsletterStatus.textContent = 'La suscripción todavía no está conectada a un backend.';
+      newsletterStatus.classList.add('is-visible');
+    });
+  };
+
   setupCookieNotice();
+  setupNewsletterForm();
 
   const loadGoogleNews = async (query) => {
     const normalizedQuery = query.trim().slice(0, maxQueryLength);

@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title description">
+  <title id="title">MiPortal</title>
+  <desc id="description">Noticias y recursos de aprendizaje web.</desc>
+  <rect width="1200" height="630" fill="#f3f6fb"/>
+  <rect x="70" y="70" width="1060" height="490" rx="28" fill="#ffffff" stroke="#dce3ed" stroke-width="4"/>
+  <circle cx="940" cy="210" r="135" fill="#e0ecff"/>
+  <circle cx="940" cy="210" r="78" fill="#1769e0" opacity="0.9"/>
+  <text x="120" y="250" fill="#172033" font-family="Georgia, serif" font-size="92" font-weight="700">MiPortal</text>
+  <text x="120" y="330" fill="#1769e0" font-family="Arial, sans-serif" font-size="34" font-weight="700">Noticias y recursos web</text>
+  <rect x="120" y="400" width="360" height="12" rx="6" fill="#f4b942"/>
+</svg>
