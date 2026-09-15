@@ -133,33 +133,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // 1. Funcionalidad de Modo Oscuro
-  themeToggleBtn.addEventListener('click', () => {
+  if (themeToggleBtn) {
+    themeToggleBtn.addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
     const isDark = document.body.classList.contains('dark-mode');
     themeToggleBtn.textContent = isDark ? '☀️' : '🌙';
-  });
-
-  // 2. Menú Desplegable Móvil
-  navToggleBtn.addEventListener('click', () => {
-    mainNav.classList.toggle('open');
-  });
-
-  searchForm.addEventListener('submit', (event) => {
-    event.preventDefault();
-    loadGoogleNews(searchInput.value.trim());
-  });
-
-  filterButtons.forEach((button) => {
-    button.addEventListener('click', () => {
-      searchInput.value = button.dataset.query || 'noticias';
-      filterButtons.forEach((filterButton) => filterButton.classList.remove('active'));
-      button.classList.add('active');
-
-      loadGoogleNews(searchInput.value);
     });
-  });
+  }
 
-  searchInput.value = 'noticias';
-  loadGoogleNews(searchInput.value);
+  if (navToggleBtn && mainNav) {
+    navToggleBtn.addEventListener('click', () => {
+      mainNav.classList.toggle('open');
+    });
+
+    mainNav.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => mainNav.classList.remove('open'));
+    });
+  }
+
+  if (cardsContainer && searchForm && searchInput) {
+    searchForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      loadGoogleNews(searchInput.value.trim());
+    });
+
+    filterButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        searchInput.value = button.dataset.query || 'noticias';
+        filterButtons.forEach((filterButton) => filterButton.classList.remove('active'));
+        button.classList.add('active');
+
+        loadGoogleNews(searchInput.value);
+      });
+    });
+
+    searchInput.value = document.body.dataset.newsQuery || 'noticias';
+    loadGoogleNews(searchInput.value);
+  }
 });

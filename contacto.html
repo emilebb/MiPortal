@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://api.rss2json.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self';">
+  <title>Contacto | MiPortal.com</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="main-header">
+    <div class="logo"><h1>MiPortal<span>.com</span></h1></div>
+    <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">☰</button>
+    <nav class="main-nav" id="mainNav">
+      <ul>
+        <li><a href="index.html">Inicio</a></li>
+        <li><a href="noticias.html">Noticias</a></li>
+        <li><a href="tecnologia.html">Tecnología</a></li>
+        <li><a href="recursos.html">Recursos</a></li>
+        <li><a href="contacto.html" class="active">Contacto</a></li>
+      </ul>
+    </nav>
+    <button id="themeToggle" class="btn-theme" aria-label="Cambiar tema">🌙</button>
+  </header>
+
+  <main class="container main-layout">
+    <section class="contact-section">
+      <h2>Contacto</h2>
+      <p>Este formulario es una demostración estática. El sitio no procesa ni envía mensajes todavía.</p>
+      <form class="contact-form">
+        <label for="name">Nombre<input id="name" name="name" type="text" autocomplete="name" required></label>
+        <label for="message">Mensaje<textarea id="message" name="message" required></textarea></label>
+        <button type="button" class="search-submit">Disponible próximamente</button>
+      </form>
+    </section>
+  </main>
+
+  <footer class="main-footer"><p>&copy; 2026 MiPortal. Todos los derechos reservados.</p></footer>
+  <script src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; connect-src https://api.rss2json.com; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self';">
+  <title>Recursos | MiPortal.com</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="main-header">
+    <div class="logo"><h1>MiPortal<span>.com</span></h1></div>
+    <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">☰</button>
+    <nav class="main-nav" id="mainNav">
+      <ul>
+        <li><a href="index.html">Inicio</a></li>
+        <li><a href="noticias.html">Noticias</a></li>
+        <li><a href="tecnologia.html">Tecnología</a></li>
+        <li><a href="recursos.html" class="active">Recursos</a></li>
+        <li><a href="contacto.html">Contacto</a></li>
+      </ul>
+    </nav>
+    <button id="themeToggle" class="btn-theme" aria-label="Cambiar tema">🌙</button>
+  </header>
+
+  <div class="container main-layout">
+    <main class="content-area">
+      <section class="widget">
+        <h2>Recursos útiles</h2>
+        <p>Materiales de referencia para seguir aprendiendo desarrollo web.</p>
+      </section>
+      <section class="cards-grid">
+        <article class="card"><div class="card-body"><span class="tag">HTML</span><h3>MDN Web Docs</h3><p class="card-description">Referencia completa de HTML, CSS y APIs web.</p><a class="read-more" href="https://developer.mozilla.org/es/" target="_blank" rel="noopener noreferrer">Visitar MDN →</a></div></article>
+        <article class="card"><div class="card-body"><span class="tag">CSS</span><h3>CSS-Tricks</h3><p class="card-description">Guías y ejemplos prácticos para construir interfaces.</p><a class="read-more" href="https://css-tricks.com/" target="_blank" rel="noopener noreferrer">Visitar CSS-Tricks →</a></div></article>
+        <article class="card"><div class="card-body"><span class="tag">Accesibilidad</span><h3>WebAIM</h3><p class="card-description">Recursos para crear sitios web más accesibles.</p><a class="read-more" href="https://webaim.org/" target="_blank" rel="noopener noreferrer">Visitar WebAIM →</a></div></article>
+      </section>
+    </main>
+    <aside class="sidebar">
+      <div class="widget"><h3>Enlaces recomendados</h3><ul><li><a href="https://www.w3.org/" target="_blank" rel="noopener noreferrer">W3C</a></li><li><a href="https://web.dev/" target="_blank" rel="noopener noreferrer">web.dev</a></li></ul></div>
+    </aside>
+  </div>
+
+  <footer class="main-footer"><p>&copy; 2026 MiPortal. Todos los derechos reservados.</p></footer>
+  <script src="main.js"></script>
+</body>
+</html>
