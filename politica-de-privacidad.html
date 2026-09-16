@@ -4,12 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self'; connect-src https://api.rss2json.com; img-src 'self' data: https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
-  <title>Política de privacidad | MiPortal.com</title>
-  <meta name="description" content="Consultá la información de privacidad, cookies y tratamiento de datos de MiPortal.">
-  <meta property="og:title" content="Política de privacidad | MiPortal">
-  <meta property="og:description" content="Información sobre privacidad, cookies y formularios estáticos de MiPortal.">
+  
+  <!-- SEO Básico -->
+  <title>Política de Privacidad - MiPortal</title>
+  <meta name="description" content="Consultá la política de privacidad de MiPortal. Información sobre cookies, tratamiento de datos, Google Tag Manager y consentimiento de usuario.">
+  <link rel="canonical" href="https://miportal.com/politica-de-privacidad.html">
+  
+  <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:image" content="og-image.svg">
+  <meta property="og:url" content="https://miportal.com/politica-de-privacidad.html">
+  <meta property="og:title" content="Política de Privacidad - MiPortal">
+  <meta property="og:description" content="Consultá la política de privacidad de MiPortal. Información sobre cookies, tratamiento de datos, Google Tag Manager y consentimiento de usuario.">
+  <meta property="og:image" content="https://miportal.com/og-image-legal.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="es_ES">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:url" content="https://miportal.com/politica-de-privacidad.html">
+  <meta name="twitter:title" content="Política de Privacidad - MiPortal">
+  <meta name="twitter:description" content="Consultá la política de privacidad de MiPortal. Información sobre cookies, tratamiento de datos, Google Tag Manager y consentimiento de usuario.">
+  <meta name="twitter:image" content="https://miportal.com/og-image-legal.jpg">
+  
+  <!-- Favicon (CONFIGURAR: Reemplazar con archivo real) -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  
+  <!-- Noindex para páginas legales (opcional, descomentar si no quieres indexar) -->
+  <!-- <meta name="robots" content="noindex, follow"> -->
+  
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -17,8 +41,10 @@
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MRGDJ643" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
   <header class="main-header">
-    <div class="logo"><h1>MiPortal<span>.com</span></h1></div>
-    <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">☰</button>
+    <div class="logo">
+      <div class="logo-text">MiPortal<span>.com</span></div>
+    </div>
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="mainNav">☰</button>
     <nav class="main-nav" id="mainNav">
       <ul>
         <li><a href="index.html">Inicio</a></li>
@@ -27,30 +53,49 @@
         <li><a href="contacto.html">Contacto</a></li>
       </ul>
     </nav>
-    <button id="themeToggle" class="btn-theme" aria-label="Cambiar tema">🌙</button>
+    <button id="themeToggle" class="btn-theme" type="button" aria-label="Cambiar entre modo claro y oscuro">🌙</button>
   </header>
-  <div class="ad-container ad-leaderboard"></div>
 
   <main class="container legal-page">
     <article class="legal-content">
       <p class="eyebrow">Información legal</p>
       <h2>Política de privacidad</h2>
-      <p><strong>Última actualización:</strong> 15 de septiembre de 2026. Este texto es una plantilla informativa y debe ser revisado según la actividad y jurisdicción aplicables antes de publicarse como documento legal.</p>
+      <p><strong>Última actualización:</strong> CONFIGURAR_FECHA. Este documento debe ser revisado por un profesional legal según la jurisdicción aplicable antes de publicarse.</p>
       <section>
-        <h3>Responsable</h3>
-        <p><strong>Titular:</strong> Responsable del proyecto MiPortal. Para consultas sobre privacidad, escribí a <a href="mailto:estudio.123455@gmail.com">estudio.123455@gmail.com</a>.</p>
+        <h3>Responsable del tratamiento</h3>
+        <p><strong>Nombre:</strong> CONFIGURAR_NOMBRE_RESPONSABLE</p>
+        <p><strong>Correo electrónico:</strong> <a href="mailto:CONFIGURAR_CORREO@ejemplo.com">CONFIGURAR_CORREO@ejemplo.com</a></p>
+        <p><strong>Dirección:</strong> CONFIGURAR_DIRECCION (opcional)</p>
       </section>
       <section>
-        <h3>Datos y finalidad</h3>
-        <p>Este sitio es principalmente informativo. El formulario de contacto es una demostración estática y actualmente no procesa ni envía mensajes. Las búsquedas de noticias pueden comunicarse con servicios externos indicados en la página de Noticias.</p>
+        <h3>Datos que recopilamos</h3>
+        <p>Este sitio es principalmente informativo. El formulario de contacto es una demostración estática y actualmente no procesa ni envía mensajes. Las búsquedas de noticias se comunican con servicios externos (El País vía RSS, Google News vía API) según se indica en la página de Noticias.</p>
       </section>
       <section>
-        <h3>Cookies</h3>
-        <p>El sitio utiliza almacenamiento local para recordar si aceptaste o cerraste el aviso de cookies. También utiliza Google Tag Manager para administrar etiquetas de medición y, eventualmente, publicidad. El consentimiento para almacenamiento de analítica y publicidad se establece como denegado por defecto y solo se actualiza a concedido cuando aceptás el aviso. Las etiquetas concretas y sus proveedores pueden cambiar según la configuración publicada en Google Tag Manager.</p>
+        <h3>Cookies y tecnologías de seguimiento</h3>
+        <p>Este sitio utiliza almacenamiento local para recordar tu decisión de consentimiento de cookies. Utiliza Google Tag Manager para administrar etiquetas de medición (analítica) y, eventualmente, publicidad.</p>
+        <p><strong>Consentimiento por defecto:</strong> El almacenamiento para analítica y publicidad se establece como denegado por defecto. Google Tag Manager solo se carga después de que otorgás consentimiento explícito ("Aceptar todo"). Si rechazás todo, las funciones de analítica y publicidad permanecen desactivadas.</p>
+        <p><strong>Cambio de preferencias:</strong> Podés modificar tu decisión en cualquier momento utilizando el enlace "Preferencias de cookies" en el footer de cualquier página.</p>
+      </section>
+      <section>
+        <h3>Derechos del usuario</h3>
+        <p>CONFIGURAR: Describir los derechos del usuario según la jurisdicción aplicable (acceso, rectificación, supresión, portabilidad, oposición, etc.).</p>
+      </section>
+      <section>
+        <h3>Base legal</h3>
+        <p>CONFIGURAR: Describir la base legal del tratamiento de datos según la jurisdicción aplicable (consentimiento, interés legítimo, contrato, etc.).</p>
+      </section>
+      <section>
+        <h3>Transferencias internacionales</h3>
+        <p>CONFIGURAR: Indicar si hay transferencias de datos a terceros países y las garantías aplicables.</p>
+      </section>
+      <section>
+        <h3>Contacto para privacidad</h3>
+        <p>Para consultas sobre privacidad, escribí a <a href="mailto:CONFIGURAR_CORREO@ejemplo.com">CONFIGURAR_CORREO@ejemplo.com</a>.</p>
       </section>
       <section>
         <h3>Alcance de esta información</h3>
-        <p>Esta página no constituye asesoramiento jurídico ni garantiza el cumplimiento de una normativa específica. Completá los datos del responsable, las finalidades y los mecanismos aplicables según tu jurisdicción y la operación real del sitio.</p>
+        <p>Esta página no constituye asesoramiento jurídico ni garantiza el cumplimiento de una normativa específica. Completá los campos CONFIGURAR según tu jurisdicción y la operación real del sitio. Consultá con un abogado especializado.</p>
       </section>
     </article>
   </main>

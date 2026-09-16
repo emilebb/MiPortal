@@ -4,12 +4,36 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self'; connect-src https://api.rss2json.com; img-src 'self' data: https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
-  <title>Términos y condiciones | MiPortal.com</title>
-  <meta name="description" content="Leé los términos y condiciones informativos para el uso del portal MiPortal.">
-  <meta property="og:title" content="Términos y condiciones | MiPortal">
-  <meta property="og:description" content="Información sobre el uso del portal, contenido externo y disponibilidad de MiPortal.">
+  
+  <!-- SEO Básico -->
+  <title>Términos y Condiciones - MiPortal</title>
+  <meta name="description" content="Leé los términos y condiciones de uso del portal MiPortal. Información sobre uso del portal, contenido externo, disponibilidad y responsabilidad.">
+  <link rel="canonical" href="https://miportal.com/terminos-y-condiciones.html">
+  
+  <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:image" content="og-image.svg">
+  <meta property="og:url" content="https://miportal.com/terminos-y-condiciones.html">
+  <meta property="og:title" content="Términos y Condiciones - MiPortal">
+  <meta property="og:description" content="Leé los términos y condiciones de uso del portal MiPortal. Información sobre uso del portal, contenido externo, disponibilidad y responsabilidad.">
+  <meta property="og:image" content="https://miportal.com/og-image-legal.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="es_ES">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:url" content="https://miportal.com/terminos-y-condiciones.html">
+  <meta name="twitter:title" content="Términos y Condiciones - MiPortal">
+  <meta name="twitter:description" content="Leé los términos y condiciones de uso del portal MiPortal. Información sobre uso del portal, contenido externo, disponibilidad y responsabilidad.">
+  <meta name="twitter:image" content="https://miportal.com/og-image-legal.jpg">
+  
+  <!-- Favicon (CONFIGURAR: Reemplazar con archivo real) -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  
+  <!-- Noindex para páginas legales (opcional, descomentar si no quieres indexar) -->
+  <!-- <meta name="robots" content="noindex, follow"> -->
+  
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -17,8 +41,10 @@
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MRGDJ643" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
   <header class="main-header">
-    <div class="logo"><h1>MiPortal<span>.com</span></h1></div>
-    <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">☰</button>
+    <div class="logo">
+      <div class="logo-text">MiPortal<span>.com</span></div>
+    </div>
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="mainNav">☰</button>
     <nav class="main-nav" id="mainNav">
       <ul>
         <li><a href="index.html">Inicio</a></li>
@@ -27,34 +53,51 @@
         <li><a href="contacto.html">Contacto</a></li>
       </ul>
     </nav>
-    <button id="themeToggle" class="btn-theme" aria-label="Cambiar tema">🌙</button>
+    <button id="themeToggle" class="btn-theme" type="button" aria-label="Cambiar entre modo claro y oscuro">🌙</button>
   </header>
-  <div class="ad-container ad-leaderboard"></div>
 
   <main class="container legal-page">
     <article class="legal-content">
       <p class="eyebrow">Información legal</p>
       <h2>Términos y condiciones</h2>
-      <p><strong>Última actualización:</strong> 15 de septiembre de 2026. Este documento es una plantilla informativa y debe ser revisado según la actividad y jurisdicción aplicables.</p>
+      <p><strong>Última actualización:</strong> CONFIGURAR_FECHA. Este documento debe ser revisado por un profesional legal según la jurisdicción aplicable antes de publicarse.</p>
       <section>
         <h3>Responsable del sitio</h3>
-        <p><strong>Titular:</strong> Responsable del proyecto MiPortal. Consultas: <a href="mailto:estudio.123455@gmail.com">estudio.123455@gmail.com</a>.</p>
+        <p><strong>Nombre:</strong> CONFIGURAR_NOMBRE_RESPONSABLE</p>
+        <p><strong>Correo electrónico:</strong> <a href="mailto:CONFIGURAR_CORREO@ejemplo.com">CONFIGURAR_CORREO@ejemplo.com</a></p>
+        <p><strong>Dirección:</strong> CONFIGURAR_DIRECCION (opcional)</p>
       </section>
       <section>
         <h3>Uso del portal</h3>
-        <p>MiPortal ofrece información, titulares y enlaces a recursos de terceros con fines generales. Usá el sitio de forma lícita, respetuosa y sin intentar interferir con su funcionamiento.</p>
+        <p>MiPortal ofrece información, titulares y enlaces a recursos de terceros con fines informativos. Usá el sitio de forma lícita, respetuosa y sin intentar interferir con su funcionamiento.</p>
       </section>
       <section>
         <h3>Contenido externo</h3>
-        <p>Las noticias y algunos recursos pueden provenir de sitios externos. MiPortal no controla sus contenidos, disponibilidad, políticas ni cambios, por lo que conviene consultar cada fuente antes de tomar decisiones.</p>
+        <p>Las noticias provienen de El País (vía RSS) y Google News. Los recursos de desarrollo web enlazan a sitios de referencia como MDN, CSS-Tricks y WebAIM. MiPortal no controla el contenido, disponibilidad, políticas ni cambios de estos sitios externos.</p>
+      </section>
+      <section>
+        <h3>Propiedad intelectual</h3>
+        <p>CONFIGURAR: Describir la propiedad intelectual del contenido de MiPortal y el uso permitido del contenido externo.</p>
+      </section>
+      <section>
+        <h3>Limitación de responsabilidad</h3>
+        <p>CONFIGURAR: Describir las limitaciones de responsabilidad según la jurisdicción aplicable.</p>
       </section>
       <section>
         <h3>Disponibilidad y cambios</h3>
-        <p>El portal se ofrece tal como está y puede modificarse, suspenderse o actualizarse sin aviso previo. El formulario de contacto es estático y no envía mensajes actualmente.</p>
+        <p>El portal se ofrece tal como está y puede modificarse, suspenderse o actualizarse sin aviso previo. El formulario de contacto es una demostración estática y actualmente no procesa mensajes.</p>
+      </section>
+      <section>
+        <h3>Ley aplicable y jurisdicción</h3>
+        <p>CONFIGURAR: Indicar la ley aplicable y los tribunales competentes según la jurisdicción.</p>
+      </section>
+      <section>
+        <h3>Contacto</h3>
+        <p>Para consultas sobre estos términos, escribí a <a href="mailto:CONFIGURAR_CORREO@ejemplo.com">CONFIGURAR_CORREO@ejemplo.com</a>.</p>
       </section>
       <section>
         <h3>Alcance de esta información</h3>
-        <p>Estos términos no constituyen asesoramiento jurídico ni garantizan el cumplimiento de una normativa específica. Completá las condiciones aplicables a tu actividad y jurisdicción antes de usar esta página como documento legal.</p>
+        <p>Estos términos no constituyen asesoramiento jurídico ni garantizan el cumplimiento de una normativa específica. Completá los campos CONFIGURAR según tu actividad y jurisdicción. Consultá con un abogado especializado.</p>
       </section>
     </article>
   </main>

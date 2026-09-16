@@ -4,12 +4,66 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self'; connect-src https://api.rss2json.com; img-src 'self' data: https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
-  <title>Mi Gran Portal Web</title>
-  <meta name="description" content="MiPortal reúne noticias actuales y recursos de aprendizaje web en un portal simple y ordenado.">
-  <meta property="og:title" content="Mi Gran Portal Web | MiPortal">
-  <meta property="og:description" content="Noticias y recursos de aprendizaje web en un solo lugar.">
+  
+  <!-- SEO Básico -->
+  <title>MiPortal - Noticias y Recursos de Desarrollo Web</title>
+  <meta name="description" content="Consultá titulares de El País, buscá en Google News y accedé a recursos de HTML, CSS y accesibilidad. Todo en una interfaz simple y organizada.">
+  <link rel="canonical" href="https://miportal.com/">
+  
+  <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:image" content="og-image.svg">
+  <meta property="og:url" content="https://miportal.com/">
+  <meta property="og:title" content="MiPortal - Noticias y Recursos de Desarrollo Web">
+  <meta property="og:description" content="Consultá titulares de El País, buscá en Google News y accedé a recursos de HTML, CSS y accesibilidad. Todo en una interfaz simple y organizada.">
+  <meta property="og:image" content="https://miportal.com/og-image.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="es_ES">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://miportal.com/">
+  <meta name="twitter:title" content="MiPortal - Noticias y Recursos de Desarrollo Web">
+  <meta name="twitter:description" content="Consultá titulares de El País, buscá en Google News y accedé a recursos de HTML, CSS y accesibilidad. Todo en una interfaz simple y organizada.">
+  <meta name="twitter:image" content="https://miportal.com/og-image.jpg">
+  
+  <!-- Favicon (CONFIGURAR: Reemplazar con archivo real) -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  
+  <!-- Datos estructurados JSON-LD -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "MiPortal",
+    "url": "https://miportal.com/",
+    "description": "Portal de información con noticias y recursos de desarrollo web",
+    "potentialAction": {
+      "@type": "SearchAction",
+      "target": "https://miportal.com/noticias.html?q={search_term_string}",
+      "query-input": "required name=search_term_string"
+    }
+  }
+  </script>
+  
+  <!-- CONFIGURAR: Completar datos reales de la organización -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "MiPortal",
+    "url": "https://miportal.com/",
+    "logo": "https://miportal.com/logo.png",
+    "description": "Portal de información con noticias y recursos de desarrollo web",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "email": "CONFIGURAR: correo@miportal.com",
+      "contactType": "customer service"
+    }
+  }
+  </script>
+  
   <!-- Estilos globales y modulares -->
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -21,9 +75,9 @@
   <!-- Encabezado y Navegación Principal -->
   <header class="main-header">
     <div class="logo">
-      <h1>MiPortal<span>.com</span></h1>
+      <div class="logo-text">MiPortal<span>.com</span></div>
     </div>
-    <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">☰</button>
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="mainNav">☰</button>
     <nav class="main-nav" id="mainNav">
       <ul>
         <li><a href="index.html" class="active">Inicio</a></li>
@@ -32,20 +86,20 @@
         <li><a href="contacto.html">Contacto</a></li>
       </ul>
     </nav>
-    <button id="themeToggle" class="btn-theme">🌙</button>
+    <button id="themeToggle" class="btn-theme" type="button" aria-label="Cambiar entre modo claro y oscuro">🌙</button>
   </header>
-  <div class="ad-container ad-leaderboard"></div>
 
   <!-- Contenido Principal -->
   <main class="home-page container">
+    <h1 class="visually-hidden">MiPortal - Noticias Actuales y Recursos de Aprendizaje Web</h1>
     <section class="home-hero">
       <div>
         <span class="eyebrow">Portal de información</span>
-        <h2>Todo lo importante, en un solo lugar.</h2>
-        <p>MiPortal reúne noticias actuales y recursos de aprendizaje en una experiencia simple, rápida y ordenada.</p>
+        <h2>Noticias y recursos de desarrollo web en un solo lugar</h2>
+        <p>Consultá titulares de El País, buscá en Google News y accedé a guías de HTML, CSS y accesibilidad. Todo en una interfaz simple y organizada.</p>
         <div class="home-actions">
-          <a class="primary-action" href="noticias.html">Explorar noticias</a>
-          <a class="secondary-action" href="recursos.html">Ver recursos</a>
+          <a class="primary-action" href="noticias.html">Ver noticias</a>
+          <a class="secondary-action" href="recursos.html">Explorar recursos</a>
         </div>
       </div>
       <div class="home-hero-mark" aria-hidden="true">MP</div>
@@ -53,21 +107,21 @@
 
     <section class="home-section" aria-labelledby="about-title">
       <div class="section-heading">
-        <span class="eyebrow">Qué es MiPortal</span>
-        <h2 id="about-title">Una puerta de entrada a contenido útil</h2>
+        <span class="eyebrow">Qué ofrece MiPortal</span>
+        <h2 id="about-title">Herramientas para estar informado y aprender</h2>
       </div>
-      <p class="section-intro">El portal está construido con HTML, CSS y JavaScript puro. Cada área tiene su propia página para que puedas encontrar rápidamente lo que necesitás.</p>
+      <p class="section-intro">MiPortal conecta fuentes externas de información y recursos educativos. Cada sección está diseñada para facilitarte el acceso a contenido útil sin salir del sitio.</p>
       <div class="feature-grid">
         <article class="feature-item">
           <span class="feature-number">01</span>
           <h3>Noticias</h3>
-          <p>Consulta titulares recientes de Google News y abre cada fuente original desde una tarjeta clara.</p>
+          <p>Consultá titulares de El País y realizá búsquedas en Google News. Cada resultado abre en su fuente original.</p>
           <a href="noticias.html">Ir a Noticias →</a>
         </article>
         <article class="feature-item">
           <span class="feature-number">02</span>
           <h3>Recursos</h3>
-          <p>Accede a referencias y materiales recomendados para seguir aprendiendo desarrollo web.</p>
+          <p>Accedé a referencias seleccionadas de HTML, CSS, accesibilidad y desarrollo web para seguir aprendiendo.</p>
           <a href="recursos.html">Ver Recursos →</a>
         </article>
       </div>
@@ -76,9 +130,9 @@
     <section class="home-info-band" aria-labelledby="how-title">
       <div>
         <span class="eyebrow">Cómo funciona</span>
-        <h2 id="how-title">Búsquedas conectadas con Google News</h2>
+        <h2 id="how-title">Contenido de fuentes externas, organizado para vos</h2>
       </div>
-      <p>Cuando buscás un tema, MiPortal consulta Google News y muestra los resultados dentro de la página. El contenido externo se limpia antes de renderizarse y los enlaces se validan para mantener una navegación segura.</p>
+      <p>Las noticias provienen de El País (vía RSS) y tus búsquedas consultan Google News. Los recursos de desarrollo web enlazan a documentación oficial y sitios de referencia. Todo el contenido abre en su fuente original.</p>
     </section>
   </main>
 

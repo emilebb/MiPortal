@@ -4,12 +4,49 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self'; connect-src https://api.rss2json.com; img-src 'self' data: https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
-  <title>Contacto | MiPortal.com</title>
-  <meta name="description" content="Contactá al equipo de MiPortal para consultas, sugerencias e información sobre el proyecto.">
-  <meta property="og:title" content="Contacto | MiPortal">
-  <meta property="og:description" content="Encontrá los datos de contacto de MiPortal y conocé el estado actual de su formulario.">
+  
+  <!-- SEO Básico -->
+  <title>Contacto - Consultas y Sugerencias sobre MiPortal</title>
+  <meta name="description" content="Contactá al equipo de MiPortal para consultas, sugerencias e información sobre el proyecto. Formulario de contacto y correo electrónico disponible.">
+  <link rel="canonical" href="https://miportal.com/contacto.html">
+  
+  <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:image" content="og-image.svg">
+  <meta property="og:url" content="https://miportal.com/contacto.html">
+  <meta property="og:title" content="Contacto - Consultas y Sugerencias sobre MiPortal">
+  <meta property="og:description" content="Contactá al equipo de MiPortal para consultas, sugerencias e información sobre el proyecto. Formulario de contacto y correo electrónico disponible.">
+  <meta property="og:image" content="https://miportal.com/og-image-contacto.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="es_ES">
+  
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:url" content="https://miportal.com/contacto.html">
+  <meta name="twitter:title" content="Contacto - Consultas y Sugerencias sobre MiPortal">
+  <meta name="twitter:description" content="Contactá al equipo de MiPortal para consultas, sugerencias e información sobre el proyecto. Formulario de contacto y correo electrónico disponible.">
+  <meta name="twitter:image" content="https://miportal.com/og-image-contacto.jpg">
+  
+  <!-- Favicon (CONFIGURAR: Reemplazar con archivo real) -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  
+  <!-- Datos estructurados JSON-LD para página de contacto -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ContactPage",
+    "name": "Contacto - MiPortal",
+    "description": "Contactá al equipo de MiPortal para consultas, sugerencias e información sobre el proyecto",
+    "url": "https://miportal.com/contacto.html",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "MiPortal",
+      "url": "https://miportal.com/"
+    }
+  }
+  </script>
+  
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -17,8 +54,10 @@
   <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MRGDJ643" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <!-- End Google Tag Manager (noscript) -->
   <header class="main-header">
-    <div class="logo"><h1>MiPortal<span>.com</span></h1></div>
-    <button class="nav-toggle" id="navToggle" aria-label="Abrir menú">☰</button>
+    <div class="logo">
+      <div class="logo-text">MiPortal<span>.com</span></div>
+    </div>
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="mainNav">☰</button>
     <nav class="main-nav" id="mainNav">
       <ul>
         <li><a href="index.html">Inicio</a></li>
@@ -27,19 +66,18 @@
         <li><a href="contacto.html" class="active">Contacto</a></li>
       </ul>
     </nav>
-    <button id="themeToggle" class="btn-theme" aria-label="Cambiar tema">🌙</button>
+    <button id="themeToggle" class="btn-theme" type="button" aria-label="Cambiar entre modo claro y oscuro">🌙</button>
   </header>
-  <div class="ad-container ad-leaderboard"></div>
 
   <main class="container main-layout">
     <section class="contact-section">
       <h2>Contacto</h2>
-      <p>Este formulario es una demostración estática. El sitio no procesa ni envía mensajes todavía.</p>
-      <p>También podés escribirnos a <a href="mailto:estudio.123455@gmail.com">estudio.123455@gmail.com</a>.</p>
+      <p>Este formulario es una demostración estática. Actualmente el sitio no procesa ni envía mensajes.</p>
+      <p>Para consultas sobre el proyecto, escribí a <a href="mailto:CONFIGURAR_CORREO@ejemplo.com">CONFIGURAR_CORREO@ejemplo.com</a>.</p>
       <form class="contact-form">
-        <label for="name">Nombre<input id="name" name="name" type="text" autocomplete="name" required></label>
-        <label for="message">Mensaje<textarea id="message" name="message" required></textarea></label>
-        <button type="button" class="search-submit">Disponible próximamente</button>
+        <label for="name">Nombre<input id="name" name="name" type="text" autocomplete="name" required aria-required="true"></label>
+        <label for="message">Mensaje<textarea id="message" name="message" required aria-required="true"></textarea></label>
+        <button type="button" class="search-submit" disabled aria-disabled="true">Formulario en desarrollo</button>
       </form>
     </section>
   </main>

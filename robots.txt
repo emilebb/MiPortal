@@ -1,4 +1,25 @@
+# robots.txt para MiPortal
+# CONFIGURAR: Actualizar el dominio cuando el sitio esté en producción
+
 User-agent: *
 Allow: /
 
-Sitemap: https://mi-portal-seven.vercel.app/sitemap.xml
+# Bloquear acceso a archivos de configuración y desarrollo
+Disallow: /.git/
+Disallow: /.devin/
+Disallow: /.claude/
+Disallow: /node_modules/
+Disallow: /package.json
+Disallow: /package-lock.json
+Disallow: /.DS_Store
+
+# Páginas legales pueden tener noindex (opcional)
+# Descomentar si no quieres indexar páginas legales
+# Disallow: /politica-de-privacidad.html
+# Disallow: /terminos-y-condiciones.html
+
+# Sitemap
+Sitemap: https://miportal.com/sitemap.xml
+
+# Crawl-delay (opcional, ajustar según necesidades del servidor)
+# Crawl-delay: 1
