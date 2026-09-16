@@ -1,5 +1,7 @@
 const gtmContainerId = 'GTM-MRGDJ643';
 const cookieConsentKey = 'miportal-cookie-consent';
+const rssNewsUrl = 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada';
+const rssNewsLabel = 'El País';
 
 const updateGtmConsent = (hasConsent) => {
   if (typeof window.gtag !== 'function') {
@@ -80,6 +82,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       return url.href;
+    } catch {
+      return null;
+    }
+  };
+
+  const getSafeHttpsUrl = (value) => {
+    try {
+      const url = new URL(value);
+      return url.protocol === 'https:' ? url.href : null;
     } catch {
       return null;
     }
@@ -231,6 +242,106 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  const createNewsCard = ({ tagText, title, description, imageUrl, link }) => {
+    const article = document.createElement('article');
+    article.className = 'card news-card';
+
+    if (imageUrl) {
+      const image = document.createElement('img');
+      image.src = imageUrl;
+      image.alt = title;
+      image.loading = 'lazy';
+      article.appendChild(image);
+    }
+
+    const cardBody = document.createElement('div');
+    cardBody.className = 'card-body';
+
+    const tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.textContent = tagText;
+
+    const headline = document.createElement('h3');
+    headline.textContent = title;
+
+    const descriptionText = document.createElement('p');
+    descriptionText.className = 'card-description';
+    descriptionText.textContent = description;
+
+    cardBody.append(tag, headline, descriptionText);
+
+    if (link) {
+      const readMore = document.createElement('a');
+      readMore.className = 'read-more';
+      readMore.href = link;
+      readMore.target = '_blank';
+      readMore.rel = 'noopener noreferrer';
+      readMore.textContent = 'Leer noticia →';
+      cardBody.appendChild(readMore);
+    }
+
+    article.appendChild(cardBody);
+    return article;
+  };
+
+  const cargarNoticiasDirectas = async () => {
+    activeController?.abort();
+
+    const controller = new AbortController();
+    const requestId = ++currentRequestId;
+    activeController = controller;
+    const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssNewsUrl)}`;
+
+    showStatus(`Cargando noticias de ${rssNewsLabel}...`);
+
+    try {
+      const response = await fetch(proxyUrl, {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+        signal: controller.signal
+      });
+      if (!response.ok) {
+        throw new Error('No se pudo consultar el feed RSS');
+      }
+
+      const data = await response.json();
+      if (requestId !== currentRequestId || data?.status !== 'ok' || !Array.isArray(data.items)) {
+        throw new Error('No se encontraron noticias');
+      }
+
+      const fragment = document.createDocumentFragment();
+      data.items.slice(0, 12).forEach((item) => {
+        if (!item || typeof item.title !== 'string') {
+          return;
+        }
+
+        const title = cleanDescription(item.title).slice(0, 300);
+        const description = cleanDescription(item.description || item.content).slice(0, 600) || 'Lee la noticia completa en su fuente original.';
+        const imageUrl = getSafeHttpsUrl(item.thumbnail || (item.enclosure && item.enclosure.link));
+        const link = getSafeHttpsUrl(item.link);
+
+        fragment.appendChild(createNewsCard({ tagText: rssNewsLabel, title, description, imageUrl, link }));
+      });
+
+      if (requestId !== currentRequestId) {
+        return;
+      }
+
+      cardsContainer.replaceChildren(fragment);
+      if (!cardsContainer.children.length) {
+        showStatus('No se encontraron noticias válidas.');
+      }
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        return;
+      }
+
+      if (requestId === currentRequestId) {
+        showStatus('No se pudieron cargar las noticias ahora. Probá nuevamente en unos segundos.');
+      }
+    }
+  };
+
   if (themeToggleBtn) {
     themeToggleBtn.addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
@@ -266,6 +377,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     searchInput.value = document.body.dataset.newsQuery || 'noticias';
-    loadGoogleNews(searchInput.value);
+    cargarNoticiasDirectas();
   }
 });

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self'; connect-src https://api.rss2json.com; img-src 'self' data: https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self'; connect-src https://api.rss2json.com; img-src 'self' data: https://www.googletagmanager.com https://imagenes.elpais.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
   <title>Noticias | MiPortal.com</title>
   <meta name="description" content="Explorá titulares recientes y buscá noticias por tema desde MiPortal.">
   <meta property="og:title" content="Noticias | MiPortal">
@@ -38,7 +38,7 @@
           <input type="search" id="searchInput" name="q" placeholder="Buscar en Google..." autocomplete="off" maxlength="120" required>
           <button type="submit" class="search-submit">Buscar noticias</button>
         </form>
-        <p class="privacy-note">Las búsquedas se consultan mediante Google News y un servicio RSS externo.</p>
+        <p class="privacy-note">El feed de El País se consulta mediante un servicio RSS externo; las búsquedas usan Google News.</p>
         <div class="category-filters">
           <button type="button" class="filter-btn active" data-query="noticias">Todo</button>
           <button type="button" class="filter-btn" data-query="tecnología">Tecnología</button>
@@ -47,7 +47,7 @@
       </section>
       <section class="cards-grid">
         <div id="cardsContainer" class="cards-grid-content">
-          <p class="google-results">Cargando noticias de Google...</p>
+          <p class="google-results">Cargando noticias de El País...</p>
         </div>
       </section>
     </main>
@@ -55,7 +55,7 @@
       <div class="widget ad-container ad-sidebar"></div>
       <div class="widget">
         <h3>Noticias</h3>
-        <p>Consulta titulares recientes y abre cada noticia en Google News.</p>
+        <p>Consulta los titulares recientes de El País y abre cada noticia en su fuente original.</p>
       </div>
       <div class="widget newsletter-widget">
         <h3>Recibí novedades</h3>
