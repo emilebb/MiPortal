@@ -151,14 +151,14 @@ grant execute on function public.is_admin() to authenticated;
 -- ============================================================================
 create table if not exists public.resources (
   id          uuid primary key default gen_random_uuid(),
-  title       text not null check (char_length(trim(title)) between 1 and 200),
+  title       text not null check (char_length(trim(title)) between 1 and 160),
   description text not null check (char_length(trim(description)) between 1 and 1000),
   url         text not null check (url ~* '^https?://[^[:space:]]+$'),
   -- CONFIGURAR ROLES: si querés agregar más categorías, editá esta lista y
   -- actualizá el <select> de admin/recurso-form.html.
   -- El formulario admin exige https:// (validación client-side); el CHECK
   -- mantiene https?:// como superconjunto para filas importadas antes.
-  category    text not null check (category in ('HTML','CSS','JavaScript','Accesibilidad','Herramientas','Otros')),
+  category    text not null check (category in ('HTML','CSS','JavaScript','React','Fundamentos','Accesibilidad','Herramientas','Otros')),
   image_url   text check (image_url is null or image_url ~* '^https?://[^[:space:]]+$'),
   published   boolean not null default true,
   created_at  timestamptz not null default now(),

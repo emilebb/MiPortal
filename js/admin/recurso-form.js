@@ -93,6 +93,13 @@
       titleInput.value = data.title || '';
       descriptionInput.value = data.description || '';
       urlInput.value = data.url || '';
+      if (data.category && !Array.from(categoryInput.options)
+        .some((option) => option.value === data.category)) {
+        const option = document.createElement('option');
+        option.value = data.category;
+        option.textContent = data.category;
+        categoryInput.appendChild(option);
+      }
       categoryInput.value = data.category || '';
       imageUrlInput.value = data.image_url || '';
       publishedInput.checked = Boolean(data.published);
@@ -115,6 +122,12 @@
       const emptyField = !title ? titleInput : (!description ? descriptionInput : (!url ? urlInput : categoryInput));
       setFieldError(emptyField, 'Completá todos los campos obligatorios.');
       emptyField.focus();
+      return;
+    }
+
+    if (Array.from(title).length > 160) {
+      setFieldError(titleInput, 'El título no puede superar los 160 caracteres.');
+      titleInput.focus();
       return;
     }
 

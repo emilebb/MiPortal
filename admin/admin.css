@@ -3,6 +3,11 @@
    Complementa a styles.css (se carga antes). Reutiliza sus vars.
    ============================================================ */
 
+/* Los layouts del panel deben respetar los estados ocultos. */
+[hidden] {
+  display: none !important;
+}
+
 .admin-header {
   display: flex;
   align-items: center;
