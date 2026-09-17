@@ -6,7 +6,8 @@
   "scripts": {
     "build": "node scripts/generate-config.mjs && node scripts/build-static.mjs",
     "dev": "node scripts/generate-config.mjs",
-    "test:contact": "node --test scripts/contact.test.cjs scripts/contact-browser.test.mjs"
+    "test:contact": "node --test scripts/contact.test.cjs scripts/contact-browser.test.mjs",
+    "test:newsletter": "node --test scripts/newsletter.test.cjs"
   },
   "license": "UNLICENSED",
   "dependencies": {

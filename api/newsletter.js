@@ -7,7 +7,8 @@ const origins = new Set([
 ]);
 const maxBytes = 4000;
 const tokenLifetime = 48 * 60 * 60 * 1000;
-const unavailable = 'La suscripción no está disponible. Inténtalo más tarde.';
+const unavailable = 'El servicio de suscripción está momentáneamente no disponible. Inténtalo más tarde.';
+const misconfigured = 'La suscripción a novedades no está configurada. Avisa al administrador del sitio.';
 
 function validEmail(value) {
   if (typeof value !== 'string' || value.length > 254) return false;
@@ -45,15 +46,82 @@ function readToken(token, secret) {
 
 function config() {
   const env = process.env;
-  let database;
-  try { database = new URL(env.SUPABASE_URL); } catch { return null; }
-  if (database.protocol !== 'https:' || database.username || database.password ||
-      database.pathname !== '/' || !env.SUPABASE_SECRET_KEY ||
-      !env.NEWSLETTER_HASH_SECRET || env.NEWSLETTER_HASH_SECRET.length < 32 ||
-      !env.RESEND_API_KEY || !validEmail(env.RESEND_FROM_EMAIL) || env.VERCEL !== '1') {
-    return null;
+  const missing = [];
+  let database = null;
+  try { database = new URL(env.SUPABASE_URL); } catch { database = null; }
+  if (!database || database.protocol !== 'https:' || database.username ||
+      database.password || database.pathname !== '/') missing.push('SUPABASE_URL');
+  if (!env.SUPABASE_SECRET_KEY) missing.push('SUPABASE_SECRET_KEY');
+  if (typeof env.NEWSLETTER_HASH_SECRET !== 'string' || env.NEWSLETTER_HASH_SECRET.length < 32) missing.push('NEWSLETTER_HASH_SECRET');
+  if (!env.RESEND_API_KEY) missing.push('RESEND_API_KEY');
+  if (!validEmail(env.RESEND_FROM_EMAIL)) missing.push('RESEND_FROM_EMAIL');
+  if (env.VERCEL !== '1') missing.push('VERCEL');
+  return { env, database, missing };
+}
+
+function clientIP(req) {
+  const first = name => {
+    const value = req.headers[name];
+    return typeof value === 'string' ? value.split(',')[0].trim() : '';
+  };
+  if (process.env.VERCEL === '1') {
+    const trusted = req.headers['x-vercel-forwarded-for'];
+    return typeof trusted === 'string' && isIP(trusted) ? trusted : null;
   }
-  return { env, database };
+  for (const candidate of [first('x-vercel-forwarded-for'),
+    first('x-forwarded-for'), first('x-real-ip'),
+    req.socket?.remoteAddress, req.connection?.remoteAddress]) {
+    if (typeof candidate === 'string' && isIP(candidate)) return candidate;
+  }
+  return null;
+}
+
+function originAllowed(origin) {
+  if (typeof origin !== 'string') return false;
+  if (origins.has(origin)) return true;
+  return process.env.VERCEL !== '1' &&
+    /^https?:\/\/(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/.test(origin);
+}
+
+function safeJson(value) {
+  if (typeof value !== 'object' || value === null) {
+    return typeof value === 'string' ? value.slice(0, 120) : String(value ?? '');
+  }
+  const out = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (/key|secret|token|authorization|apikey|password|bearer/i.test(key)) continue;
+    out[key] = typeof entry === 'string' ? entry.slice(0, 120)
+      : typeof entry === 'object' && entry !== null ? safeJson(entry) : entry;
+  }
+  return JSON.stringify(out).slice(0, 300);
+}
+
+function upstreamError(context, status, detail, unavailable) {
+  const error = new Error(`${context} respondió ${status}`);
+  error.context = context;
+  error.status = status;
+  error.detail = detail;
+  error.unavailable = unavailable ?? (Number.isInteger(status) && status >= 500);
+  return error;
+}
+
+function logUpstream(error) {
+  const name = error?.name ?? 'Error';
+  const context = error?.context ? `${error.context}: ` : '';
+  const status = Number.isInteger(error?.status) ? ` [HTTP ${error.status}]` : '';
+  const detail = error?.detail ? ` — ${safeJson(error.detail)}` : '';
+  console.error(`[newsletter] ${context}${name}${status}${detail}`);
+}
+
+function upstreamStatus(error) {
+  if (error?.name === 'TimeoutError' || error?.name === 'AbortError') return 504;
+  if (Number.isInteger(error?.status) && error.status === 429) return 429;
+  if (error?.unavailable === true) return 503;
+  return 502;
+}
+
+function upstreamMessage(error) {
+  return error?.status === 429 ? 'Demasiados intentos. Probá más tarde.' : unavailable;
 }
 
 async function rpc(configured, name, payload) {
@@ -65,7 +133,11 @@ async function rpc(configured, name, payload) {
         'Content-Type': 'application/json' },
       body: JSON.stringify(payload), signal: AbortSignal.timeout(3000)
     });
-  if (!response.ok) throw new Error('Database request failed');
+  if (!response.ok) {
+    let detail = '';
+    try { detail = await response.text(); } catch { }
+    throw upstreamError(`Supabase ${name}`, response.status, detail);
+  }
   return response.json();
 }
 
@@ -77,59 +149,85 @@ async function sendEmail(configured, to, subject, text, key) {
     body: JSON.stringify({ from: configured.env.RESEND_FROM_EMAIL, to: [to], subject, text }),
     signal: AbortSignal.timeout(8000)
   });
-  if (!response.ok) throw new Error('Provider request failed');
+  if (!response.ok) {
+    let detail = '';
+    try { detail = await response.text(); } catch { }
+    throw upstreamError('Resend', response.status, detail);
+  }
   const result = await response.json();
-  if (!result?.id) throw new Error('Provider response invalid');
+  if (!result?.id) throw upstreamError('Resend', 502, result, false);
 }
 
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
+  const fail = (status, error) => res.status(status).json({ error });
+
   if (req.method === 'GET') {
-    const configured = config();
+    const { env, database, missing } = config();
+    if (missing.length) {
+      console.error(`[newsletter] GET: configuración incompleta: ${missing.join(', ')}`);
+      return fail(500, misconfigured);
+    }
     const url = new URL(req.url, 'https://www.miportal.me');
-    const hash = configured && readToken(url.searchParams.get('token'), configured.env.NEWSLETTER_HASH_SECRET);
-    if (!hash || !configured) return jsonResponse(res, 400, { error: 'El enlace no es válido o caducó.' });
     const action = url.searchParams.get('action');
-    if (action !== 'confirm' && action !== 'unsubscribe') return jsonResponse(res, 400, { error: 'Acción no válida.' });
+    if (action !== 'confirm' && action !== 'unsubscribe') return fail(400, 'Acción no válida.');
+    const hash = readToken(url.searchParams.get('token'), env.NEWSLETTER_HASH_SECRET);
+    if (!hash) return fail(400, 'El enlace no es válido o caducó.');
     try {
-      await rpc(configured, 'update_newsletter_status', { p_email_hash: hash, p_status: action === 'confirm' ? 'confirmed' : 'unsubscribed' });
+      await rpc({ env, database }, 'update_newsletter_status',
+        { p_email_hash: hash, p_status: action === 'confirm' ? 'confirmed' : 'unsubscribed' });
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       return res.status(200).send(`<p>${action === 'confirm' ? 'Suscripción confirmada.' : 'Suscripción cancelada.'} Ya podés cerrar esta ventana.</p>`);
-    } catch { return jsonResponse(res, 503, { error: unavailable }); }
+    } catch (error) { logUpstream(error); return fail(upstreamStatus(error), unavailable); }
   }
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'GET, POST');
-    return jsonResponse(res, 405, { error: 'Método no permitido.' });
+    return fail(405, 'Método no permitido.');
   }
-  if (!origins.has(req.headers.origin)) return jsonResponse(res, 403, { error: 'Origen no permitido.' });
+  if (!originAllowed(req.headers.origin)) return fail(403, 'Origen no permitido.');
   if (!/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(req.headers['content-type'] || '')) {
-    return jsonResponse(res, 415, { error: 'Formato no permitido.' });
+    return fail(415, 'Formato no permitido.');
   }
   const raw = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : req.body;
   if (Buffer.byteLength(typeof raw === 'string' ? raw : JSON.stringify(raw) || '') > maxBytes) {
-    return jsonResponse(res, 413, { error: 'Solicitud demasiado grande.' });
+    return fail(413, 'Solicitud demasiado grande.');
   }
   let body;
-  try { body = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch { return jsonResponse(res, 400, { error: 'Datos inválidos.' }); }
+  try { body = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch { return fail(400, 'Datos inválidos.'); }
   if (!body || typeof body !== 'object' || Array.isArray(body) ||
       Object.keys(body).some(key => !['email', 'website'].includes(key)) ||
       body.website !== undefined && body.website !== '' || !validEmail(body.email)) {
-    return jsonResponse(res, 400, { error: 'Ingresá un correo válido.' });
+    return fail(400, 'Ingresá un correo válido.');
   }
+
   const configured = config();
-  const rawIP = req.headers['x-vercel-forwarded-for'];
-  if (!configured || typeof rawIP !== 'string' || !isIP(rawIP)) return jsonResponse(res, 503, { error: unavailable });
+  if (configured.missing.length) {
+    console.error(`[newsletter] Configuración incompleta: ${configured.missing.join(', ')}`);
+    return fail(500, misconfigured);
+  }
+  const ip = clientIP(req);
+  if (!ip) return fail(400, 'No se pudo validar la solicitud.');
+
   const email = body.email.trim().toLowerCase();
   const hash = createHmac('sha256', configured.env.NEWSLETTER_HASH_SECRET).update(email).digest('hex');
   const expiresAt = Date.now() + tokenLifetime;
   const confirmUrl = `https://www.miportal.me/api/newsletter?action=confirm&token=${encodeURIComponent(tokenFor(hash, expiresAt, configured.env.NEWSLETTER_HASH_SECRET))}`;
   const unsubscribeUrl = `https://www.miportal.me/api/newsletter?action=unsubscribe&token=${encodeURIComponent(tokenFor(hash, expiresAt, configured.env.NEWSLETTER_HASH_SECRET))}`;
   try {
-    const limit = await rpc(configured, 'reserve_newsletter_attempt', { p_sender_hash: createHmac('sha256', configured.env.NEWSLETTER_HASH_SECRET).update(`ip:${rawIP}`).digest('hex') });
-    if (limit?.allowed !== true) return jsonResponse(res, 429, { error: 'Demasiados intentos. Probá más tarde.' });
+    const limit = await rpc(configured, 'reserve_newsletter_attempt',
+      { p_sender_hash: createHmac('sha256', configured.env.NEWSLETTER_HASH_SECRET).update(`ip:${ip}`).digest('hex') });
+    if (limit?.allowed !== true) {
+      res.setHeader('Retry-After', '3600');
+      return fail(429, 'Demasiados intentos. Probá más tarde.');
+    }
     const result = await rpc(configured, 'upsert_newsletter_subscriber', { p_email: email, p_email_hash: hash });
     await sendEmail(configured, email, 'Confirmá tu suscripción a MiPortal',
       `Confirmá tu suscripción abriendo este enlace:\n${confirmUrl}\n\nPara cancelar la suscripción:\n${unsubscribeUrl}`, hash);
-    return jsonResponse(res, 202, { message: result?.status === 'confirmed' ? 'Te enviamos las preferencias de suscripción.' : 'Revisá tu correo para confirmar la suscripción.' });
-  } catch { return jsonResponse(res, 503, { error: unavailable }); }
+    return jsonResponse(res, 202, { message: result?.status === 'confirmed'
+      ? '¡Gracias! Te has suscrito correctamente.'
+      : '¡Gracias! Te has suscrito correctamente. Revisá tu correo para confirmar tu suscripción.' });
+  } catch (error) {
+    logUpstream(error);
+    return fail(upstreamStatus(error), upstreamMessage(error));
+  }
 };
