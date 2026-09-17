@@ -74,6 +74,7 @@
       <form id="contactForm" class="contact-form" method="post" action="/api/contact">
         <label for="name">Nombre<input id="name" name="name" type="text" autocomplete="name" minlength="2" maxlength="100" required aria-required="true"></label>
         <label for="email">Correo electrónico<input id="email" name="email" type="email" maxlength="254" autocomplete="email" required></label>
+        <label for="subject">Asunto<input id="subject" name="subject" type="text" minlength="3" maxlength="150" required aria-required="true"></label>
         <label for="message">Mensaje<textarea id="message" name="message" minlength="10" maxlength="5000" required aria-required="true"></textarea></label>
         <label class="visually-hidden" aria-hidden="true">Sitio web<input name="website" tabindex="-1" autocomplete="off"></label>
         <button type="submit" class="search-submit">Enviar mensaje</button>

@@ -108,6 +108,7 @@ test('contact in Chrome: retry, reset, accessibility and actual page CSP', async
     await waitFor('window.testReady === true');
     await evaluate(`document.querySelector('[name=name]').value = 'Local fixture';
       document.querySelector('[name=email]').value = 'test@example.com';
+      document.querySelector('[name=subject]').value = 'Consulta de prueba';
       document.querySelector('[name=message]').value = 'Only mocked contact content';`);
   };
   const submit = () => evaluate('contactForm.requestSubmit()');
@@ -135,6 +136,7 @@ test('contact in Chrome: retry, reset, accessibility and actual page CSP', async
       assert.match(await evaluate('contactStatus.textContent'), /aceptado/);
       await evaluate(`contactForm.elements.name.value = 'Another fixture';
         contactForm.elements.email.value = 'other@example.com';
+        contactForm.elements.subject.value = 'Otro asunto distinto';
         contactForm.elements.message.value = 'New intentional contact message';`);
       await submit();
       assert.notEqual(await evaluate('calls[1].body.requestId'),

@@ -5,7 +5,8 @@
   "description": "Sitio estático MiPortal + backend Supabase para el CRUD de Recursos",
   "scripts": {
     "build": "node scripts/generate-config.mjs && node scripts/build-static.mjs",
-    "dev": "node scripts/generate-config.mjs"
+    "dev": "node scripts/generate-config.mjs",
+    "test:contact": "node --test scripts/contact.test.cjs scripts/contact-browser.test.mjs"
   },
   "license": "UNLICENSED",
   "dependencies": {

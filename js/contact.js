@@ -13,7 +13,7 @@
     sending = true;
     button.disabled = true;
     form.setAttribute('aria-busy', 'true');
-    status.textContent = 'Enviando mensaje…';
+    status.textContent = 'Enviando…';
     try {
       const content = snapshot();
       // Conserva la clave tras errores; no reintenta automáticamente.
