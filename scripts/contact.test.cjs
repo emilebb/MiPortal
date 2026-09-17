@@ -52,17 +52,42 @@ test('contact API sends through Resend with validation and bounded abuse', async
       assert.match(response.body.message, /aceptado/i);
       assert.equal(calls.length, 1);
       const mail = calls[0].payload;
-      assert.equal(mail.from, config.RESEND_FROM_EMAIL);
+      assert.equal(mail.from, `MiPortal <${config.RESEND_FROM_EMAIL}>`);
       assert.deepEqual(mail.to, [config.CONTACT_TO_EMAIL]);
       assert.equal(mail.reply_to, body.email);
-      assert.equal(mail.html, undefined);
-      assert.equal(mail.subject, `[MiPortal] ${body.subject}`);
+      assert.equal(mail.subject, 'Nuevo mensaje de contacto — MiPortal');
+      assert.equal(typeof mail.html, 'string');
+      assert.match(mail.html, /Nuevo mensaje de contacto/);
+      assert.match(mail.html, /Prueba local/);
+      assert.match(mail.html, /mailto:test@example\.com/);
+      assert.match(mail.html, /RESPONDER AL USUARIO/);
+      assert.match(mail.html, /MiPortal/);
+      assert.match(mail.html, /Fecha/);
+      assert.equal(mail.html.includes('<script'), false);
       assert.match(mail.text, /Nombre: Prueba local/);
       assert.match(mail.text, /Correo: test@example.com/);
       assert.match(mail.text, /Asunto: Consulta sobre MiPortal/);
       assert.match(mail.text, /Mensaje ficticio/);
+      assert.match(mail.text, /mailto:test@example\.com/);
       assert.match(calls[0].headers['Idempotency-Key'], /^contact\/[a-f0-9]{64}$/);
       assert.equal(JSON.stringify(mail).includes('mock-provider-secret'), false);
+    });
+
+  await t.test('escapes user input before inserting it into the HTML email',
+    async () => {
+      handler.resetRateLimit();
+      calls = [];
+      const body = {
+        ...input(),
+        name: 'Al <script>alert(1)</script>',
+        subject: 'A & B <b>"cita"</b>',
+        message: 'Línea 1\n<script>alert(2)</script>\n" & \' < >'
+      };
+      assert.equal((await run(body)).code, 202);
+      const mail = calls[0].payload;
+      assert.equal(mail.html.includes('<script>'), false);
+      assert.match(mail.html, /&lt;script&gt;/);
+      assert.match(mail.html, /A &amp; B &lt;b&gt;/);
     });
 
   await t.test('unchanged retries reuse the same idempotency key', async () => {

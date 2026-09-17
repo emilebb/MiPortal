@@ -1,5 +1,6 @@
 const { createHash } = require('node:crypto');
 const { isIP } = require('node:net');
+const { buildContactEmail } = require('../lib/emails');
 
 const origins = new Set([
   'https://www.miportal.me', 'https://miportal.me',
@@ -159,10 +160,13 @@ module.exports = async function handler(req, res) {
   }
 
   const env = process.env;
+  const { html, text } = buildContactEmail({
+    name: name.trim(), email, subject: subject.trim(), message: message.trim()
+  });
   const payload = {
-    from: env.RESEND_FROM_EMAIL, to: [env.CONTACT_TO_EMAIL],
-    subject: `[MiPortal] ${subject.trim()}`, reply_to: email,
-    text: `Nombre: ${name.trim()}\nCorreo: ${email}\nAsunto: ${subject.trim()}\n\n${message.trim()}`
+    from: `MiPortal <${env.RESEND_FROM_EMAIL}>`, to: [env.CONTACT_TO_EMAIL],
+    subject: 'Nuevo mensaje de contacto — MiPortal', reply_to: email,
+    html, text
   };
   // Vincula la clave al contenido, la configuración y el inicio del intento.
   const key = createHash('sha256').update(

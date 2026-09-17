@@ -1,5 +1,6 @@
 const { createHmac, timingSafeEqual } = require('node:crypto');
 const { isIP } = require('node:net');
+const { buildWelcomeEmail } = require('../lib/emails');
 
 const origins = new Set([
   'https://www.miportal.me', 'https://miportal.me',
@@ -110,7 +111,12 @@ function logUpstream(error) {
   const context = error?.context ? `${error.context}: ` : '';
   const status = Number.isInteger(error?.status) ? ` [HTTP ${error.status}]` : '';
   const detail = error?.detail ? ` — ${safeJson(error.detail)}` : '';
-  console.error(`[newsletter] ${context}${name}${status}${detail}`);
+  let line = `[newsletter] ${context}${name}${status}${detail}`;
+  for (const value of [process.env.RESEND_API_KEY, process.env.SUPABASE_SECRET_KEY,
+    process.env.NEWSLETTER_HASH_SECRET]) {
+    if (typeof value === 'string' && value.length >= 8) line = line.split(value).join('***');
+  }
+  console.error(line);
 }
 
 function upstreamStatus(error) {
@@ -141,12 +147,14 @@ async function rpc(configured, name, payload) {
   return response.json();
 }
 
-async function sendEmail(configured, to, subject, text, key) {
+async function sendWelcome(configured, to, urls, key) {
+  const { html, text } = buildWelcomeEmail(urls);
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST', redirect: 'error',
     headers: { Authorization: `Bearer ${configured.env.RESEND_API_KEY}`,
       'Content-Type': 'application/json', 'Idempotency-Key': `newsletter/${key}` },
-    body: JSON.stringify({ from: configured.env.RESEND_FROM_EMAIL, to: [to], subject, text }),
+    body: JSON.stringify({ from: `MiPortal <${configured.env.RESEND_FROM_EMAIL}>`,
+      to: [to], subject: '¡Bienvenido a MiPortal! 🎉', html, text }),
     signal: AbortSignal.timeout(8000)
   });
   if (!response.ok) {
@@ -221,8 +229,11 @@ module.exports = async function handler(req, res) {
       return fail(429, 'Demasiados intentos. Probá más tarde.');
     }
     const result = await rpc(configured, 'upsert_newsletter_subscriber', { p_email: email, p_email_hash: hash });
-    await sendEmail(configured, email, 'Confirmá tu suscripción a MiPortal',
-      `Confirmá tu suscripción abriendo este enlace:\n${confirmUrl}\n\nPara cancelar la suscripción:\n${unsubscribeUrl}`, hash);
+    try {
+      await sendWelcome(configured, email, { confirmUrl, unsubscribeUrl }, hash);
+    } catch (error) {
+      logUpstream(error);
+    }
     return jsonResponse(res, 202, { message: result?.status === 'confirmed'
       ? '¡Gracias! Te has suscrito correctamente.'
       : '¡Gracias! Te has suscrito correctamente. Revisá tu correo para confirmar tu suscripción.' });

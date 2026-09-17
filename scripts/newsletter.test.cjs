@@ -61,6 +61,14 @@ test('newsletter API uses mocked Supabase RPC and Resend only', async t => {
   assert.equal(calls[0].payload.p_sender_hash.length, 64);
   assert.equal(calls[1].payload.p_email, 'reader@example.test');
   assert.deepEqual(calls[2].payload.to, ['reader@example.test']);
+  assert.equal(calls[2].payload.subject, '¡Bienvenido a MiPortal! 🎉');
+  assert.equal(calls[2].payload.from, 'MiPortal <newsletter@example.test>');
+  assert.equal(typeof calls[2].payload.html, 'string');
+  assert.match(calls[2].payload.html, /Bienvenido a MiPortal/);
+  assert.match(calls[2].payload.html, /VISITAR MIPORTAL/);
+  assert.match(calls[2].payload.html, /action=confirm/);
+  assert.match(calls[2].payload.html, /action=unsubscribe/);
+  assert.equal(calls[2].payload.html.includes('mock-provider-secret'), false);
   assert.match(calls[2].payload.text, /action=confirm/);
   assert.match(calls[2].payload.text, /action=unsubscribe/);
 
@@ -142,11 +150,11 @@ test('newsletter API rate limit returns Retry-After without sending', async t =>
 test('newsletter API maps upstream and provider failures to specific codes', async t => {
   withEnv(t);
   const cases = [
-    { rpc: response(404, 'Could not find the function public.upsert_newsletter_subscriber'), expected: 502 },
-    { rpc: response(503, { message: 'service unavailable' }), expected: 503 },
-    { rpc: response(200, { allowed: true }), resend: response(401, { message: 'mock-provider-secret' }), expected: 502 },
-    { rpc: response(200, { allowed: true }), resend: response(429, { message: 'rate limited' }), expected: 429 },
-    { rpc: response(200, { allowed: true }), resend: response(200, {}), expected: 502 }
+    { rpc: response(404, 'Could not find the function public.upsert_newsletter_subscriber'), expected: 502, saved: false },
+    { rpc: response(503, { message: 'service unavailable' }), expected: 503, saved: false },
+    { rpc: response(200, { allowed: true }), resend: response(401, { message: 'mock-provider-secret' }), expected: 202, saved: true },
+    { rpc: response(200, { allowed: true }), resend: response(429, { message: 'rate limited' }), expected: 202, saved: true },
+    { rpc: response(200, { allowed: true }), resend: response(200, {}), expected: 202, saved: true }
   ];
   for (const testCase of cases) {
     const calls = [];
@@ -160,12 +168,34 @@ test('newsletter API maps upstream and provider failures to specific codes', asy
     const result = await run();
     assert.equal(result.code, testCase.expected);
     assert.equal(JSON.stringify(result).includes('mock-provider-secret'), false);
-    if (testCase.expected === 429) {
-      assert.equal(result.body.error, 'Demasiados intentos. Probá más tarde.');
+    if (testCase.saved) {
+      assert.match(result.body.message, /suscrito correctamente/);
     } else {
       assert.equal(result.body.error, 'El servicio de suscripción está momentáneamente no disponible. Inténtalo más tarde.');
     }
   }
+});
+
+test('newsletter API keeps a registered subscription when the welcome email fails', async t => {
+  withEnv(t);
+  const logs = [];
+  const spy = t.mock.method(console, 'error', line => logs.push(String(line)));
+  const calls = [];
+  t.mock.method(global, 'fetch', async (url, options) => {
+    calls.push({ url, options });
+    if (url.includes('/reserve_newsletter_attempt')) return response(200, { allowed: true });
+    if (url.includes('/upsert_newsletter_subscriber')) return response(200, { status: 'pending' });
+    return response(429, { statusCode: 429, message: 'You have exceeded the rate limit. mock-provider-secret', name: 'RateLimitError' });
+  });
+  const result = await run();
+  assert.equal(result.code, 202);
+  assert.match(result.body.message, /suscrito correctamente/);
+  assert.equal(JSON.stringify(result).includes('mock-provider-secret'), false);
+  assert.match(logs.at(-1), /Resend/);
+  assert.equal(JSON.stringify(logs).includes('mock-provider-secret'), false);
+  assert.equal(String(logs.at(-1)).includes('mock-provider-secret'), false);
+  assert.ok(String(logs.at(-1)).includes('***'));
+  spy.mock.restore();
 });
 
 test('newsletter API timeout returns 504 and never leaks secrets to logs', async t => {
