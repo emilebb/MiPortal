@@ -1,0 +1,128 @@
+{
+  "id": "9b27711b2f8f45ef",
+  "name": "MiPortal · Noticias web cada 4 horas",
+  "nodes": [
+    {
+      "id": "b7e02593-8dce-4005-af6f-338adf05c88c",
+      "name": "Cada 4 horas",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 4
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a18833a4-5f97-4af7-84ad-ddf224dc889f",
+      "name": "Leer web.dev",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "url": "https://web.dev/feed.xml",
+        "options": {}
+      }
+    },
+    {
+      "id": "1605ed0f-e680-4829-8cb0-b80d2f378705",
+      "name": "Validar noticias",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "jsCode": "// n8n Code node: original headlines only; never fabricate dates or translations.\nconst seen=new Set();\nreturn $input.all().flatMap(({json:item})=>{\n let url;try{url=new URL(item.link);}catch{return [];}\n if(url.protocol!=='https:'||url.hostname!=='web.dev'||!url.pathname.startsWith('/blog/')||url.username||url.password)return [];\n url.search='';url.hash='';\n const title=String(item.title||'').replace(/<[^>]*>/g,'').trim().slice(0,300);\n const date=new Date(item.isoDate||item.pubDate||'');\n if(!title||!Number.isFinite(date.getTime())||date.getTime()>Date.now()+86400000||seen.has(url.href))return [];\n seen.add(url.href);\n return [{json:{url:url.href,title,description:String(item.contentSnippet||item.description||'').replace(/<[^>]*>/g,'').slice(0,600),source:'web.dev',published_at:date.toISOString(),fetched_at:new Date().toISOString()}}];\n});\n"
+      }
+    },
+    {
+      "id": "1f087d8c-9bc8-4474-b0f2-faae088285b6",
+      "name": "Publicar sin duplicados",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://lfflmyqjoxntoatbbwtf.supabase.co/rest/v1/news_articles?on_conflict=url",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "timeout": 20000
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=minimal"
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Cada 4 horas": {
+      "main": [
+        [
+          {
+            "node": "Leer web.dev",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer web.dev": {
+      "main": [
+        [
+          {
+            "node": "Validar noticias",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar noticias": {
+      "main": [
+        [
+          {
+            "node": "Publicar sin duplicados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Bogota",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false,
+    "executionTimeout": 180
+  }
+}

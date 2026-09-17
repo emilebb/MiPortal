@@ -3,33 +3,32 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self'; connect-src https://api.rss2json.com https://*.supabase.co; img-src 'self' data: https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self'; connect-src 'self' https://api.rss2json.com https://*.supabase.co; img-src 'self' data: https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
   
   <!-- SEO Básico -->
   <title>Contacto - Consultas y Sugerencias sobre MiPortal</title>
   <meta name="description" content="Contactá al equipo de MiPortal para consultas, sugerencias e información sobre el proyecto. Formulario de contacto y correo electrónico disponible.">
-  <link rel="canonical" href="https://miportal.com/contacto.html">
+  <link rel="canonical" href="https://www.miportal.me/contacto.html">
   
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://miportal.com/contacto.html">
+  <meta property="og:url" content="https://www.miportal.me/contacto.html">
   <meta property="og:title" content="Contacto - Consultas y Sugerencias sobre MiPortal">
   <meta property="og:description" content="Contactá al equipo de MiPortal para consultas, sugerencias e información sobre el proyecto. Formulario de contacto y correo electrónico disponible.">
-  <meta property="og:image" content="https://miportal.com/og-image-contacto.jpg">
+  <meta property="og:image" content="https://www.miportal.me/og-image.svg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:locale" content="es_ES">
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="https://miportal.com/contacto.html">
+  <meta name="twitter:url" content="https://www.miportal.me/contacto.html">
   <meta name="twitter:title" content="Contacto - Consultas y Sugerencias sobre MiPortal">
   <meta name="twitter:description" content="Contactá al equipo de MiPortal para consultas, sugerencias e información sobre el proyecto. Formulario de contacto y correo electrónico disponible.">
-  <meta name="twitter:image" content="https://miportal.com/og-image-contacto.jpg">
+  <meta name="twitter:image" content="https://www.miportal.me/og-image.svg">
   
-  <!-- Favicon (CONFIGURAR: Reemplazar con archivo real) -->
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.svg">
   
   <!-- Datos estructurados JSON-LD para página de contacto -->
   <script type="application/ld+json">
@@ -38,11 +37,11 @@
     "@type": "ContactPage",
     "name": "Contacto - MiPortal",
     "description": "Contactá al equipo de MiPortal para consultas, sugerencias e información sobre el proyecto",
-    "url": "https://miportal.com/contacto.html",
+    "url": "https://www.miportal.me/contacto.html",
     "isPartOf": {
       "@type": "WebSite",
       "name": "MiPortal",
-      "url": "https://miportal.com/"
+      "url": "https://www.miportal.me/"
     }
   }
   </script>
@@ -50,9 +49,6 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <!-- Google Tag Manager (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MRGDJ643" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-  <!-- End Google Tag Manager (noscript) -->
   <header class="main-header">
     <div class="logo">
       <div class="logo-text">MiPortal<span>.com</span></div>
@@ -73,13 +69,17 @@
   <main class="container main-layout">
     <section class="contact-section">
       <h2>Contacto</h2>
-      <p>Este formulario es una demostración estática. Actualmente el sitio no procesa ni envía mensajes.</p>
-      <p>Para consultas sobre el proyecto, escribí a <a href="mailto:CONFIGURAR_CORREO@ejemplo.com">CONFIGURAR_CORREO@ejemplo.com</a>.</p>
-      <form class="contact-form">
-        <label for="name">Nombre<input id="name" name="name" type="text" autocomplete="name" required aria-required="true"></label>
-        <label for="message">Mensaje<textarea id="message" name="message" required aria-required="true"></textarea></label>
-        <button type="button" class="search-submit" disabled aria-disabled="true">Formulario en desarrollo</button>
+      <p>Envíanos tu consulta sobre MiPortal o desarrollo web. El formulario envía tu mensaje por correo; la confirmación indica que el servicio lo aceptó, no que ya fue entregado.</p>
+      <p>Para consultas sobre el proyecto, escribí a <a href="mailto:emile.123455@gmail.com">emile.123455@gmail.com</a>.</p>
+      <form id="contactForm" class="contact-form" method="post" action="/api/contact">
+        <label for="name">Nombre<input id="name" name="name" type="text" autocomplete="name" minlength="2" maxlength="100" required aria-required="true"></label>
+        <label for="email">Correo electrónico<input id="email" name="email" type="email" maxlength="254" autocomplete="email" required></label>
+        <label for="message">Mensaje<textarea id="message" name="message" minlength="10" maxlength="5000" required aria-required="true"></textarea></label>
+        <label class="visually-hidden" aria-hidden="true">Sitio web<input name="website" tabindex="-1" autocomplete="off"></label>
+        <button type="submit" class="search-submit">Enviar mensaje</button>
+        <p id="contactStatus" role="status" aria-live="polite" aria-atomic="true"></p>
       </form>
+      <noscript>Activa JavaScript para usar el formulario o utiliza el correo indicado.</noscript>
     </section>
   </main>
 
@@ -97,5 +97,6 @@
   <script src="js/supabase-client.js"></script>
   <script src="js/auth-nav.js"></script>
   <script src="main.js"></script>
+  <script src="js/contact.js"></script>
 </body>
 </html>

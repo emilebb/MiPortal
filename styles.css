@@ -426,6 +426,25 @@ body {
   gap: 0.45rem;
 }
 
+#newsLanguage {
+  padding: 0.62rem 0.85rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: var(--card-bg);
+  color: var(--text-color);
+  font: inherit;
+}
+
+.news-status {
+  color: var(--muted-color);
+  font-size: 0.9rem;
+}
+
+#refreshNews:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .filter-btn {
   padding: 0.62rem 0.85rem;
   color: var(--muted-color);
@@ -996,6 +1015,8 @@ body {
 
   #searchForm {
     width: 100%;
+    flex: 0 1 auto;
+    flex-wrap: wrap;
   }
 
   .category-filters {

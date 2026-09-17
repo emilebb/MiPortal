@@ -1,7 +1,6 @@
 const gtmContainerId = 'GTM-MRGDJ643';
 const cookieConsentKey = 'miportal-cookie-consent';
-const rssNewsUrl = 'https://web.dev/feed.xml';
-const rssNewsLabel = 'web.dev';
+let gtmLoaded = false;
 
 // REVISIÓN JURÍDICA: La configuración de consentimiento debe adaptarse según la jurisdicción aplicable
 // (ej. RGPD en UE, CCPA en California, etc.) y el tipo de datos procesados.
@@ -46,10 +45,16 @@ const initializeGoogleTagManager = () => {
 };
 
 const loadGtmScript = () => {
+  if (gtmLoaded || document.querySelector(`script[data-miportal-gtm="${gtmContainerId}"]`)) {
+    gtmLoaded = true;
+    return;
+  }
   const script = document.createElement('script');
   script.async = true;
+  script.dataset.miportalGtm = gtmContainerId;
   script.src = `https://www.googletagmanager.com/gtm.js?id=${gtmContainerId}`;
   document.head.appendChild(script);
+  gtmLoaded = true;
 };
 
 // Inicializar GTM pero no cargar script hasta consentimiento
@@ -59,45 +64,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const themeToggleBtn = document.getElementById('themeToggle');
   const navToggleBtn = document.getElementById('navToggle');
   const mainNav = document.getElementById('mainNav');
-  const searchForm = document.getElementById('searchForm');
-  const searchInput = document.getElementById('searchInput');
-  const cardsContainer = document.getElementById('cardsContainer');
-  const filterButtons = document.querySelectorAll('.filter-btn');
-  const maxQueryLength = 120;
-  let activeController = null;
-  let currentRequestId = 0;
-
-  const cleanDescription = (html) => {
-    const descriptionDocument = new DOMParser().parseFromString(html || '', 'text/html');
-    descriptionDocument.querySelectorAll('script, style, ol, ul').forEach((element) => element.remove());
-
-    let text = descriptionDocument.body.textContent || '';
-
-    if (/<\/?(?:ol|ul|li|a|p|br)\b/i.test(text)) {
-      const encodedMarkupDocument = new DOMParser().parseFromString(text, 'text/html');
-      encodedMarkupDocument.querySelectorAll('script, style, ol, ul').forEach((element) => element.remove());
-      text = encodedMarkupDocument.body.textContent || '';
-    }
-
-    return text
-      .replace(/https?:\/\/\S+/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
-  };
-
-  const getSafeNewsUrl = (value) => {
-    try {
-      const url = new URL(value);
-
-      if (url.protocol !== 'https:' || url.hostname !== 'news.google.com') {
-        return null;
-      }
-
-      return url.href;
-    } catch {
-      return null;
-    }
-  };
 
   const getSafeHttpsUrl = (value) => {
     try {
@@ -108,55 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  const showStatus = (message, type = 'info') => {
-    const status = document.createElement('div');
-    status.className = `status-message status-${type}`;
-    status.textContent = message;
-    cardsContainer.replaceChildren(status);
-  };
-
-  const showLoading = (message) => {
-    const loading = document.createElement('div');
-    loading.className = 'loading-state';
-    loading.innerHTML = `
-      <div class="loading-spinner"></div>
-      <p>${message}</p>
-    `;
-    cardsContainer.replaceChildren(loading);
-  };
-
-  const showEmpty = (message) => {
-    const empty = document.createElement('div');
-    empty.className = 'empty-state';
-    empty.innerHTML = `
-      <div class="empty-icon">📭</div>
-      <p>${message}</p>
-    `;
-    cardsContainer.replaceChildren(empty);
-  };
-
-  const showError = (message) => {
-    const error = document.createElement('div');
-    error.className = 'error-state';
-    error.innerHTML = `
-      <div class="error-icon">⚠️</div>
-      <p>${message}</p>
-      <button type="button" class="retry-button">Intentar nuevamente</button>
-    `;
-    error.querySelector('.retry-button').addEventListener('click', () => {
-      location.reload();
-    });
-    cardsContainer.replaceChildren(error);
-  };
-
-  const updateLastUpdated = (source) => {
-    const lastUpdated = document.getElementById('lastUpdated');
-    if (!lastUpdated) return;
-
-    const now = new Date();
-    const timeString = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-    lastUpdated.textContent = `Última actualización: ${timeString} (${source})`;
-  };
 
   const setupCookieNotice = () => {
     const savedConsent = localStorage.getItem(cookieConsentKey);
@@ -226,18 +143,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const setupNewsletterForm = () => {
-    const newsletterForm = document.getElementById('newsletterForm');
-    const newsletterStatus = document.getElementById('newsletterStatus');
-
-    if (!newsletterForm || !newsletterStatus) {
-      return;
-    }
-
-    newsletterForm.addEventListener('submit', (event) => {
-      event.preventDefault();
-      newsletterStatus.textContent = 'La suscripción todavía no está conectada a un backend.';
-      newsletterStatus.classList.add('is-visible');
-    });
+    // Newsletter behavior is loaded only on pages that contain its form.
   };
 
   setupCookieNotice();
@@ -406,146 +312,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setupRecursos();
 
-  const createNewsCard = ({ tagText, title, description, imageUrl, link, pubDate }) => {
-    const article = document.createElement('article');
-    article.className = 'card news-card';
-
-    if (imageUrl) {
-      const image = document.createElement('img');
-      image.src = imageUrl;
-      image.alt = `Imagen: ${title || 'noticia'}`;
-      image.loading = 'lazy';
-      image.onerror = function() {
-        this.style.display = 'none';
-        article.classList.remove('has-image');
-      };
-      image.onload = function() {
-        article.classList.add('has-image');
-      };
-      article.appendChild(image);
-    }
-
-    const cardBody = document.createElement('div');
-    cardBody.className = 'card-body';
-
-    const tag = document.createElement('span');
-    tag.className = 'tag';
-    tag.textContent = tagText;
-
-    const headline = document.createElement('h3');
-    headline.textContent = title;
-
-    const descriptionText = document.createElement('p');
-    descriptionText.className = 'card-description';
-    descriptionText.textContent = description;
-
-    cardBody.append(tag, headline, descriptionText);
-
-    if (pubDate) {
-      const dateElement = document.createElement('time');
-      dateElement.className = 'news-date';
-      try {
-        const date = new Date(pubDate);
-        dateElement.textContent = date.toLocaleDateString('es-ES', {
-          day: 'numeric',
-          month: 'short',
-          year: 'numeric'
-        });
-        dateElement.setAttribute('datetime', pubDate);
-        cardBody.appendChild(dateElement);
-      } catch (e) {
-        // Si la fecha no es válida, no mostrarla
-      }
-    }
-
-    if (link) {
-      const readMore = document.createElement('a');
-      readMore.className = 'read-more';
-      readMore.href = link;
-      readMore.target = '_blank';
-      readMore.rel = 'noopener noreferrer';
-      readMore.textContent = `Leer noticia en ${tagText} →`;
-      cardBody.appendChild(readMore);
-    }
-
-    article.appendChild(cardBody);
-    return article;
-  };
-
-  const cargarNoticiasDirectas = async (query = '') => {
-    const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-    const terms = normalize(query.trim().slice(0, maxQueryLength)).split(/\s+/).filter(Boolean);
-    activeController?.abort();
-
-    const controller = new AbortController();
-    const requestId = ++currentRequestId;
-    activeController = controller;
-    const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(rssNewsUrl)}`;
-
-    showLoading(`Cargando noticias de ${rssNewsLabel}...`);
-
-    try {
-      const response = await fetch(proxyUrl, {
-        method: 'GET',
-        headers: { Accept: 'application/json' },
-        signal: controller.signal
-      });
-      if (!response.ok) {
-        throw new Error('No se pudo conectar con el feed de web.dev');
-      }
-
-      const data = await response.json();
-      if (requestId !== currentRequestId || data?.status !== 'ok' || !Array.isArray(data.items)) {
-        throw new Error('No se encontraron noticias en el feed de web.dev');
-      }
-
-      const fragment = document.createDocumentFragment();
-      let validItems = 0;
-
-      data.items.filter(item => {
-        const url = getSafeHttpsUrl(item?.link);
-        if (!url || new URL(url).hostname !== 'web.dev' || !new URL(url).pathname.startsWith('/blog/')) return false;
-        const text = normalize(cleanDescription(`${item.title || ''} ${item.description || item.content || ''}`));
-        return terms.every(term => text.includes(term));
-      }).slice(0, 12).forEach((item) => {
-        if (!item || typeof item.title !== 'string') {
-          return;
-        }
-
-        const title = cleanDescription(item.title).slice(0, 300);
-        const description = cleanDescription(item.description || item.content).slice(0, 600) || 'Lee la noticia completa en su fuente original.';
-        const imageUrl = getSafeHttpsUrl(item.thumbnail || (item.enclosure && item.enclosure.link));
-        const articleUrl = new URL(item.link);
-        articleUrl.searchParams.set('hl', 'es');
-        const link = articleUrl.href;
-        const pubDate = item.pubDate;
-
-        fragment.appendChild(createNewsCard({ tagText: rssNewsLabel, title, description, imageUrl, link, pubDate }));
-        validItems++;
-      });
-
-      if (requestId !== currentRequestId) {
-        return;
-      }
-
-      if (validItems === 0) {
-        showEmpty(terms.length ? 'No hay noticias de desarrollo web para ese tema entre los titulares disponibles. Probá con otro término.' : 'No se encontraron noticias de desarrollo web en este momento.');
-        return;
-      }
-
-      cardsContainer.replaceChildren(fragment);
-      updateLastUpdated(rssNewsLabel);
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        return;
-      }
-
-      if (requestId === currentRequestId) {
-        showError(`No se pudieron cargar las noticias de web.dev: ${error.message}. Probá nuevamente en unos segundos.`);
-      }
-    }
-  };
-
   if (themeToggleBtn) {
     themeToggleBtn.addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
@@ -590,27 +356,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (cardsContainer && searchForm && searchInput) {
-    searchForm.addEventListener('submit', (event) => {
-      event.preventDefault();
-      cargarNoticiasDirectas(searchInput.value.trim());
-    });
-
-    filterButtons.forEach((button) => {
-      button.addEventListener('click', () => {
-        searchInput.value = button.dataset.query || '';
-        filterButtons.forEach((filterButton) => {
-          filterButton.classList.remove('active');
-          filterButton.setAttribute('aria-pressed', 'false');
-        });
-        button.classList.add('active');
-        button.setAttribute('aria-pressed', 'true');
-
-        cargarNoticiasDirectas(searchInput.value);
-      });
-    });
-
-    searchInput.value = new URLSearchParams(window.location.search).get('q') || '';
-    cargarNoticiasDirectas(searchInput.value);
-  }
 });

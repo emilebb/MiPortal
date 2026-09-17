@@ -58,10 +58,12 @@
   };
 
   const showListStates = (loading, empty, error) => {
-    loadingState.hidden = !loading;
-    emptyState.hidden = !empty;
-    errorState.hidden = !error;
-    list.hidden = loading || empty || error;
+    const visibleState = loading ? loadingState : empty ? emptyState : error ? errorState : list;
+    [loadingState, emptyState, errorState, list].forEach((state) => {
+      const visible = state === visibleState;
+      state.hidden = !visible;
+      state.setAttribute('aria-hidden', String(!visible));
+    });
   };
 
   const renderRows = (resources) => {

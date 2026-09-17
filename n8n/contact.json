@@ -1,0 +1,145 @@
+{
+  "id": "799affdb3ae143f3",
+  "name": "MiPortal · Avisos de contacto cada 5 minutos",
+  "nodes": [
+    {
+      "id": "38660e53-4a62-4c28-8e9b-76de23cd37ad",
+      "name": "Cada 5 minutos",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        300
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "95101388-b1d7-471b-a5a6-f7cafa7a8122",
+      "name": "Reclamar mensaje pendiente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://lfflmyqjoxntoatbbwtf.supabase.co/rest/v1/rpc/claim_contact",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{}",
+        "options": {
+          "timeout": 20000
+        }
+      }
+    },
+    {
+      "id": "a73f9c09-5ebe-4eeb-bead-48c317889999",
+      "name": "Avisar por Resend",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        440,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.resend.com/emails",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ \"miportal-contact/\" + $json.id }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({from:\"MiPortal <no-reply@auth.miportal.me>\",to:[\"emile.123455@gmail.com\"],subject:\"Nuevo mensaje de MiPortal\",reply_to:$json.email,text:\"Nombre: \" + $json.name + \"\\nCorreo: \" + $json.email + \"\\n\\n\" + $json.message}) }}",
+        "options": {
+          "timeout": 20000
+        }
+      }
+    },
+    {
+      "id": "0fbdbaf3-cbb5-465e-9662-3490a360fc86",
+      "name": "Marcar aviso enviado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        660,
+        300
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://lfflmyqjoxntoatbbwtf.supabase.co/rest/v1/rpc/complete_contact",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({p_id:$(\"Reclamar mensaje pendiente\").item.json.id,p_lease_id:$(\"Reclamar mensaje pendiente\").item.json.lease_id}) }}",
+        "options": {
+          "timeout": 20000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Cada 5 minutos": {
+      "main": [
+        [
+          {
+            "node": "Reclamar mensaje pendiente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reclamar mensaje pendiente": {
+      "main": [
+        [
+          {
+            "node": "Avisar por Resend",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avisar por Resend": {
+      "main": [
+        [
+          {
+            "node": "Marcar aviso enviado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Bogota",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "none",
+    "saveManualExecutions": false,
+    "executionTimeout": 180
+  }
+}

@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://api.rss2json.com https://*.supabase.co; img-src 'self' data: https://www.googletagmanager.com https://web.dev https://storage.googleapis.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://api.rss2json https://*.supabase.co; img-src 'self' data: https://www.googletagmanager.com https://web.dev https://storage.googleapis.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
   
   <!-- SEO Básico -->
   <title>Noticias de desarrollo web | MiPortal</title>
-  <meta name="description" content="Consultá noticias de desarrollo web de web.dev y buscá entre los titulares disponibles. HTML, CSS, JavaScript, navegadores y rendimiento. Cada resultado abre en su fuente original.">
+  <meta name="description" content="Novedades de desarrollo web de fuentes especializadas en español e inglés. Filtrá por CSS, JavaScript, frameworks, accesibilidad e idioma.">
   <link rel="canonical" href="https://www.miportal.me/noticias.html">
   
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.miportal.me/noticias.html">
   <meta property="og:title" content="Noticias de desarrollo web | MiPortal">
-  <meta property="og:description" content="Consultá noticias de desarrollo web de web.dev y buscá entre los titulares disponibles. HTML, CSS, JavaScript, navegadores y rendimiento. Cada resultado abre en su fuente original.">
-  <meta property="og:image" content="https://www.miportal.me/og-image-noticias.jpg">
+  <meta property="og:description" content="Novedades de desarrollo web de fuentes especializadas en español e inglés. Filtrá por tema e idioma y visitá la fuente original.">
+  <meta property="og:image" content="https://www.miportal.me/og-image.svg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:locale" content="es_ES">
@@ -24,12 +24,11 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="https://www.miportal.me/noticias.html">
   <meta name="twitter:title" content="Noticias de desarrollo web | MiPortal">
-  <meta name="twitter:description" content="Consultá noticias de desarrollo web de web.dev y buscá entre los titulares disponibles. HTML, CSS, JavaScript, navegadores y rendimiento. Cada resultado abre en su fuente original.">
-  <meta name="twitter:image" content="https://www.miportal.me/og-image-noticias.jpg">
+  <meta name="twitter:description" content="Novedades de desarrollo web de fuentes especializadas en español e inglés. Filtrá por tema e idioma y visitá la fuente original.">
+  <meta name="twitter:image" content="https://www.miportal.me/og-image.svg">
   
-  <!-- Favicon (CONFIGURAR: Reemplazar con archivo real) -->
-  <link rel="icon" type="image/x-icon" href="/favicon.ico">
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.svg">
   
   <!-- Datos estructurados JSON-LD para colección de noticias -->
   <script type="application/ld+json">
@@ -37,7 +36,7 @@
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Noticias - MiPortal",
-    "description": "Consultá noticias de desarrollo web de web.dev y buscá entre los titulares disponibles",
+    "description": "Noticias de desarrollo web de fuentes especializadas en español e inglés",
     "url": "https://www.miportal.me/noticias.html",
     "isPartOf": {
       "@type": "WebSite",
@@ -52,10 +51,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
-<body data-news-query="noticias">
-  <!-- Google Tag Manager (noscript) -->
-  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-MRGDJ643" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-  <!-- End Google Tag Manager (noscript) -->
+<body>
   <header class="main-header">
     <div class="logo">
       <div class="logo-text">MiPortal<span>.me</span></div>
@@ -79,16 +75,27 @@
         <h1>Noticias de desarrollo web</h1>
         <form id="searchForm">
           <label for="searchInput" class="visually-hidden">Buscar noticias</label>
-          <input type="search" id="searchInput" name="q" placeholder="Buscar noticias de desarrollo web..." autocomplete="off" maxlength="120" required aria-required="true">
+          <input type="search" id="searchInput" name="q" placeholder="Buscar noticias de desarrollo web..." autocomplete="off" maxlength="120" aria-describedby="searchHelp">
           <button type="submit" class="search-submit">Buscar noticias</button>
         </form>
-        <p class="privacy-note">📰 <strong>Fuentes:</strong> Novedades de desarrollo web publicadas en web.dev. Cada resultado abre en su fuente original.</p>
+        <p class="privacy-note" id="searchHelp">Buscá palabras completas en títulos, resúmenes y etiquetas originales. Deben coincidir todas; los acentos no importan. La búsqueda se combina con categoría e idioma.</p>
+        <label for="newsLanguage">Idioma original</label>
+        <select id="newsLanguage">
+          <option value="">Todos los idiomas</option>
+          <option value="es">Solo español</option>
+        </select>
+        <button type="button" class="filter-btn" id="resetNews">Restablecer filtros</button>
+        <button type="button" class="filter-btn" id="refreshNews">Actualizar fuentes</button>
         <div class="category-filters" role="group" aria-label="Filtros de categoría">
           <button type="button" class="filter-btn active" data-query="" aria-pressed="true">🌐 Todas</button>
           <button type="button" class="filter-btn" data-query="css" aria-pressed="false">🎨 CSS</button>
           <button type="button" class="filter-btn" data-query="javascript" aria-pressed="false">💻 JavaScript</button>
+          <button type="button" class="filter-btn" data-query="frameworks" aria-pressed="false">Frameworks</button>
+          <button type="button" class="filter-btn" data-query="accessibility" aria-pressed="false">Accesibilidad</button>
+          <button type="button" class="filter-btn" data-query="platform" aria-pressed="false">HTML y navegadores</button>
         </div>
       </section>
+      <p id="newsStatus" class="news-status" role="status" aria-live="polite"></p>
       <section class="cards-grid">
         <div id="cardsContainer" class="cards-grid-content">
           <div class="loading-state">
@@ -102,13 +109,24 @@
     <aside class="sidebar">
       <div class="widget">
         <h3>Sobre las noticias</h3>
-        <p>Noticias internacionales de la plataforma web, publicadas por web.dev. Los titulares están en inglés; los enlaces solicitan la versión en español cuando está disponible. El buscador filtra los titulares y resúmenes originales. Cada resultado abre en su fuente original.</p>
+        <p>Fuentes especializadas, sin restricción de país. Para preferir contenido en español, elegí «Solo español»; «Todos los idiomas» incluye también la actualidad internacional en inglés. Conservamos el idioma y enlace originales, sin traducciones automáticas.</p>
+        <ul>
+          <li><a href="https://www.paradigmadigital.com/feed/">Paradigma Digital</a> — español</li>
+          <li><a href="https://www.campusmvp.es/recursos/syndication.axd">campusMVP</a> — español</li>
+          <li><a href="https://www.smashingmagazine.com/feed/">Smashing Magazine</a> — inglés</li>
+          <li><a href="https://css-tricks.com/feed/">CSS-Tricks</a> — inglés</li>
+          <li><a href="https://react.dev/rss.xml">React</a> — inglés</li>
+        </ul>
+        <p>Consultamos hasta 10 entradas por fuente mediante rss2json. En fuentes generales seleccionamos temas web. Ordenamos por fecha de publicación recibida (sin asumir hora ni zona); a igual fecha, español primero. Las fechas ausentes aparecen al final. El servicio puede usar caché y no ofrece un archivo completo ni cobertura en tiempo real.</p>
       </div>
       <div class="widget newsletter-widget">
         <h3>Recibí novedades</h3>
-        <form id="newsletterForm" class="newsletter-form" action="#" method="post">
+        <form id="newsletterForm" class="newsletter-form" action="/api/newsletter" method="post">
           <label for="newsletterEmail">Correo electrónico
             <input id="newsletterEmail" name="email" type="email" autocomplete="email" required aria-required="true">
+          </label>
+          <label class="visually-hidden" aria-hidden="true">Sitio web
+            <input name="website" tabindex="-1" autocomplete="off">
           </label>
           <button type="submit">Suscribirme</button>
           <p id="newsletterStatus" class="newsletter-status" role="status" aria-live="polite"></p>
@@ -131,5 +149,7 @@
   <script src="js/supabase-client.js"></script>
   <script src="js/auth-nav.js"></script>
   <script src="main.js"></script>
+  <script type="module" src="js/news-page.mjs"></script>
+  <script src="js/newsletter.js"></script>
 </body>
 </html>

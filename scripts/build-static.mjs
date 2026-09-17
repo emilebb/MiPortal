@@ -26,6 +26,8 @@ const entries = [
   'robots.txt',
   'sitemap.xml',
   'og-image.svg',
+  'favicon.svg',
+  'apple-touch-icon.svg',
   'supabase-config.js',
   'js',
   'admin'

@@ -1,6 +1,4 @@
 # robots.txt para MiPortal
-# CONFIGURAR: Actualizar el dominio cuando el sitio esté en producción
-
 User-agent: *
 Allow: /
 
@@ -16,13 +14,8 @@ Disallow: /.DS_Store
 # El panel administrativo no debe indexarse ni seguirse
 Disallow: /admin/
 
-# Páginas legales pueden tener noindex (opcional)
-# Descomentar si no quieres indexar páginas legales
-# Disallow: /politica-de-privacidad.html
-# Disallow: /terminos-y-condiciones.html
-
 # Sitemap
-Sitemap: https://miportal.com/sitemap.xml
+Sitemap: https://www.miportal.me/sitemap.xml
 
 # Crawl-delay (opcional, ajustar según necesidades del servidor)
 # Crawl-delay: 1

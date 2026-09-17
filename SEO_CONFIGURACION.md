@@ -19,20 +19,15 @@ Cada página tiene una meta description única y descriptiva que incluye:
 
 ### 3. URLs Canónicas
 Todas las páginas incluyen `<link rel="canonical">` apuntando a:
-- `https://miportal.com/` (CONFIGURAR: Cambiar al dominio real)
+- `https://www.miportal.me/` (dominio confirmado en el código fuente)
 
 ### 4. Open Graph y Twitter Cards
 Cada página tiene etiquetas completas de:
 - **Open Graph**: og:type, og:url, og:title, og:description, og:image, og:image:width, og:image:height, og:locale
 - **Twitter**: twitter:card, twitter:url, twitter:title, twitter:description, twitter:image
 
-**Imágenes requeridas (CONFIGURAR):**
-- `/og-image.jpg` (1200x630px) - Principal
-- `/og-image-noticias.jpg` (1200x630px) - Noticias
-- `/og-image-recursos.jpg` (1200x630px) - Recursos
-- `/og-image-contacto.jpg` (1200x630px) - Contacto
-- `/og-image-sobre.jpg` (1200x630px) - Sobre nosotros
-- `/og-image-legal.jpg` (1200x630px) - Páginas legales
+**Imagen compartida verificada:** `/og-image.svg` (1200x630px), usada por las
+páginas públicas y copiada al build.
 
 ### 5. Datos Estructurados JSON-LD
 - **WebSite**: Schema.org con SearchAction
@@ -48,9 +43,9 @@ Cada página tiene etiquetas completas de:
 
 ### 7. Idioma y Favicon
 - **lang="es"**: Mantenido en todas las páginas
-- **Favicon**: Enlaces añadidos (CONFIGURAR: Crear archivos reales)
-  - `/favicon.ico`
-  - `/apple-touch-icon.png` (180x180px)
+- **Favicon y marca compartida**: `favicon.svg`, `apple-touch-icon.svg` y
+  `og-image.svg` son locales y se incluyen en el build; usan la marca MiPortal
+  existente.
 
 ### 8. Archivos SEO Generados
 - **robots.txt**: Configuración básica con sitemap
@@ -59,7 +54,7 @@ Cada página tiene etiquetas completas de:
 ## Configuración Pendiente ⚠️
 
 ### Dominio Real
-Cambiar `https://miportal.com/` por el dominio real en:
+Las referencias de dominio confirmadas usan `https://www.miportal.me/` en:
 - Todas las URLs canónicas
 - Open Graph URLs
 - Twitter URLs
@@ -68,16 +63,9 @@ Cambiar `https://miportal.com/` por el dominio real en:
 - sitemap.xml
 
 ### Imágenes
-Crear y subir las siguientes imágenes:
-- **og-image.jpg** (1200x630px) - Para página principal
-- **og-image-noticias.jpg** (1200x630px) - Para noticias
-- **og-image-recursos.jpg** (1200x630px) - Para recursos
-- **og-image-contacto.jpg** (1200x630px) - Para contacto
-- **og-image-sobre.jpg** (1200x630px) - Para sobre nosotros
-- **og-image-legal.jpg** (1200x630px) - Para páginas legales
-- **logo.png** - Para datos estructurados Organization
-- **favicon.ico** - Favicon del sitio
-- **apple-touch-icon.png** (180x180px) - Para iOS
+`og-image.svg`, `favicon.svg` y `apple-touch-icon.svg` están presentes y se
+incluyen en el build. El logo de Organization sigue pendiente porque no hay un
+archivo confirmado separado para ese dato estructurado.
 
 ### Datos de Organización
 Completar en index.html JSON-LD Organization:
@@ -137,7 +125,7 @@ Configurar Google Analytics 4 para:
 
 ## Checklist de Lanzamiento
 
-- [ ] Cambiar dominio `https://miportal.com/` al real
+- [x] Confirmar dominio `https://www.miportal.me/` en páginas públicas
 - [ ] Crear y subir imágenes Open Graph
 - [ ] Crear favicon y apple-touch-icon
 - [ ] Completar datos de organización en JSON-LD

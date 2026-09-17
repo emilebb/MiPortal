@@ -9,8 +9,8 @@
 // Se conserva SUPABASE_ANON_KEY como alias de compatibilidad: si
 // SUPABASE_PUBLISHABLE_KEY no está definida, se usa la anon key.
 //
-// Estas dos son claves PÚBLICAS por diseño (viven en el navegador). La
-// service_role key NO se usa nunca en este proyecto.
+// Estos valores son PÚBLICOS por diseño (viven en el navegador). Las claves
+// privadas de api/contact.js nunca se incluyen en la configuración generada.
 //
 // Si faltan, se genera un archivo con placeholders y se advierte: el sitio
 // mostrará un mensaje de "configuración pendiente" en lugar de romperse.

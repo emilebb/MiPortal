@@ -10,14 +10,26 @@ const root = new URL('../', import.meta.url);
 const mock = `
   window.pending = [];
   window.violations = [];
+  if (location.search.includes('timeout')) {
+    const originalTimeout = window.setTimeout;
+    window.setTimeout = (callback, delay, ...args) =>
+      originalTimeout(callback, delay === 10000 ? 50 : delay, ...args);
+  }
   addEventListener('DOMContentLoaded', () => {
     setTimeout(() => { window.testReady = true; }, 0);
   });
   addEventListener('securitypolicyviolation', e => violations.push(e.violatedDirective));
-  window.fetch = () => new Promise(resolve => pending.push(resolve));
+  window.fetch = (url, { signal } = {}) => new Promise((resolve, reject) => {
+    const entry = { url, resolve };
+    pending.push(entry);
+    signal?.addEventListener('abort', () => {
+      pending = pending.filter(item => item !== entry);
+      reject(new Error('Aborted'));
+    });
+  });
   const query = {
     select() { return this; }, eq() { return this; },
-    order() { return new Promise(resolve => pending.push(resolve)); }
+    order() { return new Promise(resolve => pending.push({ resolve })); }
   };
   if (!location.search.includes('missing')) {
     window.MiPortalSupabase = { from: () => query };
@@ -31,8 +43,9 @@ test('resource and news states in Chrome with page CSP', async (t) => {
       if (path === '/mock.js') {
         res.setHeader('Content-Type', 'text/javascript');
         res.end(mock);
-      } else if (path === '/main.js' || path === '/styles.css') {
-        res.setHeader('Content-Type', path.endsWith('.js')
+      } else if (['/main.js', '/styles.css', '/js/news-page.mjs',
+        '/js/news-feed.mjs'].includes(path)) {
+        res.setHeader('Content-Type', /\.m?js$/.test(path)
           ? 'text/javascript' : 'text/css');
         res.end(await readFile(new URL(path.slice(1), root)));
       } else if (['/recursos.html', '/noticias.html'].includes(path)) {
@@ -40,7 +53,10 @@ test('resource and news states in Chrome with page CSP', async (t) => {
         res.setHeader('Content-Type', 'text/html');
         res.end(html.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '')
           .replace('</body>',
-            '<script src="/mock.js"></script><script src="/main.js"></script></body>'));
+            '<script src="/mock.js"></script><script src="/main.js"></script>' +
+            (path === '/noticias.html'
+              ? '<script type="module" src="/js/news-page.mjs"></script>' : '') +
+            '</body>'));
       } else {
         res.writeHead(404).end();
       }
@@ -113,8 +129,10 @@ test('resource and news states in Chrome with page CSP', async (t) => {
         assert.equal(await evaluate(`document.querySelector('${grid}').getAttribute('aria-busy')`), 'true');
       }
       const settle = async payload => {
-        await evaluate(`pending.shift()(${resources ? JSON.stringify(payload)
-          : `{ok: true, json: async () => (${JSON.stringify(payload)})}`})`);
+        await evaluate(`pending.splice(0).forEach(entry => entry.resolve(${resources
+          ? JSON.stringify(payload)
+          : `{ok: true, json: async () => (${JSON.stringify(payload)})}`}))`);
+        await waitFor(`!document.querySelector('${grid}').hasAttribute('aria-busy')`);
       };
       await settle(resources ? { data: [] } : { status: 'ok', items: [] });
       assert.equal(await evaluate(`!!document.querySelector('${grid} .empty-state .empty-icon')`), true);
@@ -128,11 +146,11 @@ test('resource and news states in Chrome with page CSP', async (t) => {
       assert.equal(await evaluate(`document.querySelector('${grid}').hasAttribute('aria-busy')`), false);
       assert.equal(await evaluate(`document.querySelector('${grid} .retry-button')?.hasAttribute('onclick')`), false);
       await evaluate(`document.querySelector('${grid} .retry-button').click()`);
-      await waitFor(`!!document.querySelector('${grid} .loading-spinner') && window.pending?.length === 1`);
+      await waitFor(`!!document.querySelector('${grid} .loading-spinner') && window.pending?.length === ${resources ? 1 : 5}`);
       await settle(resources ? { data: [{ title: 'Recovered resource',
         description: 'Resource description', url: 'https://example.com' }] }
-        : { status: 'ok', items: [{ title: 'Recovered news',
-          description: 'News description', link: 'https://web.dev/blog/css-news?hl=en' },
+        : { status: 'ok', items: [{ title: 'Fixture: recovered CSS news',
+          description: 'Test-only description', link: 'https://css-tricks.com/test-fixture/' },
           { title: 'International news', link: 'https://elpais.com/internacional/noticia.html' }] });
       assert.equal(await evaluate(`document.querySelectorAll('${grid} .card').length`), 1);
       assert.equal(await evaluate(`!!document.querySelector('${grid} .loading-state, ${grid} .error-state')`), false);
@@ -140,9 +158,91 @@ test('resource and news states in Chrome with page CSP', async (t) => {
       assert.deepEqual(await evaluate(`violations.filter(v => v.startsWith('script-src'))`), []);
     });
   }
+  await t.test('news: combined filters, safe attribution, partial failure and cache', async () => {
+    await navigate('noticias.html');
+    const fixtures = {
+      'https://www.paradigmadigital.com/feed/': [{
+        title: 'Angular Zoneless: detección de cambios',
+        link: 'https://www.paradigmadigital.com/dev/angular-zoneless-siguiente-paso-evolucion-deteccion-cambios/',
+        pubDate: '2026-09-04 06:00:00'
+      }],
+      'https://www.smashingmagazine.com/feed/': [{
+        title: 'Stop Treating CSS Container Queries Like Traditional Media Queries',
+        link: 'https://smashingmagazine.com/2026/09/stop-treating-css-container-queries-traditional-media-queries/',
+        pubDate: '2026-09-16 10:00:00', categories: ['CSS'],
+        description: '<p>Fixture markup</p><script>window.injected=true</script>'
+      }],
+      'https://www.campusmvp.es/recursos/syndication.axd': [{
+        title: 'Fixture: Blazor sin fecha', pubDate: null,
+        link: 'https://www.campusmvp.es/recursos/test-fixture'
+      }]
+    };
+    await evaluate(`pending.splice(0).forEach(({url, resolve}) => {
+      const feed = new URL(url).searchParams.get('rss_url');
+      resolve({ok: true, json: async () => ({status: 'ok',
+        items: (${JSON.stringify(fixtures)})[feed] || []})});
+    })`);
+    await waitFor(`document.querySelectorAll('.news-card').length === 3`);
+    assert.deepEqual(await evaluate(`Array.from(document.querySelectorAll('.news-date'),
+      node => [node.textContent, node.getAttribute('datetime')])`), [
+      ['Publicado: 16/09/2026', '2026-09-16'],
+      ['Publicado: 04/09/2026', '2026-09-04'], ['Fecha no disponible', null]
+    ]);
+    assert.equal(await evaluate('window.injected === undefined'), true);
+    assert.equal(await evaluate(`document.querySelector('.news-card a').href`),
+      fixtures['https://www.smashingmagazine.com/feed/'][0].link);
+    assert.equal(await evaluate(`document.querySelector('.news-card a').rel`),
+      'noopener noreferrer');
+    assert.match(await evaluate(`document.querySelector('.news-card .tag').textContent`),
+      /Smashing Magazine · Inglés/);
+    await evaluate(`searchInput.value = 'angular deteccion';
+      searchForm.requestSubmit();
+      document.querySelector('[data-query="javascript"]').click();
+      newsLanguage.value = 'es'; newsLanguage.dispatchEvent(new Event('change'));`);
+    assert.equal(await evaluate(`document.querySelectorAll('.news-card').length`), 1);
+    assert.equal(await evaluate('searchInput.value'), 'angular deteccion');
+    await evaluate(`document.querySelector('[data-query="css"]').click()`);
+    assert.equal(await evaluate(`!!document.querySelector('.empty-state')`), true);
+    await evaluate('resetNews.click()');
+    assert.equal(await evaluate(`document.querySelectorAll('.news-card').length`), 3);
+    await evaluate(`searchInput.value = 'Java'; searchForm.requestSubmit()`);
+    assert.equal(await evaluate(`!!document.querySelector('.empty-state')`), true);
+    await evaluate(`searchInput.value = ''; searchForm.requestSubmit()`);
+    assert.equal(await evaluate(`document.querySelectorAll('.news-card').length`), 3);
+    assert.equal(await evaluate('pending.length'), 0);
+    await evaluate('refreshNews.click()');
+    assert.equal(await evaluate('refreshNews.disabled'), true);
+    await evaluate(`pending.splice(0).forEach(({url, resolve}) => resolve({
+      ok: true, json: async () => new URL(url).searchParams.get('rss_url')
+        === 'https://www.smashingmagazine.com/feed/' ? {status: 'error'}
+        : {status: 'ok', items: []}
+    }))`);
+    await waitFor('!refreshNews.disabled');
+    assert.equal(await evaluate(`document.querySelectorAll('.news-card').length`), 1);
+    assert.match(await evaluate('newsStatus.textContent'), /Smashing Magazine/);
+    await evaluate('refreshNews.click()');
+    await evaluate(`pending.splice(0).forEach(({resolve}) => resolve({ok: false}))`);
+    await waitFor('!refreshNews.disabled');
+    assert.equal(await evaluate(`document.querySelectorAll('.news-card').length`), 1);
+    assert.equal(await evaluate(`cardsContainer.hasAttribute('aria-busy')`), false);
+    assert.match(await evaluate('lastUpdated.textContent'), /^Última consulta:/);
+    assert.deepEqual(await evaluate(`violations.filter(v => v.startsWith('script-src'))`), []);
+  });
   await t.test('resources: missing configuration has message and no retry', async () => {
     await navigate('recursos.html?missing');
     assert.equal(await evaluate(`!!document.querySelector('#resourcesGrid .error-state p')?.textContent.includes('no está configurada')`), true);
     assert.equal(await evaluate(`document.querySelector('#resourcesGrid .retry-button')`), null);
+  });
+  await t.test('news: timed out requests release controls and allow retry', async () => {
+    await navigate('noticias.html?timeout');
+    await waitFor(`!!document.querySelector('#cardsContainer .error-state')`);
+    assert.equal(await evaluate('refreshNews.disabled'), false);
+    assert.equal(await evaluate('cardsContainer.hasAttribute("aria-busy")'), false);
+    assert.equal(await evaluate('pending.length'), 0);
+    await evaluate(`document.querySelector('#cardsContainer .retry-button').click();
+      pending.splice(0).forEach(({resolve}) => resolve({ok: true,
+        json: async () => ({status: 'ok', items: []})}));`);
+    await waitFor(`!!document.querySelector('#cardsContainer .empty-state')`);
+    assert.equal(await evaluate('refreshNews.disabled'), false);
   });
 });

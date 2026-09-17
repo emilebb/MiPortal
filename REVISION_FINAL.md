@@ -62,13 +62,11 @@
 ## Riesgos y Tareas Pendientes
 
 ### Riesgos Técnicos
-1. **Imágenes Open Graph**: Las imágenes referenciadas no existen (og-image.jpg, etc.)
-   - **Impacto**: Visualización incompleta en redes sociales
-   - **Solución**: Crear imágenes 1200x630px según documentación SEO
+1. **Imagen Open Graph**: `og-image.svg` existe, usa la marca existente y se
+   incluye en el build estático.
 
-2. **Favicon**: Archivos favicon.ico y apple-touch-icon.png no existen
-   - **Impacto**: Icono de navegador no personalizado
-   - **Solución**: Crear archivos de favicon según documentación SEO
+2. **Favicon**: `favicon.svg` y `apple-touch-icon.svg` existen y se incluyen
+   en el build estático.
 
 3. **Logo PNG**: logo.png referenciado en JSON-LD no existe
    - **Impacto**: Schema.org Organization incompleto
@@ -84,7 +82,7 @@
    - **Solución**: Implementar backend cuando esté disponible
 
 ### Tareas de Configuración Pendientes
-1. **Dominio real**: Cambiar `https://miportal.com/` al dominio de producción
+1. **Dominio real**: Las referencias públicas usan `https://www.miportal.me/`.
 2. **Datos de contacto**: Reemplazar `CONFIGURAR_CORREO@ejemplo.com` con correo real
 3. **Datos del proyecto**: Completar `CONFIGURAR_NOMBRE_RESPONSABLE` y otros campos
 4. **Fecha legal**: Actualizar `CONFIGURAR_FECHA` en documentos legales
@@ -157,10 +155,10 @@
 ## Recomendaciones para Producción
 
 ### Inmediatas (antes de lanzamiento)
-1. Crear imágenes Open Graph (6 imágenes 1200x630px)
-2. Crear favicon y apple-touch-icon
+1. Verificar las imágenes y assets locales en el entorno de producción
+2. Aplicar las migraciones y configurar secretos de servidor
 3. Reemplazar todos los campos CONFIGURAR con datos reales
-4. Cambiar dominio `https://miportal.com/` al real
+4. Verificar el dominio confirmado en el entorno de producción
 5. Probar en múltiples navegadores y dispositivos
 
 ### Corto plazo (primeras semanas)
