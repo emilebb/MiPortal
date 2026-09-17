@@ -1,7 +1,7 @@
 const gtmContainerId = 'GTM-MRGDJ643';
 const cookieConsentKey = 'miportal-cookie-consent';
-const rssNewsUrl = 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/america-colombia/portada';
-const rssNewsLabel = 'El País Colombia';
+const rssNewsUrl = 'https://web.dev/feed.xml';
+const rssNewsLabel = 'web.dev';
 
 // REVISIÓN JURÍDICA: La configuración de consentimiento debe adaptarse según la jurisdicción aplicable
 // (ej. RGPD en UE, CCPA en California, etc.) y el tipo de datos procesados.
@@ -491,12 +491,12 @@ document.addEventListener('DOMContentLoaded', () => {
         signal: controller.signal
       });
       if (!response.ok) {
-        throw new Error('No se pudo conectar con el feed de El País');
+        throw new Error('No se pudo conectar con el feed de web.dev');
       }
 
       const data = await response.json();
       if (requestId !== currentRequestId || data?.status !== 'ok' || !Array.isArray(data.items)) {
-        throw new Error('No se encontraron noticias en el feed de El País');
+        throw new Error('No se encontraron noticias en el feed de web.dev');
       }
 
       const fragment = document.createDocumentFragment();
@@ -504,7 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       data.items.filter(item => {
         const url = getSafeHttpsUrl(item?.link);
-        if (!url || new URL(url).hostname !== 'elpais.com' || !new URL(url).pathname.startsWith('/america-colombia/')) return false;
+        if (!url || new URL(url).hostname !== 'web.dev' || !new URL(url).pathname.startsWith('/blog/')) return false;
         const text = normalize(cleanDescription(`${item.title || ''} ${item.description || item.content || ''}`));
         return terms.every(term => text.includes(term));
       }).slice(0, 12).forEach((item) => {
@@ -515,7 +515,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const title = cleanDescription(item.title).slice(0, 300);
         const description = cleanDescription(item.description || item.content).slice(0, 600) || 'Lee la noticia completa en su fuente original.';
         const imageUrl = getSafeHttpsUrl(item.thumbnail || (item.enclosure && item.enclosure.link));
-        const link = getSafeHttpsUrl(item.link);
+        const articleUrl = new URL(item.link);
+        articleUrl.searchParams.set('hl', 'es');
+        const link = articleUrl.href;
         const pubDate = item.pubDate;
 
         fragment.appendChild(createNewsCard({ tagText: rssNewsLabel, title, description, imageUrl, link, pubDate }));
@@ -527,7 +529,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (validItems === 0) {
-        showEmpty(terms.length ? 'No hay noticias de Colombia para ese tema entre los titulares disponibles. Probá con otro término.' : 'No se encontraron noticias de Colombia en este momento.');
+        showEmpty(terms.length ? 'No hay noticias de desarrollo web para ese tema entre los titulares disponibles. Probá con otro término.' : 'No se encontraron noticias de desarrollo web en este momento.');
         return;
       }
 
@@ -539,7 +541,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (requestId === currentRequestId) {
-        showError(`No se pudieron cargar las noticias de El País: ${error.message}. Probá nuevamente en unos segundos.`);
+        showError(`No se pudieron cargar las noticias de web.dev: ${error.message}. Probá nuevamente en unos segundos.`);
       }
     }
   };

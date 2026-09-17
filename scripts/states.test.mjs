@@ -132,7 +132,7 @@ test('resource and news states in Chrome with page CSP', async (t) => {
       await settle(resources ? { data: [{ title: 'Recovered resource',
         description: 'Resource description', url: 'https://example.com' }] }
         : { status: 'ok', items: [{ title: 'Recovered news',
-          description: 'News description', link: 'https://elpais.com/america-colombia/noticia.html' },
+          description: 'News description', link: 'https://web.dev/blog/css-news?hl=en' },
           { title: 'International news', link: 'https://elpais.com/internacional/noticia.html' }] });
       assert.equal(await evaluate(`document.querySelectorAll('${grid} .card').length`), 1);
       assert.equal(await evaluate(`!!document.querySelector('${grid} .loading-state, ${grid} .error-state')`), false);

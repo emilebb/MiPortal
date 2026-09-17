@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://api.rss2json.com https://*.supabase.co; img-src 'self' data: https://www.googletagmanager.com https://imagenes.elpais.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://api.rss2json.com https://*.supabase.co; img-src 'self' data: https://www.googletagmanager.com https://web.dev https://storage.googleapis.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
   
   <!-- SEO Básico -->
-  <title>Noticias de Colombia | MiPortal</title>
-  <meta name="description" content="Consultá noticias de Colombia de El País y buscá entre los titulares disponibles. Tecnología, diseño y actualidad. Cada resultado abre en su fuente original.">
+  <title>Noticias de desarrollo web | MiPortal</title>
+  <meta name="description" content="Consultá noticias de desarrollo web de web.dev y buscá entre los titulares disponibles. HTML, CSS, JavaScript, navegadores y rendimiento. Cada resultado abre en su fuente original.">
   <link rel="canonical" href="https://www.miportal.me/noticias.html">
   
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.miportal.me/noticias.html">
-  <meta property="og:title" content="Noticias de Colombia | MiPortal">
-  <meta property="og:description" content="Consultá noticias de Colombia de El País y buscá entre los titulares disponibles. Tecnología, diseño y actualidad. Cada resultado abre en su fuente original.">
+  <meta property="og:title" content="Noticias de desarrollo web | MiPortal">
+  <meta property="og:description" content="Consultá noticias de desarrollo web de web.dev y buscá entre los titulares disponibles. HTML, CSS, JavaScript, navegadores y rendimiento. Cada resultado abre en su fuente original.">
   <meta property="og:image" content="https://www.miportal.me/og-image-noticias.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -23,8 +23,8 @@
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="https://www.miportal.me/noticias.html">
-  <meta name="twitter:title" content="Noticias de Colombia | MiPortal">
-  <meta name="twitter:description" content="Consultá noticias de Colombia de El País y buscá entre los titulares disponibles. Tecnología, diseño y actualidad. Cada resultado abre en su fuente original.">
+  <meta name="twitter:title" content="Noticias de desarrollo web | MiPortal">
+  <meta name="twitter:description" content="Consultá noticias de desarrollo web de web.dev y buscá entre los titulares disponibles. HTML, CSS, JavaScript, navegadores y rendimiento. Cada resultado abre en su fuente original.">
   <meta name="twitter:image" content="https://www.miportal.me/og-image-noticias.jpg">
   
   <!-- Favicon (CONFIGURAR: Reemplazar con archivo real) -->
@@ -37,7 +37,7 @@
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Noticias - MiPortal",
-    "description": "Consultá noticias de Colombia de El País y buscá entre los titulares disponibles",
+    "description": "Consultá noticias de desarrollo web de web.dev y buscá entre los titulares disponibles",
     "url": "https://www.miportal.me/noticias.html",
     "isPartOf": {
       "@type": "WebSite",
@@ -58,7 +58,7 @@
   <!-- End Google Tag Manager (noscript) -->
   <header class="main-header">
     <div class="logo">
-      <div class="logo-text">MiPortal<span>.com</span></div>
+      <div class="logo-text">MiPortal<span>.me</span></div>
     </div>
     <button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="mainNav">☰</button>
     <nav class="main-nav" id="mainNav">
@@ -76,23 +76,24 @@
   <div class="container main-layout">
     <main class="content-area">
       <section class="filter-section">
+        <h1>Noticias de desarrollo web</h1>
         <form id="searchForm">
           <label for="searchInput" class="visually-hidden">Buscar noticias</label>
-          <input type="search" id="searchInput" name="q" placeholder="Buscar noticias de Colombia..." autocomplete="off" maxlength="120" required aria-required="true">
+          <input type="search" id="searchInput" name="q" placeholder="Buscar noticias de desarrollo web..." autocomplete="off" maxlength="120" required aria-required="true">
           <button type="submit" class="search-submit">Buscar noticias</button>
         </form>
-        <p class="privacy-note">📰 <strong>Fuentes:</strong> Noticias de la sección Colombia de El País (RSS). Cada resultado abre en su fuente original.</p>
+        <p class="privacy-note">📰 <strong>Fuentes:</strong> Novedades de desarrollo web publicadas en web.dev. Cada resultado abre en su fuente original.</p>
         <div class="category-filters" role="group" aria-label="Filtros de categoría">
-          <button type="button" class="filter-btn active" data-query="" aria-pressed="true">🇨🇴 Colombia</button>
-          <button type="button" class="filter-btn" data-query="tecnología" aria-pressed="false">💻 Tecnología</button>
-          <button type="button" class="filter-btn" data-query="diseño" aria-pressed="false">🎨 Diseño</button>
+          <button type="button" class="filter-btn active" data-query="" aria-pressed="true">🌐 Todas</button>
+          <button type="button" class="filter-btn" data-query="css" aria-pressed="false">🎨 CSS</button>
+          <button type="button" class="filter-btn" data-query="javascript" aria-pressed="false">💻 JavaScript</button>
         </div>
       </section>
       <section class="cards-grid">
         <div id="cardsContainer" class="cards-grid-content">
           <div class="loading-state">
             <div class="loading-spinner"></div>
-            <p>Cargando noticias de Colombia...</p>
+            <p>Cargando noticias de desarrollo web...</p>
           </div>
         </div>
         <div id="lastUpdated" class="last-updated" aria-live="polite"></div>
@@ -101,7 +102,7 @@
     <aside class="sidebar">
       <div class="widget">
         <h3>Sobre las noticias</h3>
-        <p>Los titulares provienen de la sección Colombia de El País. Las búsquedas y categorías filtran los titulares disponibles de esa sección. Cada resultado abre en su fuente original.</p>
+        <p>Noticias internacionales de la plataforma web, publicadas por web.dev. Los titulares están en inglés; los enlaces solicitan la versión en español cuando está disponible. El buscador filtra los titulares y resúmenes originales. Cada resultado abre en su fuente original.</p>
       </div>
       <div class="widget newsletter-widget">
         <h3>Recibí novedades</h3>
