@@ -23,7 +23,7 @@
 ### 2. Pruebas de Contenido
 - ✅ **Textos coherentes**: Propuesta de valor clara y consistente en todas las páginas
 - ✅ **Sin datos inventados**: Todos los campos personales marcados como CONFIGURAR
-- ✅ **Fuentes específicas**: El País RSS y Google News claramente mencionados
+- ✅ **Fuentes específicas**: feeds RSS especializados consultados mediante rss2json
 - ✅ **Funcionalidades reales**: No se prometen funcionalidades no implementadas
 
 ### 3. Pruebas de Accesibilidad
@@ -73,13 +73,13 @@
    - **Solución**: Crear logo.png o actualizar referencia
 
 ### Riesgos Funcionales
-1. **Búsqueda de noticias**: Depende de APIs externas (RSS2JSON, Google News)
+1. **Búsqueda de noticias**: Depende de rss2json y de los feeds RSS originales
    - **Impacto**: Funcionalidad puede fallar si APIs cambian
    - **Solución**: Monitorear disponibilidad de APIs
 
-2. **Formularios**: Formularios de contacto y newsletter no procesan datos
-   - **Impacto**: Funcionalidad limitada a demostración
-   - **Solución**: Implementar backend cuando esté disponible
+2. **Formularios**: Contacto y suscripción requieren migraciones y secretos de servidor
+   - **Impacto**: No quedan activos hasta completar la configuración de producción
+   - **Solución**: Aplicar las migraciones y configurar Resend/Supabase en Vercel
 
 ### Tareas de Configuración Pendientes
 1. **Dominio real**: Las referencias públicas usan `https://www.miportal.me/`.
@@ -101,11 +101,11 @@
 ### Portada (index.html)
 - **Hero**: Texto más específico "Noticias y recursos de desarrollo web en un solo lugar"
 - **Secciones**: "Qué ofrece MiPortal" en lugar de "Qué es MiPortal"
-- **Descripciones**: Más concretas sobre fuentes (El País RSS, Google News)
+- **Descripciones**: Más concretas sobre feeds RSS especializados y sus fuentes originales
 - **Botones**: "Ver noticias" y "Explorar recursos" más directos
 
 ### Noticias (noticias.html)
-- **Nota de fuentes**: Más concisa "Titulares de El País (RSS) y búsquedas en Google News"
+- **Nota de fuentes**: Feeds RSS especializados, con atribución y enlaces originales
 - **Widget sidebar**: "Sobre las noticias" en lugar de "Noticias"
 - **Botones de filtro**: Con emojis para mejor identificación visual
 
@@ -166,7 +166,7 @@
 2. Configurar Google Search Console
 3. Monitorear Core Web Vitals
 4. Probar Open Graph en redes sociales
-5. Implementar backend para formularios
+5. Autorizar una prueba real de contacto y confirmación de suscripción
 
 ### Medio plazo (primeros meses)
 1. Optimizar performance

@@ -17,9 +17,8 @@ test sends a real message.
 ## Setup
 
 1. Apply `supabase/contact-resend.sql` through your normal Supabase migration
-   process. It is additive and repeatable, with no dependency on the legacy queue
-   migration. It creates a private rate-limit table and a service-role-only RPC.
-   Do not rerun `supabase/n8n-setup.sql` on an existing database.
+  process. It is additive and repeatable and creates a private rate-limit table
+  and a service-role-only RPC.
 2. Verify a domain you control in Resend, then choose a sender address on that
    domain. Create a sending API key restricted to that domain where available.
    This repository does not establish that any sender domain is verified.
@@ -84,19 +83,12 @@ activation actions. **Obtain explicit permission before any real email test.**
   uncertain provider failure is `502`, timeout `504`, conflict/expired attempt
   `409`. Errors preserve the form and release the submit button.
 
-## Legacy n8n cutover
+## Current architecture
 
-The new handler **never calls `enqueue_contact`** and never inserts into
-`contact_messages`. Its limiter uses `contact_send_attempts` exclusively, so the
-existing `claim_contact` worker cannot claim or resend new direct messages.
-
-The prior `n8n/contact.json`, generator and queue SQL are preserved. Their sender
-configuration is historical and is not evidence of domain verification. Keep the
-legacy contact worker inactive during cutover. If the deployed worker is already
-active, pause only that contact workflow through your authorized operational
-process, and decide separately what to do with existing queued rows. Do not copy
-legacy rows into the new endpoint or replay them automatically. News workflows
-and the news cache do not participate in this migration.
+Contact messages are sent directly by `api/contact.js` through Resend after the
+server-side Supabase rate-limit reservation. News are loaded by
+`js/news-feed.mjs` through rss2json in the browser. No workflow service, queue
+table, news cache table or third-party automation credential is required by the site.
 
 ## Local verification (no email delivery)
 
@@ -110,9 +102,9 @@ node --test scripts/contact-static.test.cjs
 API tests replace **all** fetch calls and use fake secrets. Browser tests serve
 local fixtures, block external HTTPS and never mount the real API handler. The
 database suite starts its own `postgres:16-alpine` container with `--network none`
-and temporary storage; it never connects to Supabase or starts existing workers.
-It verifies migration repeatability, access restrictions, concurrent quotas,
-retention and preservation of legacy queue/news fixtures. Docker and the local
+and temporary storage; it never connects to Supabase or starts external workers.
+It verifies migration repeatability, access restrictions, concurrent quotas and
+retention. Docker and the local
 PostgreSQL image are required; Chrome defaults to `/usr/bin/google-chrome`.
 The static test checks the existing build output. To test secret exclusion, build
 with fake server-variable values prefixed `CONTACT_TEST_RESEND_SECRET_SENTINEL`,
@@ -120,8 +112,7 @@ with fake server-variable values prefixed `CONTACT_TEST_RESEND_SECRET_SENTINEL`,
 the test rejects any such values in public artifacts.
 
 For rollback, restore the prior handler/client/contact page together. The additive
-limiter table/RPC may remain unused. Re-enabling legacy queue delivery is a
-separate operational decision, since it can send older queued messages.
+limiter table/RPC may remain unused.
 
 ## Verified API references
 

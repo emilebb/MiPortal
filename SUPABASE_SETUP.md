@@ -168,7 +168,7 @@ la seguridad autoritativa es RLS en Supabase.
       = lazy` y oculta las que fallen; el `referrer`/privacidad de esas peticiones
       depende del host externo. Opcional: subir imágenes al Storage de Supabase
       (fuera de alcance) y servir desde ahí.
-- [ ] **Newsletter**: sigue sin backend (fuera de alcance de este cambio).
+- [ ] **Newsletter**: aplicar `supabase/newsletter.sql` y configurar sus secretos de servidor en Vercel.
 - [ ] **Dominio en producción**: cambiar `miportal.com` por el dominio real en
       SEO/OG/canonical/sitemap cuando exista.
 

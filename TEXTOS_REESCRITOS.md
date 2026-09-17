@@ -7,7 +7,7 @@
 **Hero:**
 - **Antes:** "Todo lo importante, en un solo lugar."
 - **Ahora:** "Noticias y recursos de desarrollo web en un solo lugar"
-- **Descripción:** "Consultá titulares de El País, buscá en Google News y accedé a guías de HTML, CSS y accesibilidad. Todo en una interfaz simple y organizada."
+- **Descripción:** "Consultá novedades de desarrollo web de fuentes especializadas y accedé a guías de HTML, CSS y accesibilidad. Todo en una interfaz simple y organizada."
 
 **Sección "Qué ofrece MiPortal":**
 - **Antes:** "Una puerta de entrada a contenido útil"
@@ -15,23 +15,23 @@
 - **Descripción:** "MiPortal conecta fuentes externas de información y recursos educativos. Cada sección está diseñada para facilitarte el acceso a contenido útil sin salir del sitio."
 
 **Características:**
-- **Noticias:** "Consultá titulares de El País y realizá búsquedas en Google News. Cada resultado abre en su fuente original."
+- **Noticias:** "Consultá novedades de desarrollo web de fuentes especializadas. Cada resultado abre en su fuente original."
 - **Recursos:** "Accedé a referencias seleccionadas de HTML, CSS, accesibilidad y desarrollo web para seguir aprendiendo."
 
 **Sección "Cómo funciona":**
-- **Antes:** "Búsquedas conectadas con Google News"
+- **Antes:** "Búsquedas conectadas con un agregador externo"
 - **Ahora:** "Contenido de fuentes externas, organizado para vos"
-- **Descripción:** "Las noticias provienen de El País (vía RSS) y tus búsquedas consultan Google News. Los recursos de desarrollo web enlazan a documentación oficial y sitios de referencia. Todo el contenido abre en su fuente original."
+- **Descripción:** "Las noticias provienen de feeds RSS de fuentes especializadas mediante rss2json. Los recursos de desarrollo web enlazan a documentación oficial y sitios de referencia. Todo el contenido abre en su fuente original."
 
 ### 2. Página Noticias (noticias.html)
 
 **Nota de fuentes:**
-- **Antes:** "Al cargar la página se muestran titulares de El País. Al buscar, se consultan resultados de Google News. Todo el contenido abre en su fuente original."
-- **Ahora:** "Titulares de El País (RSS) y búsquedas en Google News. Cada resultado abre en su fuente original."
+- **Antes:** "Al cargar la página se mostraban titulares de una fuente concreta y las búsquedas consultaban otro servicio. Todo el contenido abría en su fuente original."
+- **Ahora:** "Novedades de fuentes RSS especializadas mediante rss2json. Cada resultado abre en su fuente original."
 
 **Widget sidebar:**
-- **Antes:** "Consulta los titulares recientes de El País y abre cada noticia en su fuente original."
-- **Ahora:** "Los titulares provienen de El País (RSS) y tus búsquedas consultan Google News. Cada resultado abre en su fuente original."
+- **Antes:** "Consulta titulares recientes de una única fuente y abre cada noticia en su fuente original."
+- **Ahora:** "Las noticias provienen de feeds RSS especializados mediante rss2json. Cada resultado abre en su fuente original."
 
 ### 3. Página Recursos (recursos.html)
 
@@ -46,7 +46,7 @@
 - **Ahora:** "MiPortal es un portal que conecta fuentes externas de noticias y recursos educativos de desarrollo web. Nuestro objetivo es facilitar el acceso a información útil en una interfaz simple y organizada."
 
 **Secciones actualizadas:**
-- **"Qué ofrecemos":** Descripción concreta de fuentes (El País RSS, Google News, recursos de desarrollo)
+- **"Qué ofrecemos":** Descripción concreta de fuentes RSS especializadas y recursos de desarrollo
 - **"Tecnología":** Información sobre stack técnico (HTML, CSS, JavaScript puro)
 - **"Contacto":** CONFIGURAR_CORREO@ejemplo.com
 - **"Información del proyecto":** Campos CONFIGURAR para nombre, responsable, correo
@@ -93,11 +93,11 @@
 
 ### index.html
 - **Título:** "MiPortal - Noticias y Recursos de Desarrollo Web"
-- **Descripción:** "Consultá titulares de El País, buscá en Google News y accedé a recursos de HTML, CSS y accesibilidad. Todo en una interfaz simple y organizada."
+- **Descripción:** "Consultá novedades de desarrollo web y accedé a recursos de HTML, CSS y accesibilidad. Todo en una interfaz simple y organizada."
 
 ### noticias.html
-- **Título:** "Noticias - Titulares de El País y Búsquedas en Google News | MiPortal"
-- **Descripción:** "Consultá titulares de El País (RSS) y realizá búsquedas en Google News. Tecnología, diseño y actualidad. Cada resultado abre en su fuente original."
+- **Título:** "Noticias de desarrollo web | MiPortal"
+- **Descripción:** "Consultá novedades de desarrollo web de fuentes RSS especializadas. Tecnología, diseño y actualidad. Cada resultado abre en su fuente original."
 
 ### recursos.html
 - **Título:** "Recursos de Desarrollo Web - HTML, CSS y Accesibilidad | MiPortal"
@@ -142,7 +142,7 @@
 
 ### 1. Concreción y Especificidad
 - Eliminadas frases genéricas como "Todo lo importante"
-- Especificadas fuentes reales (El País RSS, Google News)
+- Especificadas fuentes RSS reales y sus atribuciones
 - Descripciones funcionales claras
 
 ### 2. Honestidad Funcional

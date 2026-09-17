@@ -4,7 +4,7 @@
 
 ### 1. Títulos Descriptivos y Únicos
 - **index.html**: "MiPortal - Noticias Actuales y Recursos de Aprendizaje Web"
-- **noticias.html**: "Noticias Actuales - Titulares de El País y Búsquedas en Google News | MiPortal"
+- **noticias.html**: "Noticias de desarrollo web | MiPortal"
 - **recursos.html**: "Recursos de Desarrollo Web - HTML, CSS, Accesibilidad y Más | MiPortal"
 - **contacto.html**: "Contacto - Consultas y Sugerencias sobre MiPortal"
 - **sobre-nosotros.html**: "Sobre Nosotros - Conocé el Proyecto MiPortal"

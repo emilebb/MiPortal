@@ -39,12 +39,6 @@ test('contact RPC in disposable offline PostgreSQL, never production', async t =
     select public.reserve_contact_attempt('${hash(sender)}','${hash(email)}');`;
   sql(`create role anon; create role authenticated;
     create role service_role bypassrls;`);
-  sql(readFileSync(new URL('../supabase/n8n-setup.sql', `file://${__filename}`),
-    'utf8'));
-  sql(`insert into public.contact_messages(name,email,message,sender_hash)
-    values ('Fixture','test@example.com','Legacy queue fixture','fixture');
-    insert into public.news_articles(url,title,source,published_at)
-    values ('https://example.test/news','Fixture news','Fixture',now());`);
   const migration = readFileSync(new URL('../supabase/contact-resend.sql',
     `file://${__filename}`), 'utf8');
   sql(migration);
@@ -97,10 +91,9 @@ test('contact RPC in disposable offline PostgreSQL, never production', async t =
     assert.equal(sql('select count(*) from public.contact_send_attempts;')
       .stdout.trim(), '1');
   });
-  await t.test('direct reservations never touch legacy queue or news', () => {
-    assert.equal(sql('select count(*) from public.contact_messages;').stdout.trim(), '1');
-    assert.equal(sql('select count(*) from public.news_articles;').stdout.trim(), '1');
-    assert.equal(sql(`select count(*) from public.contact_messages
-      where notified_at is null and attempts=0;`).stdout.trim(), '1');
+  await t.test('direct reservations expose only the current limiter', () => {
+    assert.equal(sql(`select count(*) from information_schema.tables
+      where table_schema = 'public' and table_name in
+      ('contact_messages', 'news_articles');`).stdout.trim(), '0');
   });
 });
