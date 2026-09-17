@@ -49,16 +49,24 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+  <a class="skip-link" href="#main-content">Saltar al contenido</a>
+
   <header class="main-header">
     <div class="logo">
       <div class="logo-text">MiPortal<span>.me</span></div>
     </div>
-    <button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="mainNav">☰</button>
+    <button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="mainNav">
+      <span class="nav-toggle-icon" aria-hidden="true">
+        <span class="nav-toggle-line"></span>
+        <span class="nav-toggle-line"></span>
+        <span class="nav-toggle-line"></span>
+      </span>
+    </button>
     <nav class="main-nav" id="mainNav">
       <ul>
         <li><a href="index.html">Inicio</a></li>
         <li><a href="noticias.html">Noticias</a></li>
-        <li><a href="recursos.html" class="active">Recursos</a></li>
+        <li><a href="recursos.html" class="active" aria-current="page">Recursos</a></li>
         <li><a href="contacto.html">Contacto</a></li>
         <li class="auth-nav" id="auth-nav-item"><a href="/login.html">Iniciar sesión</a><a href="/register.html">Registrarse</a></li>
       </ul>
@@ -67,7 +75,7 @@
   </header>
 
   <div class="container main-layout">
-    <main class="content-area">
+    <main id="main-content" class="content-area">
       <section class="widget">
         <h2>Recursos de desarrollo web</h2>
         <p>Referencias seleccionadas para aprender HTML, CSS, JavaScript, React y accesibilidad y mejores prácticas de desarrollo.</p>
@@ -93,13 +101,16 @@
   </div>
 
   <footer class="main-footer">
-    <p>&copy; 2026 MiPortal. Todos los derechos reservados.</p>
-    <nav aria-label="Enlaces legales y de información">
-      <a href="politica-de-privacidad.html">Política de privacidad</a>
-      <a href="terminos-y-condiciones.html">Términos y condiciones</a>
-      <a href="contacto.html">Contacto</a>
-      <a href="sobre-nosotros.html">Sobre nosotros</a>
-    </nav>
+    <div class="footer-inner">
+      <p class="footer-tagline">MiPortal — noticias y recursos de desarrollo web en un solo lugar.</p>
+      <nav aria-label="Enlaces legales y de información">
+        <a href="politica-de-privacidad.html">Política de privacidad</a>
+        <a href="terminos-y-condiciones.html">Términos y condiciones</a>
+        <a href="contacto.html">Contacto</a>
+        <a href="sobre-nosotros.html">Sobre nosotros</a>
+      </nav>
+    </div>
+    <p class="footer-copy">&copy; 2026 MiPortal. Todos los derechos reservados.</p>
   </footer>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
