@@ -1,7 +1,7 @@
 const gtmContainerId = 'GTM-MRGDJ643';
 const cookieConsentKey = 'miportal-cookie-consent';
-const rssNewsUrl = 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/portada';
-const rssNewsLabel = 'El País';
+const rssNewsUrl = 'https://feeds.elpais.com/mrss-s/pages/ep/site/elpais.com/section/america-colombia/portada';
+const rssNewsLabel = 'El País Colombia';
 
 // REVISIÓN JURÍDICA: La configuración de consentimiento debe adaptarse según la jurisdicción aplicable
 // (ej. RGPD en UE, CCPA en California, etc.) y el tipo de datos procesados.
@@ -37,7 +37,7 @@ const initializeGoogleTagManager = () => {
   });
 
   const savedConsent = window.localStorage.getItem(cookieConsentKey);
-  
+
   // Solo cargar GTM si ya hubo consentimiento explícito
   if (savedConsent === 'accepted' || savedConsent === 'rejected') {
     updateGtmConsent(savedConsent === 'accepted');
@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const setupCookieNotice = () => {
     const savedConsent = localStorage.getItem(cookieConsentKey);
-    
+
     if (savedConsent) {
       // Si ya hay consentimiento, actualizar GTM según la decisión guardada
       if (savedConsent === 'accepted') {
@@ -188,14 +188,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const handleConsent = (value) => {
       localStorage.setItem(cookieConsentKey, value);
-      
+
       if (value === 'accepted') {
         updateGtmConsent(true);
         loadGtmScript();
       } else {
         updateGtmConsent(false);
       }
-      
+
       notice.remove();
     };
 
@@ -406,104 +406,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   setupRecursos();
 
-  const loadGoogleNews = async (query) => {
-    const normalizedQuery = query.trim().slice(0, maxQueryLength);
-
-    if (!normalizedQuery) {
-      showEmpty('Escribí un tema para buscar noticias.');
-      return;
-    }
-
-    activeController?.abort();
-
-    const controller = new AbortController();
-    const requestId = ++currentRequestId;
-    activeController = controller;
-    const feedUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(normalizedQuery)}&hl=es-419`;
-    const proxyUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`;
-
-    showLoading('Buscando en Google News...');
-
-    try {
-      const response = await fetch(proxyUrl, {
-        method: 'GET',
-        headers: { Accept: 'application/json' },
-        signal: controller.signal
-      });
-      if (!response.ok) {
-        throw new Error('No se pudo conectar con Google News');
-      }
-
-      const data = await response.json();
-      if (requestId !== currentRequestId || data?.status !== 'ok' || !Array.isArray(data.items)) {
-        throw new Error('No se encontraron resultados en Google News');
-      }
-
-      const fragment = document.createDocumentFragment();
-      let validItems = 0;
-
-      data.items.slice(0, 12).forEach((item) => {
-        if (!item || typeof item.title !== 'string') {
-          return;
-        }
-
-        const article = document.createElement('article');
-        article.className = 'card news-card';
-
-        const cardBody = document.createElement('div');
-        cardBody.className = 'card-body';
-
-        const tag = document.createElement('span');
-        tag.className = 'tag';
-        tag.textContent = 'Google News';
-
-        const title = document.createElement('h3');
-        title.textContent = item.title.slice(0, 300);
-
-        const description = document.createElement('p');
-        description.className = 'card-description';
-        description.textContent = cleanDescription(item.description).slice(0, 600) || 'Lee la noticia completa en su fuente original.';
-
-        cardBody.append(tag, title, description);
-
-        const safeUrl = getSafeNewsUrl(item.link);
-        if (safeUrl) {
-          const link = document.createElement('a');
-          link.className = 'read-more';
-          link.href = safeUrl;
-          link.target = '_blank';
-          link.rel = 'noopener noreferrer';
-          link.textContent = 'Leer noticia en Google News →';
-          cardBody.appendChild(link);
-        }
-
-        article.appendChild(cardBody);
-        fragment.appendChild(article);
-        validItems++;
-      });
-
-      if (requestId !== currentRequestId) {
-        return;
-      }
-
-      if (validItems === 0) {
-        showEmpty(`No se encontraron noticias válidas para "${normalizedQuery}". Probá con otro término.`);
-        return;
-      }
-
-      cardsContainer.replaceChildren(fragment);
-      updateLastUpdated('Google News');
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        return;
-      }
-
-      if (requestId === currentRequestId) {
-        showError(`No se pudieron cargar las noticias de Google News: ${error.message}. Probá nuevamente en unos segundos.`);
-      }
-    }
-  };
-
   const createNewsCard = ({ tagText, title, description, imageUrl, link, pubDate }) => {
     const article = document.createElement('article');
     article.className = 'card news-card';
@@ -544,10 +446,10 @@ document.addEventListener('DOMContentLoaded', () => {
       dateElement.className = 'news-date';
       try {
         const date = new Date(pubDate);
-        dateElement.textContent = date.toLocaleDateString('es-ES', { 
-          day: 'numeric', 
-          month: 'short', 
-          year: 'numeric' 
+        dateElement.textContent = date.toLocaleDateString('es-ES', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric'
         });
         dateElement.setAttribute('datetime', pubDate);
         cardBody.appendChild(dateElement);
@@ -570,7 +472,9 @@ document.addEventListener('DOMContentLoaded', () => {
     return article;
   };
 
-  const cargarNoticiasDirectas = async () => {
+  const cargarNoticiasDirectas = async (query = '') => {
+    const normalize = value => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const terms = normalize(query.trim().slice(0, maxQueryLength)).split(/\s+/).filter(Boolean);
     activeController?.abort();
 
     const controller = new AbortController();
@@ -598,7 +502,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const fragment = document.createDocumentFragment();
       let validItems = 0;
 
-      data.items.slice(0, 12).forEach((item) => {
+      data.items.filter(item => {
+        const url = getSafeHttpsUrl(item?.link);
+        if (!url || new URL(url).hostname !== 'elpais.com' || !new URL(url).pathname.startsWith('/america-colombia/')) return false;
+        const text = normalize(cleanDescription(`${item.title || ''} ${item.description || item.content || ''}`));
+        return terms.every(term => text.includes(term));
+      }).slice(0, 12).forEach((item) => {
         if (!item || typeof item.title !== 'string') {
           return;
         }
@@ -618,7 +527,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (validItems === 0) {
-        showEmpty('No se encontraron noticias válidas de El País en este momento.');
+        showEmpty(terms.length ? 'No hay noticias de Colombia para ese tema entre los titulares disponibles. Probá con otro término.' : 'No se encontraron noticias de Colombia en este momento.');
         return;
       }
 
@@ -649,7 +558,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const isOpen = mainNav.classList.toggle('open');
       navToggleBtn.setAttribute('aria-expanded', isOpen.toString());
       navToggleBtn.setAttribute('aria-label', isOpen ? 'Cerrar menú de navegación' : 'Abrir menú de navegación');
-      
+
       if (isOpen) {
         // Mover foco al primer enlace del menú
         const firstLink = mainNav.querySelector('a');
@@ -682,12 +591,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (cardsContainer && searchForm && searchInput) {
     searchForm.addEventListener('submit', (event) => {
       event.preventDefault();
-      loadGoogleNews(searchInput.value.trim());
+      cargarNoticiasDirectas(searchInput.value.trim());
     });
 
     filterButtons.forEach((button) => {
       button.addEventListener('click', () => {
-        searchInput.value = button.dataset.query || 'noticias';
+        searchInput.value = button.dataset.query || '';
         filterButtons.forEach((filterButton) => {
           filterButton.classList.remove('active');
           filterButton.setAttribute('aria-pressed', 'false');
@@ -695,11 +604,11 @@ document.addEventListener('DOMContentLoaded', () => {
         button.classList.add('active');
         button.setAttribute('aria-pressed', 'true');
 
-        loadGoogleNews(searchInput.value);
+        cargarNoticiasDirectas(searchInput.value);
       });
     });
 
-    searchInput.value = document.body.dataset.newsQuery || 'noticias';
-    cargarNoticiasDirectas();
+    searchInput.value = new URLSearchParams(window.location.search).get('q') || '';
+    cargarNoticiasDirectas(searchInput.value);
   }
 });

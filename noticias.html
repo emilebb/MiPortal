@@ -6,26 +6,26 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://api.rss2json.com https://*.supabase.co; img-src 'self' data: https://www.googletagmanager.com https://imagenes.elpais.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
   
   <!-- SEO Básico -->
-  <title>Noticias - Titulares de El País y Búsquedas en Google News | MiPortal</title>
-  <meta name="description" content="Consultá titulares de El País (RSS) y realizá búsquedas en Google News. Tecnología, diseño y actualidad. Cada resultado abre en su fuente original.">
-  <link rel="canonical" href="https://miportal.com/noticias.html">
+  <title>Noticias de Colombia | MiPortal</title>
+  <meta name="description" content="Consultá noticias de Colombia de El País y buscá entre los titulares disponibles. Tecnología, diseño y actualidad. Cada resultado abre en su fuente original.">
+  <link rel="canonical" href="https://www.miportal.me/noticias.html">
   
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://miportal.com/noticias.html">
-  <meta property="og:title" content="Noticias - Titulares de El País y Búsquedas en Google News | MiPortal">
-  <meta property="og:description" content="Consultá titulares de El País (RSS) y realizá búsquedas en Google News. Tecnología, diseño y actualidad. Cada resultado abre en su fuente original.">
-  <meta property="og:image" content="https://miportal.com/og-image-noticias.jpg">
+  <meta property="og:url" content="https://www.miportal.me/noticias.html">
+  <meta property="og:title" content="Noticias de Colombia | MiPortal">
+  <meta property="og:description" content="Consultá noticias de Colombia de El País y buscá entre los titulares disponibles. Tecnología, diseño y actualidad. Cada resultado abre en su fuente original.">
+  <meta property="og:image" content="https://www.miportal.me/og-image-noticias.jpg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:locale" content="es_ES">
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:url" content="https://miportal.com/noticias.html">
-  <meta name="twitter:title" content="Noticias - Titulares de El País y Búsquedas en Google News | MiPortal">
-  <meta name="twitter:description" content="Consultá titulares de El País (RSS) y realizá búsquedas en Google News. Tecnología, diseño y actualidad. Cada resultado abre en su fuente original.">
-  <meta name="twitter:image" content="https://miportal.com/og-image-noticias.jpg">
+  <meta name="twitter:url" content="https://www.miportal.me/noticias.html">
+  <meta name="twitter:title" content="Noticias de Colombia | MiPortal">
+  <meta name="twitter:description" content="Consultá noticias de Colombia de El País y buscá entre los titulares disponibles. Tecnología, diseño y actualidad. Cada resultado abre en su fuente original.">
+  <meta name="twitter:image" content="https://www.miportal.me/og-image-noticias.jpg">
   
   <!-- Favicon (CONFIGURAR: Reemplazar con archivo real) -->
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -37,12 +37,12 @@
     "@context": "https://schema.org",
     "@type": "CollectionPage",
     "name": "Noticias - MiPortal",
-    "description": "Consultá titulares de El País (RSS) y realizá búsquedas en Google News",
-    "url": "https://miportal.com/noticias.html",
+    "description": "Consultá noticias de Colombia de El País y buscá entre los titulares disponibles",
+    "url": "https://www.miportal.me/noticias.html",
     "isPartOf": {
       "@type": "WebSite",
       "name": "MiPortal",
-      "url": "https://miportal.com/"
+      "url": "https://www.miportal.me/"
     }
   }
   </script>
@@ -78,12 +78,12 @@
       <section class="filter-section">
         <form id="searchForm">
           <label for="searchInput" class="visually-hidden">Buscar noticias</label>
-          <input type="search" id="searchInput" name="q" placeholder="Buscar en Google..." autocomplete="off" maxlength="120" required aria-required="true">
+          <input type="search" id="searchInput" name="q" placeholder="Buscar noticias de Colombia..." autocomplete="off" maxlength="120" required aria-required="true">
           <button type="submit" class="search-submit">Buscar noticias</button>
         </form>
-        <p class="privacy-note">📰 <strong>Fuentes:</strong> Titulares de El País (RSS) y búsquedas en Google News. Cada resultado abre en su fuente original.</p>
+        <p class="privacy-note">📰 <strong>Fuentes:</strong> Noticias de la sección Colombia de El País (RSS). Cada resultado abre en su fuente original.</p>
         <div class="category-filters" role="group" aria-label="Filtros de categoría">
-          <button type="button" class="filter-btn active" data-query="noticias" aria-pressed="true">📰 El País</button>
+          <button type="button" class="filter-btn active" data-query="" aria-pressed="true">🇨🇴 Colombia</button>
           <button type="button" class="filter-btn" data-query="tecnología" aria-pressed="false">💻 Tecnología</button>
           <button type="button" class="filter-btn" data-query="diseño" aria-pressed="false">🎨 Diseño</button>
         </div>
@@ -92,7 +92,7 @@
         <div id="cardsContainer" class="cards-grid-content">
           <div class="loading-state">
             <div class="loading-spinner"></div>
-            <p>Cargando noticias de El País...</p>
+            <p>Cargando noticias de Colombia...</p>
           </div>
         </div>
         <div id="lastUpdated" class="last-updated" aria-live="polite"></div>
@@ -101,7 +101,7 @@
     <aside class="sidebar">
       <div class="widget">
         <h3>Sobre las noticias</h3>
-        <p>Los titulares provienen de El País (RSS) y tus búsquedas consultan Google News. Cada resultado abre en su fuente original.</p>
+        <p>Los titulares provienen de la sección Colombia de El País. Las búsquedas y categorías filtran los titulares disponibles de esa sección. Cada resultado abre en su fuente original.</p>
       </div>
       <div class="widget newsletter-widget">
         <h3>Recibí novedades</h3>
