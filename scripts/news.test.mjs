@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import {
   sources, publicationDate, classify, prepareItems, selectItems, loadFeeds
@@ -13,6 +14,13 @@ const fixture = (overrides = {}) => ({
   pubDate: '2026-09-16 10:00:00', categories: ['CSS'], ...overrides
 });
 const plain = value => typeof value === 'string' ? value : '';
+
+test('news page CSP allows the complete rss2json origin', async () => {
+  const html = await readFile(new URL('../noticias.html', import.meta.url), 'utf8');
+  const directive = html.match(/connect-src[^;]+;/)?.[0] || '';
+  assert.ok(directive.includes('https://api.rss2json.com'));
+  assert.equal(directive.includes('https://api.rss2json '), false);
+});
 
 test('publication calendar dates never fall back to today or normalize bad dates', () => {
   for (const value of [null, undefined, '', 'invalid', '2026-02-30 00:00:00',
