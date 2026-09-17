@@ -8,3 +8,6 @@ supabase-config.js
 
 # Dependencias de Node (se instalan con npm install)
 node_modules/
+
+# Build estático que Vercel sirve como Output Directory
+public/

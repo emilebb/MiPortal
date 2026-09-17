@@ -26,19 +26,22 @@ en `supabase/schema.sql` (idempotente).
    - `SUPABASE_URL` (Production, Preview, Development si querés probar)
    - `SUPABASE_PUBLISHABLE_KEY`
    - Como mínimo, dejarlas solo en **Production**.
-2. `Settings → Build & Deployment`:
+2. `Settings → Build & Deployment` (o `vercel.json`, ya incluido):
    - Framework Preset: **Other**
    - Build Command: `npm run build`
-   - Output Directory: dejar vacío (los HTML ya están en la raíz)
+   - Output Directory: `public`
+   - El proyecto incluye `vercel.json` con `outputDirectory: "public"`, así que
+     este ajuste del dashboard no es obligatorio.
 3. Redeploy.
 
-> El build corre `scripts/generate-config.mjs`, que lee esas variables y genera
-> `supabase-config.js` (ignorado por git). Si un build corre sin las variables,
-> la página muestra un estado de "configuración pendiente" en lugar de romperse.
+> El build corre `scripts/generate-config.mjs` (lee esas variables y genera
+> `supabase-config.js`, ignorado por git) y `scripts/build-static.mjs` (copia
+> el sitio final a `public/`, lo que Vercel sirve como Output Directory). Si un
+> build corre sin las variables, la página muestra un estado de "configuración
+> pendiente" en lugar de romperse.
 
 ### Entorno local (opcional)
-Crear un `.env` (ver `.env.example`) y correr `npm run build` (o `npm run dev`)
-antes de servir la carpeta:
+Crear un `.env` (ver `.env.example`), correr `npm run build` y servir `public/`:
 
 ```bash
 SUPABASE_URL=https://TU-PROYECTO.supabase.co
@@ -119,7 +122,8 @@ la seguridad autoritativa es RLS en Supabase.
 - `node --check` sobre todos los JS (`main.js`, `js/supabase-client.js`,
   `js/admin/*.js`): sin errores de sintaxis.
 - `npm run build` (y `dev`) con y sin variables: genera `supabase-config.js`
-  correctamente; sin variables escribe placeholders y avisa en consola.
+  correctamente y deja el sitio en `public/`; sin variables escribe placeholders
+  y avisa en consola.
 - `@supabase/supabase-js` instalado como dependencia (se usa vía CDN en el
   sitio estático; el paquete queda declarado en `package.json`).
 - Validación SQL: ejecutado el `schema.sql` en una base Supabase de prueba
