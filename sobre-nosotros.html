@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self'; connect-src https://api.rss2json.com; img-src 'self' data: https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self'; connect-src https://api.rss2json.com https://*.supabase.co; img-src 'self' data: https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
   
   <!-- SEO Básico -->
   <title>Sobre Nosotros - Conocé el Proyecto MiPortal</title>
@@ -64,6 +64,7 @@
         <li><a href="noticias.html">Noticias</a></li>
         <li><a href="recursos.html">Recursos</a></li>
         <li><a href="contacto.html">Contacto</a></li>
+        <li class="auth-nav" id="auth-nav-item"><a href="/login.html">Iniciar sesión</a></li>
       </ul>
     </nav>
     <button id="themeToggle" class="btn-theme" type="button" aria-label="Cambiar entre modo claro y oscuro">🌙</button>
@@ -104,6 +105,10 @@
       <a href="sobre-nosotros.html">Sobre nosotros</a>
     </nav>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/auth-nav.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

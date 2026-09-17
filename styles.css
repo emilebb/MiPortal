@@ -288,6 +288,36 @@ body {
   background: rgba(23, 105, 224, 0.1);
 }
 
+.main-nav li.auth-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.main-nav .nav-auth {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted-color);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 650;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s, background-color 0.2s, border-color 0.2s;
+}
+
+.main-nav .nav-auth:hover,
+.main-nav .nav-auth.active {
+  color: var(--primary-color);
+  background: rgba(23, 105, 224, 0.1);
+  border-color: var(--primary-color);
+}
+
 .nav-toggle {
   display: none;
   background: none;
@@ -908,6 +938,15 @@ body {
 
   .main-nav a {
     text-align: center;
+  }
+
+  .main-nav li.auth-nav {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .main-nav .nav-auth {
+    width: 100%;
   }
 
   .main-layout {
