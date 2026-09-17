@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com; style-src 'self'; connect-src https://api.rss2json.com; img-src 'self' data: https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self'; connect-src https://api.rss2json.com https://*.supabase.co; img-src 'self' data: https: https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
   
   <!-- SEO Básico -->
   <title>Recursos de Desarrollo Web - HTML, CSS y Accesibilidad | MiPortal</title>
@@ -75,11 +75,7 @@
         <h2>Recursos de desarrollo web</h2>
         <p>Referencias seleccionadas para aprender HTML, CSS, accesibilidad y mejores prácticas de desarrollo.</p>
       </section>
-      <section class="cards-grid">
-        <article class="card"><div class="card-body"><span class="tag">HTML</span><h3>MDN Web Docs</h3><p class="card-description">Referencia completa de HTML, CSS y APIs web.</p><a class="read-more" href="https://developer.mozilla.org/es/" target="_blank" rel="noopener noreferrer">Visitar MDN →</a></div></article>
-        <article class="card"><div class="card-body"><span class="tag">CSS</span><h3>CSS-Tricks</h3><p class="card-description">Guías y ejemplos prácticos para construir interfaces.</p><a class="read-more" href="https://css-tricks.com/" target="_blank" rel="noopener noreferrer">Visitar CSS-Tricks →</a></div></article>
-        <article class="card"><div class="card-body"><span class="tag">Accesibilidad</span><h3>WebAIM</h3><p class="card-description">Recursos para crear sitios web más accesibles.</p><a class="read-more" href="https://webaim.org/" target="_blank" rel="noopener noreferrer">Visitar WebAIM →</a></div></article>
-      </section>
+      <section class="cards-grid" id="resourcesGrid" aria-live="polite"></section>
     </main>
     <aside class="sidebar">
       <div class="widget"><h3>Enlaces recomendados</h3><ul><li><a href="https://www.w3.org/" target="_blank" rel="noopener noreferrer">W3C</a></li><li><a href="https://web.dev/" target="_blank" rel="noopener noreferrer">web.dev</a></li></ul></div>
@@ -105,6 +101,9 @@
       <a href="sobre-nosotros.html">Sobre nosotros</a>
     </nav>
   </footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

@@ -13,6 +13,9 @@ Disallow: /package.json
 Disallow: /package-lock.json
 Disallow: /.DS_Store
 
+# El panel administrativo no debe indexarse ni seguirse
+Disallow: /admin/
+
 # Páginas legales pueden tener noindex (opcional)
 # Descomentar si no quieres indexar páginas legales
 # Disallow: /politica-de-privacidad.html

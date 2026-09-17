@@ -241,6 +241,168 @@ document.addEventListener('DOMContentLoaded', () => {
   setupCookiePreferences();
   setupNewsletterForm();
 
+  const setupRecursos = async () => {
+    const grid = document.getElementById('resourcesGrid');
+    if (!grid) return;
+
+    const supabase = window.MiPortalSupabase;
+
+    const renderState = (className, content) => {
+      const state = document.createElement('div');
+      state.className = className;
+      state.append(content);
+      grid.replaceChildren(state);
+    };
+
+    const showLoading = () => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'loading-spinner';
+      const message = document.createElement('p');
+      message.textContent = 'Cargando recursos...';
+      const state = document.createElement('div');
+      state.className = 'loading-state';
+      state.append(wrapper, message);
+      grid.replaceChildren(state);
+      grid.setAttribute('aria-busy', 'true');
+    };
+
+    const showEmpty = (message) => {
+      const icon = document.createElement('div');
+      icon.className = 'empty-icon';
+      icon.textContent = '📭';
+      const text = document.createElement('p');
+      text.textContent = message;
+      renderState('empty-state', [icon, text]);
+      grid.removeAttribute('aria-busy');
+    };
+
+    const showError = (message, withRetry = true) => {
+      const icon = document.createElement('div');
+      icon.className = 'error-icon';
+      icon.textContent = '⚠️';
+      const text = document.createElement('p');
+      text.textContent = message;
+      const state = [];
+      if (withRetry) {
+        const retry = document.createElement('button');
+        retry.type = 'button';
+        retry.className = 'retry-button';
+        retry.textContent = 'Intentar nuevamente';
+        retry.addEventListener('click', () => setupRecursos());
+        state.push(retry);
+      }
+      renderState('error-state', [icon, text, ...state]);
+      grid.removeAttribute('aria-busy');
+    };
+
+    const formatDate = (value) => {
+      try {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '';
+        return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+      } catch {
+        return '';
+      }
+    };
+
+    const createResourceCard = (resource) => {
+      const article = document.createElement('article');
+      article.className = 'card';
+
+      if (resource.image_url) {
+        const image = document.createElement('img');
+        image.src = resource.image_url;
+        image.alt = `Imagen de ${resource.title || 'recurso'}`;
+        image.loading = 'lazy';
+        image.onerror = function () {
+          this.remove();
+        };
+        article.appendChild(image);
+      }
+
+      const cardBody = document.createElement('div');
+      cardBody.className = 'card-body';
+
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.textContent = resource.category || 'Recurso';
+
+      const heading = document.createElement('h3');
+      heading.textContent = resource.title;
+
+      const description = document.createElement('p');
+      description.className = 'card-description';
+      description.textContent = resource.description;
+
+      cardBody.append(tag, heading, description);
+
+      const safeUrl = getSafeHttpsUrl(resource.url);
+      if (safeUrl) {
+        const link = document.createElement('a');
+        link.className = 'read-more';
+        link.href = safeUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = 'Visitar recurso →';
+        cardBody.appendChild(link);
+      }
+
+      const updated = formatDate(resource.updated_at || resource.created_at);
+      if (updated) {
+        const time = document.createElement('time');
+        time.className = 'news-date';
+        time.textContent = `Actualizado: ${updated}`;
+        time.setAttribute('datetime', resource.updated_at || resource.created_at);
+        cardBody.appendChild(time);
+      }
+
+      article.appendChild(cardBody);
+      return article;
+    };
+
+    // CONFIG MANUAL: si supabase-config.js quedó con placeholders (faltan las
+    // variables SUPABASE_URL/SUPABASE_PUBLISHABLE_KEY en el build), avisamos sin
+    // romper.
+    if (!supabase) {
+      showError('La sección de recursos no está configurada todavía. Completá SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY en Vercel.', false);
+      return;
+    }
+
+    showLoading();
+
+    try {
+      const { data, error } = await supabase
+        .from('resources')
+        .select('id, title, description, url, category, image_url, created_at, updated_at')
+        .eq('published', true)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      if (!data || data.length === 0) {
+        showEmpty('Todavía no hay recursos publicados. Volvé pronto.');
+        return;
+      }
+
+      const fragment = document.createDocumentFragment();
+      data.forEach((resource) => {
+        if (!resource || typeof resource.title !== 'string' || typeof resource.url !== 'string') {
+          return;
+        }
+        fragment.appendChild(createResourceCard(resource));
+      });
+
+      grid.replaceChildren(fragment);
+      grid.removeAttribute('aria-busy');
+    } catch (error) {
+      showError(`No se pudieron cargar los recursos: ${error.message}. Probá nuevamente en unos segundos.`);
+    }
+  };
+
+  setupRecursos();
+
   const loadGoogleNews = async (query) => {
     const normalizedQuery = query.trim().slice(0, maxQueryLength);
 

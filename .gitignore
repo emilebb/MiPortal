@@ -1,0 +1,10 @@
+# Variables locales (NUNCA commitear)
+.env
+.env.*
+!.env.example
+
+# Config generada por npm run build / npm run dev (contiene valores reales)
+supabase-config.js
+
+# Dependencias de Node (se instalan con npm install)
+node_modules/

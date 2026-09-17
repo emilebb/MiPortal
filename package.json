@@ -1,0 +1,14 @@
+{
+  "name": "miportal",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Sitio estático MiPortal + backend Supabase para el CRUD de Recursos",
+  "scripts": {
+    "build": "node scripts/generate-config.mjs",
+    "dev": "node scripts/generate-config.mjs"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.116.0"
+  }
+}
