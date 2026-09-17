@@ -19,6 +19,8 @@ const entries = [
   'terminos-y-condiciones.html',
   'login.html',
   'register.html',
+  'recovery.html',
+  'reset-password.html',
   'styles.css',
   'main.js',
   'robots.txt',

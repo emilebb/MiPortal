@@ -1,5 +1,5 @@
 // ============================================================================
-// Login del administrador (login.html).
+// Login compartido de viewers y administradores (login.html).
 // ============================================================================
 (function () {
   const supabase = window.MiPortalSupabase;
@@ -20,7 +20,8 @@
   const errorTexts = {
     config_pendiente: 'La configuración del panel está pendiente. Completá SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY en Vercel.',
     sesion_expirada: 'Tu sesión expiró. Iniciá sesión nuevamente.',
-    no_autorizado: 'Tu usuario no tiene permisos de administrador.'
+    no_autorizado: 'Tu usuario no tiene permisos de administrador. Podés volver al sitio con tu sesión activa.',
+    perfil_no_disponible: 'No se pudieron verificar tus permisos. Probá nuevamente.'
   };
 
   if (registered === '1') {
@@ -29,19 +30,37 @@
   }
 
   // Solo permite redirecciones dentro del mismo sitio (evita open redirects).
-  const getSafeNext = () => {
+  const getSafeNext = (role) => {
+    const fallback = role === 'admin' ? '/admin/' : '/index.html';
     const raw = params.get('next') || '';
-    if (!raw) return './admin/';
+    if (!raw) return fallback;
     try {
       const url = new URL(raw, window.location.origin);
-      if (url.origin !== window.location.origin) return './admin/';
+      if (url.origin !== window.location.origin) return fallback;
+      const path = decodeURIComponent(url.pathname).toLowerCase();
+      if (path.includes('\\') || path.includes('%')) return fallback;
+      if (role !== 'admin' && /^\/admin(?:\/|$)/.test(path)) return fallback;
+      if (/^\/(login|register|recovery|reset-password)\.html$/.test(path)) {
+        return fallback;
+      }
       return url.pathname + url.search + url.hash;
     } catch {
-      return './admin/';
+      return fallback;
     }
   };
 
-  const next = getSafeNext();
+  const redirectSession = async (session, preserveDenial = false) => {
+    const { data, error } = await supabase.from('profiles').select('role')
+      .eq('id', session.user.id).maybeSingle();
+    if (error || !data || !['admin', 'viewer'].includes(data.role)) {
+      throw new Error(errorTexts.perfil_no_disponible);
+    }
+    // Conserva visible la explicación de un acceso denegado por el guard.
+    if (preserveDenial && errorCode === 'no_autorizado' && data.role !== 'admin') {
+      return;
+    }
+    window.location.replace(getSafeNext(data.role));
+  };
 
   if (errorCode && errorTexts[errorCode]) {
     alertRegion.textContent = errorTexts[errorCode];
@@ -57,31 +76,16 @@
     return;
   }
 
-  // Si ya hay una sesión válida de administrador, ir directo al panel.
+  // Un fallo de permisos nunca debe cerrar una sesión válida.
   const checkExistingSession = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error) throw new Error('No se pudo consultar tu sesión. Probá nuevamente.');
       if (!session) return;
-
-      const profile = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', session.user.id)
-        .maybeSingle();
-
-      if (profile.error || !profile.data) {
-        await supabase.auth.signOut();
-        return;
-      }
-
-      if (profile.data.role === 'admin') {
-        window.location.replace(next);
-        return;
-      }
-
-      await supabase.auth.signOut();
-    } catch {
-      // Sin sesión usable; el formulario sigue disponible.
+      await redirectSession(session, true);
+    } catch (err) {
+      alertRegion.textContent = err.message;
+      alertRegion.classList.add('is-visible');
     }
   };
 
@@ -92,7 +96,9 @@
       input.setAttribute('aria-invalid', 'true');
       input.setAttribute('aria-describedby', errorMessages.id);
       errorMessages.textContent = message;
+      errorMessages.hidden = false;
       errorMessages.classList.add('is-visible');
+      input.focus();
     } else {
       input.removeAttribute('aria-invalid');
     }
@@ -106,6 +112,7 @@
 
   const cleanErrors = () => {
     errorMessages.textContent = '';
+    errorMessages.hidden = true;
     errorMessages.classList.remove('is-visible');
     alertRegion.textContent = '';
     alertRegion.classList.remove('is-visible');
@@ -117,10 +124,12 @@
     const isHidden = passwordInput.type === 'password';
     passwordInput.type = isHidden ? 'text' : 'password';
     passwordToggle.textContent = isHidden ? 'Ocultar contraseña' : 'Mostrar contraseña';
+    passwordToggle.setAttribute('aria-label', passwordToggle.textContent);
   });
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (submitButton.disabled) return;
     cleanErrors();
 
     const email = emailInput.value.trim();
@@ -128,6 +137,10 @@
 
     if (!email || !password) {
       setFieldError(!email ? emailInput : passwordInput, 'Completá el correo y la contraseña.');
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setFieldError(emailInput, 'Ingresá un correo electrónico válido.');
       return;
     }
 
@@ -139,20 +152,7 @@
         throw new Error('Correo o contraseña incorrectos.');
       }
 
-      const profile = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', data.user.id)
-        .maybeSingle();
-
-      if (profile.error || !profile.data || profile.data.role !== 'admin') {
-        await supabase.auth.signOut();
-        alertRegion.textContent = 'Este usuario no tiene permisos de administrador.';
-        alertRegion.classList.add('is-visible');
-        return;
-      }
-
-      window.location.replace(next);
+      await redirectSession(data);
     } catch (err) {
       alertRegion.textContent = err.message || 'No se pudo iniciar sesión. Probá nuevamente.';
       alertRegion.classList.add('is-visible');

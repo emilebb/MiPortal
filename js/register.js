@@ -26,14 +26,17 @@
       const isHidden = target.type === 'password';
       target.type = isHidden ? 'text' : 'password';
       toggle.textContent = isHidden ? 'Ocultar contraseña' : 'Mostrar contraseña';
+      toggle.setAttribute('aria-label', toggle.textContent);
     });
   });
 
   const setFieldError = (input, message) => {
     if (message) {
       input.setAttribute('aria-invalid', 'true');
-      input.setAttribute('aria-describedby', errorMessages.id);
+      input.setAttribute('aria-describedby',
+        input === passwordInput ? 'passwordHint errorMessages' : errorMessages.id);
       errorMessages.textContent = message;
+      errorMessages.hidden = false;
       errorMessages.classList.add('is-visible');
       input.focus();
     } else {
@@ -43,6 +46,7 @@
 
   const cleanErrors = () => {
     errorMessages.textContent = '';
+    errorMessages.hidden = true;
     errorMessages.classList.remove('is-visible');
     alertRegion.textContent = '';
     alertRegion.classList.remove('is-visible');
@@ -65,6 +69,7 @@
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (submitButton.disabled) return;
     cleanErrors();
 
     const email = emailInput.value.trim();
@@ -73,6 +78,11 @@
 
     if (!email || !password || !confirmation) {
       setFieldError(!email ? emailInput : !password ? passwordInput : confirmInput, 'Completá todos los campos.');
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setFieldError(emailInput, 'Ingresá un correo electrónico válido.');
       return;
     }
 
@@ -100,8 +110,7 @@
       }
 
       if (data.session) {
-        await supabase.auth.signOut().catch(() => {});
-        window.location.replace('login.html?registered=1');
+        window.location.replace('/index.html');
         return;
       }
 

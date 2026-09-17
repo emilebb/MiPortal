@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self'; connect-src https://*.supabase.co; img-src 'self' data:; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'self';">
   <meta name="robots" content="noindex, nofollow">
-  <title>Iniciar sesión · Admin MiPortal</title>
+  <title>Iniciar sesión · MiPortal</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="admin/admin.css">
 </head>
 <body>
   <header class="admin-header">
-    <div class="logo-text">MiPortal<span>.com</span> Admin</div>
+    <div class="logo-text">MiPortal<span>.com</span></div>
     <nav>
       <a href="index.html">Volver al sitio</a>
     </nav>
@@ -20,10 +20,10 @@
   <main class="login-layout">
     <section class="login-card">
       <h1>Iniciar sesión</h1>
-      <p>Acceso restringido al panel de administración de recursos.</p>
+      <p>Ingresá a tu cuenta de MiPortal. El panel requiere permisos de administrador.</p>
 
       <div id="loginAlert" class="login-alert" role="alert"></div>
-      <p id="errorMessages" class="field-error" hidden></p>
+      <p id="errorMessages" class="field-error" role="alert" hidden></p>
 
       <form id="loginForm" class="admin-form" novalidate>
         <div class="form-group">
@@ -45,6 +45,8 @@
           <button type="submit" id="submitButton" class="btn btn-primary">Ingresar</button>
         </div>
       </form>
+      <p><a href="recovery.html">Olvidé mi contraseña</a></p>
+      <p><a href="register.html">Crear una cuenta</a></p>
     </section>
   </main>
 

@@ -49,6 +49,11 @@ create trigger on_auth_user_created
 after insert on auth.users
 for each row execute function public.handle_new_user();
 
+-- Incluye cuentas creadas antes del trigger, sin modificar roles existentes.
+insert into public.profiles (id, email, role)
+select id, email, 'viewer' from auth.users where email is not null
+on conflict (id) do nothing;
+
 -- updated_at automático en profiles
 create or replace function public.set_updated_at()
 returns trigger
@@ -69,14 +74,52 @@ for each row execute function public.set_updated_at();
 alter table public.profiles enable row level security;
 
 -- Cada usuario solo puede ver/editar su propio perfil.
+drop policy if exists "perfil_lectura_propia" on public.profiles;
 create policy "perfil_lectura_propia" on public.profiles
   for select to authenticated
   using (id = auth.uid());
 
+-- Un usuario puede editar su propio perfil PERO NO su rol: el nuevo rol debe
+-- coincidir con el rol actual (leído con security definer para evitar
+-- recursión de RLS). Así nadie puede escalarse a admin desde el cliente.
+create or replace function public.current_profile_role()
+returns text
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select role from public.profiles where id = auth.uid();
+$$;
+
+drop policy if exists "perfil_edicion_propia" on public.profiles;
 create policy "perfil_edicion_propia" on public.profiles
   for update to authenticated
   using (id = auth.uid())
-  with check (id = auth.uid());
+  with check (id = auth.uid() and role = public.current_profile_role());
+
+-- REFUERZO: a nivel de trigger, cambiar el rol solo es posible desde una
+-- sesión con privilegios de base (postgres en el SQL Editor o service_role).
+-- Cualquier otra sesión que intente modificar el rol de profiles es rechazada.
+create or replace function public.protect_admin_role()
+returns trigger
+language plpgsql
+security invoker
+set search_path = public
+as $$
+begin
+  if new.role is distinct from old.role
+     and current_user not in ('postgres', 'service_role') then
+    raise exception 'Operación no permitida: el rol solo puede cambiarlo un administrador de la base.';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists profiles_protect_admin_role on public.profiles;
+create trigger profiles_protect_admin_role
+before update of role on public.profiles
+for each row execute function public.protect_admin_role();
 
 
 -- ============================================================================
@@ -135,25 +178,35 @@ for each row execute function public.set_updated_at();
 alter table public.resources enable row level security;
 
 -- VISITANTES SOLO LECTURA de lo publicado (anon y authenticated).
+grant usage on schema public to anon, authenticated;
+grant select on public.resources to anon, authenticated;
+grant insert, update, delete on public.resources to authenticated;
+grant select, update on public.profiles to authenticated;
+
+drop policy if exists "recursos_publicos_lectura" on public.resources;
 create policy "recursos_publicos_lectura" on public.resources
   for select to anon, authenticated
   using (published = true);
 
 -- Administradores pueden leer TODO (incluidos borradores).
+drop policy if exists "admin_lectura_total" on public.resources;
 create policy "admin_lectura_total" on public.resources
   for select to authenticated
   using (public.is_admin());
 
 -- ESCRITURA: únicamente administradores.
+drop policy if exists "solo_admin_insertar" on public.resources;
 create policy "solo_admin_insertar" on public.resources
   for insert to authenticated
   with check (public.is_admin());
 
+drop policy if exists "solo_admin_actualizar" on public.resources;
 create policy "solo_admin_actualizar" on public.resources
   for update to authenticated
   using (public.is_admin())
   with check (public.is_admin());
 
+drop policy if exists "solo_admin_eliminar" on public.resources;
 create policy "solo_admin_eliminar" on public.resources
   for delete to authenticated
   using (public.is_admin());

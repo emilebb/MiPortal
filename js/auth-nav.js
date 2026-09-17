@@ -30,7 +30,7 @@
     bindClick([loginLink, registerLink]);
   };
 
-  const renderAdmin = () => {
+  const renderAuthenticated = (isAdmin, message = '') => {
     const panelLink = document.createElement('a');
     panelLink.href = '/admin/';
     panelLink.className = 'nav-auth';
@@ -40,20 +40,28 @@
     logoutButton.type = 'button';
     logoutButton.className = 'nav-auth';
     logoutButton.textContent = 'Cerrar sesión';
+    const alert = document.createElement('span');
+    alert.setAttribute('role', 'alert');
+    alert.textContent = message;
     logoutButton.addEventListener('click', async () => {
+      logoutButton.disabled = true;
       try {
-        await supabase.auth.signOut();
+        const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+        renderLoggedOut();
       } catch {
-        // La interfaz se actualiza de todas formas.
+        alert.textContent = 'No se pudo cerrar sesión. Probá nuevamente.';
+        logoutButton.disabled = false;
       }
-      renderLoggedOut();
     });
 
-    authItem.replaceChildren(panelLink, logoutButton);
+    authItem.replaceChildren(...(isAdmin ? [panelLink] : []), logoutButton, alert);
     bindClick([panelLink, logoutButton]);
   };
 
+  let revision = 0;
   const refresh = async () => {
+    const current = ++revision;
     if (!supabase) {
       renderLoggedOut();
       return;
@@ -61,13 +69,20 @@
 
     let session;
     try {
-      const { data } = await supabase.auth.getSession();
+      const { data, error } = await supabase.auth.getSession();
+      if (error) throw error;
       session = data.session;
     } catch {
+      if (current !== revision) return;
       renderLoggedOut();
+      const alert = document.createElement('span');
+      alert.setAttribute('role', 'alert');
+      alert.textContent = 'No se pudo consultar tu sesión. Recargá para reintentar.';
+      authItem.replaceChildren(...authItem.children, alert);
       return;
     }
 
+    if (current !== revision) return;
     if (!session) {
       renderLoggedOut();
       return;
@@ -80,15 +95,12 @@
         .eq('id', session.user.id)
         .maybeSingle();
 
-      if (error || !profile || profile.role !== 'admin') {
-        await supabase.auth.signOut().catch(() => {});
-        renderLoggedOut();
-        return;
-      }
-
-      renderAdmin();
+      if (current !== revision) return;
+      renderAuthenticated(!error && profile?.role === 'admin',
+        error || !profile ? 'No se pudieron verificar tus permisos. Recargá para reintentar.' : '');
     } catch {
-      renderLoggedOut();
+      if (current !== revision) return;
+      renderAuthenticated(false, 'No se pudieron verificar tus permisos. Recargá para reintentar.');
     }
   };
 
@@ -97,7 +109,9 @@
   if (supabase) {
     supabase.auth.onAuthStateChange((event) => {
       if (['SIGNED_IN', 'SIGNED_OUT', 'TOKEN_REFRESHED', 'INITIAL_SESSION'].includes(event)) {
-        refresh();
+        // No ejecutar consultas Supabase dentro del callback de Auth (lock).
+        ++revision;
+        window.setTimeout(refresh, 0);
       }
     });
   }

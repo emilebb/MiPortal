@@ -43,8 +43,11 @@
         .eq('id', session.user.id)
         .maybeSingle();
 
-      if (error || !data || data.role !== 'admin') {
-        await supabase.auth.signOut();
+      if (error || !data) {
+        redirectToLogin('perfil_no_disponible');
+        return null;
+      }
+      if (data.role !== 'admin') {
         redirectToLogin('no_autorizado');
         return null;
       }
@@ -58,9 +61,18 @@
 
   async function signOut() {
     try {
-      await supabase?.auth.signOut();
-    } finally {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       window.location.replace('../login.html');
+    } catch {
+      let region = document.getElementById('logoutAlert');
+      if (!region) {
+        region = document.createElement('p');
+        region.id = 'logoutAlert';
+        region.setAttribute('role', 'alert');
+        document.querySelector('.admin-header').append(region);
+      }
+      region.textContent = 'No se pudo cerrar sesión. Probá nuevamente.';
     }
   }
 

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self'; connect-src https://*.supabase.co; img-src 'self' data:; object-src 'none'; base-uri 'none'; form-action 'self';">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <title>Recuperar contraseña · MiPortal</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="admin/admin.css">
+</head>
+<body>
+  <main class="login-layout">
+    <section class="login-card" aria-labelledby="recoveryTitle">
+      <h1 id="recoveryTitle">Recuperar contraseña</h1>
+      <p>Te enviaremos un enlace para elegir una nueva contraseña.</p>
+      <div id="recoveryAlert" class="login-alert" role="alert"></div>
+      <form id="recoveryForm" class="admin-form" novalidate>
+        <div class="form-group">
+          <label for="email">Correo electrónico *</label>
+          <input id="email" type="email" autocomplete="email" required
+                 aria-describedby="recoveryAlert">
+        </div>
+        <button id="submitButton" type="submit" class="btn btn-primary">Enviar enlace</button>
+      </form>
+      <p><a href="login.html">Volver a iniciar sesión</a></p>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/recovery.js"></script>
+</body>
+</html>

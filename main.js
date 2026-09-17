@@ -141,8 +141,11 @@ document.addEventListener('DOMContentLoaded', () => {
     error.innerHTML = `
       <div class="error-icon">⚠️</div>
       <p>${message}</p>
-      <button class="retry-button" onclick="location.reload()">Intentar nuevamente</button>
+      <button type="button" class="retry-button">Intentar nuevamente</button>
     `;
+    error.querySelector('.retry-button').addEventListener('click', () => {
+      location.reload();
+    });
     cardsContainer.replaceChildren(error);
   };
 
@@ -250,7 +253,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderState = (className, content) => {
       const state = document.createElement('div');
       state.className = className;
-      state.append(content);
+      state.append(...content);
       grid.replaceChildren(state);
     };
 

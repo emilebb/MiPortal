@@ -1,7 +1,8 @@
 # MiPortal · Backend Supabase para el CRUD de Recursos
 
 Guía completa de instalación, configuración y riesgos. Todo el código SQL está
-en `supabase/schema.sql` (idempotente).
+en `supabase/schema.sql`. Para una base existente usá la migración indicada abajo:
+el seed del esquema completo puede duplicar recursos al volver a ejecutarlo.
 
 ---
 
@@ -102,7 +103,8 @@ como filas de la base, así la página pública no cambia visualmente.
 | `supabase-config.js` | **Generado, gitignored** (`window.MIPORTAL_SUPABASE`) |
 | `js/supabase-client.js` | Crea el cliente supabase-js v2 (o `null` si falta config) |
 | `recursos.html` + `main.js` | Sección pública: solo `published = true`, estados loading/empty/error, URLs validadas, `textContent` (sin HTML inyectado) |
-| `login.html` + `js/admin/login.js` | Login email/contraseña, chequeo de rol admin y redirección si ya hay sesión admin |
+| `login.html` + `js/admin/login.js` | Login viewer/admin; conserva sesiones y redirige según rol |
+| `recovery.html` + `reset-password.html` | Solicitud por correo y actualización de contraseña |
 | `admin/index.html` + `js/admin/index.js` | Listado admin (búsqueda + filtro por estado/categoría), publicar/despublicar, eliminar con `<dialog>`, toasts |
 | `admin/recurso-form.html` + `js/admin/recurso-form.js` | Crear/editar recurso (`?id=`), validación https accesible |
 | `js/admin/shared.js` | Guard `requireAdmin()` + API + toasts (JS del nivel admin) |
@@ -111,7 +113,7 @@ como filas de la base, así la página pública no cambia visualmente.
 ### Cómo funciona el guard de `/admin`
 Cada página admin corre `requireAdmin()` → `getSession()` → si no hay sesión
 redirige a `../login.html?next=…`; con sesión consulta `profiles.role`; si no
-es `admin`, cierra sesión y redirige. El login anula `?next=` a destinos
+es `admin`, conserva la sesión y redirige con un error visible. El login anula `?next=` a destinos
 externos (solo redirige dentro del mismo sitio). **Esto es solo de interfaz**:
 la seguridad autoritativa es RLS en Supabase.
 
@@ -153,9 +155,8 @@ la seguridad autoritativa es RLS en Supabase.
       obtiene la publishable key (es pública), igual no puede escribir.
 - [ ] **MFA**: Supabase permite habilitar 2FA en Auth; recomendado como capa
       extra para la cuenta admin antes de producción real.
-- [ ] **Contraseña admin**: el flujo actual no permite restablecerla en el
-      frontend; el propietario la resetea desde `Authentication → Users` o
-      recibe el mail de recuperación de Supabase.
+- [ ] **Recuperación de contraseña**: configurar URLs de redirección y correo
+      siguiendo la sección siguiente; verificar la entrega real antes de publicar.
 - [ ] **`service_role`**: nunca configurarla en Vercel. Si alguien la tuviera
       en algún lado, rotarla desde Supabase Dashboard.
 - [ ] **Email de confirmación**: en producción conviene dejar `Confirm email`
@@ -179,3 +180,142 @@ la seguridad autoritativa es RLS en Supabase.
 - `textContent` y `createElement` para cualquier dato de la base (sin
   `innerHTML` con datos dinámicos).
 - URLs de la base siempre validadas con `new URL()` y protocolo `https`.
+
+## 7. Viewer sessions, password recovery and RLS deployment
+
+The frontend accepts both roles. Viewers land on `/index.html`; administrators
+land on `/admin/`. Explicit same-origin destinations are retained when permitted.
+Profile lookup errors never sign users out. A missing profile fails closed for
+admin access and shows an error at login.
+
+### Apply the backend update
+
+For an existing installation, execute
+`supabase/migrations/20260917_auth_roles.sql` in the Supabase SQL Editor as
+`postgres`. For a new installation, execute `supabase/schema.sql` instead.
+The migration is transactional and repeatable, preserves existing roles and
+backfills email users as viewers. If the database has `private.is_admin()`, it
+retains the existing resource policies and aligns that helper with `profiles`.
+It refuses that conversion if legacy `user_roles` administrators need reconciliation.
+Otherwise it reinstalls the repository's named resource policies.
+Promote administrators only using the SQL in section 2, never user metadata.
+
+Inspect `pg_policies` for `profiles` and `resources` after deployment. Additional
+permissive policies installed outside this repository can widen access; this
+migration deliberately does not delete unknown policies. Do not expose
+`service_role` to the browser. Static `/admin/` HTML is publicly downloadable;
+the JavaScript guard controls the UI, while RLS protects data and mutations.
+
+### Configure recovery email
+
+In **Authentication → URL Configuration**, set the production **Site URL** and
+allow these exact URLs for each trusted deployment origin:
+
+- `https://YOUR-DOMAIN/login.html` (signup confirmation).
+- `https://YOUR-DOMAIN/reset-password.html` (password recovery).
+
+Add corresponding localhost URLs with the actual development port when needed.
+Enable the Email provider and configure working SMTP/delivery limits. Keep the
+recovery email template's `{{ .ConfirmationURL }}` link: it validates the one-use
+token and forwards to the requested callback. The client currently uses the
+Supabase implicit callback (`#access_token=…&type=recovery`), not a custom
+`token_hash` template or a server-side PKCE callback.
+
+The callback waits for a validated `PASSWORD_RECOVERY` event (including events
+received before its script loaded), accepts matching passwords, calls
+`updateUser`, and signs out on success. Errors remain visible with retry/new-link
+navigation. An ordinary stored session does not enable the reset form. Refreshing
+the callback after tokens are consumed requires a new link. A failed sign-out
+after a successful update is reported explicitly. The minimum client length is
+six characters; stronger Supabase password requirements still apply on the server.
+
+### Verification evidence and production acceptance
+
+- `node --test scripts/auth.test.mjs`: deterministic role, navigation, validation,
+  recovery and failure-path tests with a simulated Auth API.
+- `node --test scripts/auth-browser.test.mjs`: Chrome, real Supabase JS SDK,
+  simulated HTTP responses; viewer persistence across navigation, admin guards,
+  visible/focused validation and recovery callback with delayed script loading.
+- `node --test scripts/rls.test.mjs`: isolated ephemeral Docker PostgreSQL 16;
+  real policy/trigger execution, repeatable setup/migration, metadata escalation,
+  own-profile edits, public/draft visibility and viewer/admin CRUD permissions.
+  Requires Docker and the local `postgres:16-alpine` image. Creates no host port
+  or persistent volume and never connects to existing containers.
+
+These checks do not prove deployed Supabase configuration or email delivery.
+With real viewer/admin accounts, verify login, reload, logout, draft visibility,
+direct unauthorized REST writes, recovery email, expired/reused links, and login
+with the new password (the old password must fail). Use the publishable key and
+each user's JWT for RLS acceptance; `service_role` bypasses the policies.
+
+## 8. Verificación remota — 17 de septiembre de 2026
+
+Proyecto comprobado: `miportal-backend` (`lfflmyqjoxntoatbbwtf`).
+
+- Aplicada mediante el conector la migración `auth_roles_preserve_resource_policies`,
+  correspondiente al archivo local `supabase/migrations/20260917_auth_roles.sql`
+  adaptado a las políticas encontradas en producción.
+- Antes había un usuario sin perfil; después hay cero perfiles faltantes y dos
+  perfiles `viewer`. No se asignó permanentemente el rol administrador a nadie.
+- El panel consultaba `profiles.role`, mientras el CRUD remoto consultaba
+  `user_roles`, que estaba vacía. Ahora `private.is_admin()` consulta `profiles`.
+- Se conservaron las cinco políticas existentes de `resources`, incluida la
+  comprobación `created_by = auth.uid()` al insertar. La prueba no dejó recursos.
+- Verificados en la base remota mediante SQL, dentro de una transacción revertida:
+  viewer sin lectura de borradores ni escrituras; autoascenso a admin rechazado;
+  administrador con lectura, creación, edición y eliminación; visitante con
+  lectura de publicados, sin borradores ni inserción.
+  Se usaron `SET LOCAL ROLE` y claims de Auth controlados para probar RLS, no un
+  inicio de sesión real ni tokens emitidos por el servicio Auth. La promoción
+  temporal de un perfil y los datos de prueba se deshicieron con `ROLLBACK`.
+- Reejecutadas 26 pruebas locales: todas aprobadas. Chrome usó respuestas Auth
+  simuladas y las pruebas PostgreSQL locales usaron una instancia aislada.
+- Restringida la ejecución pública de `handle_new_user`, `current_profile_role`
+  e `is_admin`; el trigger no requiere acceso RPC desde el navegador.
+- Build y `git diff --check` aprobados después de los cambios.
+- Security Advisor ya no informa funciones SECURITY DEFINER accesibles para
+  visitantes anónimos. Conserva dos avisos por helpers de rol accesibles a
+  usuarios autenticados: ambos solo consultan el rol de `auth.uid()` y forman
+  parte del control de acceso. Véase la
+  [explicación del aviso](https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable).
+  También informa protección de contraseñas filtradas desactivada; no se cambió
+  esa opción de Auth. Véase
+  [protección de contraseñas](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
+
+### Dashboard y despliegue público comprobados
+
+- Sesión del Dashboard disponible y configuración de Auth revisada.
+- Site URL existente: `https://mi-portal-seven.vercel.app`.
+- Guardadas las redirecciones exactas a `/login.html` y `/reset-password.html`
+  para ese dominio. Se conservó la regla previa `https://mi-portal-seven.vercel.app/**`.
+- Proveedor Email habilitado y confirmación de correo activada.
+- SMTP personalizado desactivado; el Dashboard indica que se utilizan plantillas
+  predeterminadas. No se configuró ningún proveedor ni se comprobó entrega real.
+- El propietario confirmó que no dispone de proveedor SMTP.
+- Tras recibir la identificación explícita de la cuenta administradora, se
+  promovió únicamente esa cuenta existente y con correo confirmado a `admin`.
+  Se conservó el otro perfil como `viewer`. El correo personal no se incluye
+  en esta documentación.
+- Publicada por CLI la versión local en el proyecto existente `mi-portal` y
+  su dominio `https://mi-portal-seven.vercel.app`. Estado confirmado: `READY`.
+  [Despliegue](https://vercel.com/emiles-projects-c997f3b7/mi-portal/6Ju1eiPdeK1aCW753oeLk4mxJkWD).
+- Comprobados por HTTP 12 archivos de autenticación y estados, incluidas
+  `/recovery.html` y `/reset-password.html`: todos responden 200 y son idénticos
+  byte a byte a los archivos locales probados. El 404 de recuperación quedó
+  resuelto. La configuración pública apunta al proyecto Supabase correcto y
+  no contiene placeholders.
+- La publicación se hizo desde una copia de fuentes preparada sin `.env`, SQL
+  ni dependencias locales. No se hizo commit ni push a GitHub: la rama remota
+  sigue en la versión anterior. Antes de otro despliegue desde Git hay que
+  sincronizar estos cambios para no reemplazar la corrección publicada.
+
+Pendiente para completar la aceptación de extremo a extremo:
+
+1. Configurar un proveedor SMTP con los datos reales del servicio que elija el
+   propietario y verificar la entrega del correo.
+2. Probar login y recuperación con cuentas reales, entrega del correo, enlace
+   expirado/reutilizado y rechazo de la contraseña anterior.
+3. Sincronizar el código local probado con GitHub antes del siguiente despliegue
+   automático desde la rama `main`.
+
+Estos pendientes no se consideran completados por las pruebas SQL o simuladas.
