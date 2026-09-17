@@ -18,6 +18,7 @@ const entries = [
   'politica-de-privacidad.html',
   'terminos-y-condiciones.html',
   'login.html',
+  'register.html',
   'styles.css',
   'main.js',
   'robots.txt',

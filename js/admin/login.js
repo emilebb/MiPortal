@@ -15,12 +15,18 @@
 
   const params = new URLSearchParams(window.location.search);
   const errorCode = params.get('error');
+  const registered = params.get('registered');
 
   const errorTexts = {
     config_pendiente: 'La configuración del panel está pendiente. Completá SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY en Vercel.',
     sesion_expirada: 'Tu sesión expiró. Iniciá sesión nuevamente.',
     no_autorizado: 'Tu usuario no tiene permisos de administrador.'
   };
+
+  if (registered === '1') {
+    alertRegion.textContent = 'Cuenta creada correctamente. Ahora iniciá sesión.';
+    alertRegion.classList.add('is-visible');
+  }
 
   // Solo permite redirecciones dentro del mismo sitio (evita open redirects).
   const getSafeNext = () => {

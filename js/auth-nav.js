@@ -18,11 +18,16 @@
   };
 
   const renderLoggedOut = () => {
-    const link = document.createElement('a');
-    link.href = '/login.html';
-    link.textContent = 'Iniciar sesión';
-    authItem.replaceChildren(link);
-    bindClick([link]);
+    const loginLink = document.createElement('a');
+    loginLink.href = '/login.html';
+    loginLink.textContent = 'Iniciar sesión';
+
+    const registerLink = document.createElement('a');
+    registerLink.href = '/register.html';
+    registerLink.textContent = 'Registrarse';
+
+    authItem.replaceChildren(loginLink, registerLink);
+    bindClick([loginLink, registerLink]);
   };
 
   const renderAdmin = () => {

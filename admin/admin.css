@@ -317,6 +317,12 @@ body.dark-mode .badge-publicado {
   font-size: 0.82rem;
 }
 
+.field-hint {
+  margin-top: 0.35rem;
+  color: var(--muted-color);
+  font-size: 0.82rem;
+}
+
 .form-check {
   display: flex;
   align-items: center;
