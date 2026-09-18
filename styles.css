@@ -733,8 +733,19 @@ input:-webkit-autofill {
   margin-top: 0.6rem;
 }
 
-.js-pro-checkout[hidden] {
+.js-pro-checkout[hidden],
+.pro-container[hidden] {
   display: none;
+}
+
+.feature-pro {
+  border-top-color: #009ee3 !important;
+  background: linear-gradient(180deg, var(--card-bg), rgba(0, 158, 227, 0.05));
+}
+
+.feature-pro .btn-pro-card {
+  margin-top: auto;
+  width: 100%;
 }
 
 .pro-status {

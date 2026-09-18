@@ -152,6 +152,9 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.js-pro-checkout').forEach((el) => {
       el.hidden = !isLoggedIn || isPro;
     });
+    document.querySelectorAll('.pro-container').forEach((el) => {
+      el.hidden = isPro;
+    });
     document.body.classList.toggle('pro-mode', isPro);
     document.querySelectorAll('.ad-container, .adsbygoogle').forEach((ad) => {
       ad.hidden = !isPro;
