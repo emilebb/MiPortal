@@ -744,6 +744,17 @@ input:-webkit-autofill {
   font-weight: 600;
 }
 
+.pro-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background-color: #10b981;
+  color: #ffffff;
+  font-weight: bold;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+}
+
 .pro-confirm {
   justify-items: center;
   text-align: center;

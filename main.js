@@ -150,12 +150,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const isLoggedIn = Boolean(session);
     const isPro = isLoggedIn && role === 'pro';
     document.querySelectorAll('.js-pro-checkout').forEach((el) => {
-      el.hidden = !isLoggedIn;
+      el.hidden = !isLoggedIn || isPro;
     });
     document.body.classList.toggle('pro-mode', isPro);
     document.querySelectorAll('.ad-container, .adsbygoogle').forEach((ad) => {
       ad.hidden = !isPro;
     });
+    const homeActions = document.querySelector('.home-actions');
+    const existingBadge = homeActions ? homeActions.querySelector('.pro-badge') : null;
+    if (isPro && homeActions && !existingBadge) {
+      const badge = document.createElement('span');
+      badge.className = 'pro-badge';
+      badge.textContent = '⭐ Cuenta Pro Activa';
+      homeActions.appendChild(badge);
+    } else if (!isPro && existingBadge) {
+      existingBadge.remove();
+    }
   };
 
   const refreshProState = async () => {
