@@ -21,6 +21,7 @@ const entries = [
   'register.html',
   'recovery.html',
   'reset-password.html',
+  'gracias-pro.html',
   'styles.css',
   'main.js',
   'robots.txt',

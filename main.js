@@ -146,26 +146,102 @@ document.addEventListener('DOMContentLoaded', () => {
     // Newsletter behavior is loaded only on pages that contain its form.
   };
 
-  const setupProStorage = () => {
-    if (document.querySelector('.pro-confirm')) {
-      localStorage.setItem('user_is_pro', 'true');
-    }
+  const applyProState = (session, role) => {
+    const isLoggedIn = Boolean(session);
+    const isPro = isLoggedIn && role === 'pro';
+    document.querySelectorAll('.js-pro-checkout').forEach((el) => {
+      el.hidden = !isLoggedIn;
+    });
+    document.body.classList.toggle('pro-mode', isPro);
+    document.querySelectorAll('.ad-container, .adsbygoogle').forEach((ad) => {
+      ad.hidden = !isPro;
+    });
   };
 
-  const setupProMode = () => {
-    if (localStorage.getItem('user_is_pro') !== 'true') {
+  const refreshProState = async () => {
+    const supabase = window.MiPortalSupabase;
+    if (!supabase) {
+      applyProState(null, null);
       return;
     }
-
-    document.querySelectorAll('.ad-container, .adsbygoogle').forEach((ad) => {
-      ad.hidden = true;
-    });
-
-    document.body.classList.add('pro-mode');
+    let session = null;
+    let role = null;
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      if (!error && data.session) {
+        session = data.session;
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .maybeSingle();
+        if (!profileError && profile) role = profile.role;
+      }
+    } catch {
+      // Sin estado: los botones quedan ocultos y el modo pro inactivo.
+    }
+    applyProState(session, role);
   };
 
-  setupProStorage();
-  setupProMode();
+  const setupProCheckout = () => {
+    document.querySelectorAll('.js-pro-checkout').forEach((button) => {
+      button.addEventListener('click', async () => {
+        const supabase = window.MiPortalSupabase;
+        if (!supabase) {
+          window.location.href = '/login.html';
+          return;
+        }
+        let session;
+        try {
+          const { data, error } = await supabase.auth.getSession();
+          if (error) throw error;
+          session = data.session;
+        } catch {
+          window.location.href = '/login.html';
+          return;
+        }
+        if (!session) {
+          window.location.href = '/login.html';
+          return;
+        }
+        button.disabled = true;
+        button.setAttribute('aria-busy', 'true');
+        try {
+          const response = await fetch('/api/mp-preference', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ user_id: session.user.id })
+          });
+          const result = await response.json().catch(() => ({}));
+          if (!response.ok || !result.init_point) {
+            throw new Error(result.error || 'No se pudo iniciar el pago.');
+          }
+          window.location.href = result.init_point;
+        } catch (error) {
+          button.disabled = false;
+          button.setAttribute('aria-busy', 'false');
+          let status = button.parentElement.querySelector('.pro-status');
+          if (!status) {
+            status = document.createElement('p');
+            status.className = 'pro-status';
+            status.setAttribute('role', 'alert');
+            button.parentElement.appendChild(status);
+          }
+          status.textContent = error.message || 'No se pudo iniciar el pago. Probá nuevamente.';
+        }
+      });
+    });
+  };
+
+  setupProCheckout();
+  refreshProState();
+
+  if (window.MiPortalSupabase) {
+    window.MiPortalSupabase.auth.onAuthStateChange(() => {
+      window.setTimeout(refreshProState, 0);
+    });
+  }
+
   setupCookieNotice();
   setupCookiePreferences();
   setupNewsletterForm();

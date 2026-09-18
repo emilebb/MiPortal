@@ -23,7 +23,7 @@ create table if not exists public.profiles (
   id         uuid primary key references auth.users(id) on delete cascade,
   email      text not null,
   role       text not null default 'viewer'
-             check (role in ('viewer', 'admin')),
+             check (role in ('viewer', 'admin', 'pro')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -147,7 +147,58 @@ grant execute on function public.is_admin() to authenticated;
 
 
 -- ============================================================================
--- 3. TABLA resources
+-- 3. TABLA payments + activación del rol Pro
+--    Solo el webhook de Mercado Pago (con service_role) puede escribir aquí.
+--    El rol 'pro' nunca se elige desde el cliente: lo confiere record_pro_payment.
+-- ============================================================================
+create table if not exists public.payments (
+  id             uuid primary key default gen_random_uuid(),
+  user_id        uuid not null references auth.users(id) on delete cascade,
+  mp_payment_id  text not null unique check (mp_payment_id <> ''),
+  amount         numeric not null check (amount > 0),
+  currency       text not null default 'COP' check (length(currency) = 3),
+  created_at     timestamptz not null default now()
+);
+alter table public.payments enable row level security;
+revoke all on public.payments from public, anon, authenticated;
+
+create or replace function public.record_pro_payment(
+  p_user_id uuid, p_payment_id text, p_amount numeric, p_currency text
+)
+returns jsonb language plpgsql security definer set search_path = '' as $$
+declare
+  payment_registered boolean;
+  profile_upgraded boolean;
+begin
+  if p_user_id is null or p_payment_id is null or p_payment_id = ''
+     or p_amount is null or p_amount <= 0 or p_currency is null
+     or length(p_currency) <> 3 then
+    raise exception 'INVALID_PAYMENT';
+  end if;
+
+  select exists (select 1 from public.payments where mp_payment_id = p_payment_id)
+    into payment_registered;
+  if not payment_registered then
+    insert into public.payments (user_id, mp_payment_id, amount, currency)
+    values (p_user_id, p_payment_id, p_amount, upper(p_currency));
+    payment_registered := true;
+  end if;
+
+  update public.profiles set role = 'pro' where id = p_user_id;
+  profile_upgraded := found;
+
+  return jsonb_build_object(
+    'payment_registered', payment_registered,
+    'profile_upgraded', profile_upgraded
+  );
+end; $$;
+
+revoke all on function public.record_pro_payment(uuid, text, numeric, text) from public, anon, authenticated;
+grant execute on function public.record_pro_payment(uuid, text, numeric, text) to service_role;
+
+
+-- ============================================================================
+-- 4. TABLA resources
 -- ============================================================================
 create table if not exists public.resources (
   id          uuid primary key default gen_random_uuid(),
@@ -213,7 +264,7 @@ create policy "solo_admin_eliminar" on public.resources
 
 
 -- ============================================================================
--- 4. DATOS INICIALES (seed)
+-- 5. DATOS INICIALES (seed)
 --    Replica el contenido fijo actual de recursos.html para que la página
 --    siga igual inmediatamente después de activar la base de datos.
 --    created_by = NULL porque fueron importados manualmente.
@@ -227,7 +278,7 @@ on conflict do nothing;
 
 
 -- ============================================================================
--- 5. PROMOVER ADMINISTRADOR (EJECUTAR UNA SOLA VEZ)
+-- 6. PROMOVER ADMINISTRADOR (EJECUTAR UNA SOLA VEZ)
 --    Reemplazá TU_EMAIL_ADMIN@ejemplo.com por el email del usuario que creaste
 --    en Authentication → Users. Sin este paso, el login admin no concederá
 --    permisos de escritura.

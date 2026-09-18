@@ -7,7 +7,8 @@
     "build": "node scripts/generate-config.mjs && node scripts/build-static.mjs",
     "dev": "node scripts/generate-config.mjs",
     "test:contact": "node --test scripts/contact.test.cjs scripts/contact-browser.test.mjs",
-    "test:newsletter": "node --test scripts/newsletter.test.cjs"
+    "test:newsletter": "node --test scripts/newsletter.test.cjs",
+    "test:mercadopago": "node --test scripts/mercadopago.test.cjs"
   },
   "license": "UNLICENSED",
   "dependencies": {

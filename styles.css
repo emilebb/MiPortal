@@ -733,6 +733,17 @@ input:-webkit-autofill {
   margin-top: 0.6rem;
 }
 
+.js-pro-checkout[hidden] {
+  display: none;
+}
+
+.pro-status {
+  margin: 0.6rem 0 0;
+  color: #dc2626;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
 .pro-confirm {
   justify-items: center;
   text-align: center;

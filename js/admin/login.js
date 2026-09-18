@@ -52,7 +52,7 @@
   const redirectSession = async (session, preserveDenial = false) => {
     const { data, error } = await supabase.from('profiles').select('role')
       .eq('id', session.user.id).maybeSingle();
-    if (error || !data || !['admin', 'viewer'].includes(data.role)) {
+    if (error || !data || !['admin', 'viewer', 'pro'].includes(data.role)) {
       throw new Error(errorTexts.perfil_no_disponible);
     }
     // Conserva visible la explicación de un acceso denegado por el guard.
