@@ -146,6 +146,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // Newsletter behavior is loaded only on pages that contain its form.
   };
 
+  const setupProStorage = () => {
+    if (document.querySelector('.pro-confirm')) {
+      localStorage.setItem('user_is_pro', 'true');
+    }
+  };
+
+  const setupProMode = () => {
+    if (localStorage.getItem('user_is_pro') !== 'true') {
+      return;
+    }
+
+    document.querySelectorAll('.ad-container, .adsbygoogle').forEach((ad) => {
+      ad.hidden = true;
+    });
+
+    document.body.classList.add('pro-mode');
+  };
+
+  setupProStorage();
+  setupProMode();
   setupCookieNotice();
   setupCookiePreferences();
   setupNewsletterForm();

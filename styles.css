@@ -701,6 +701,66 @@ input:-webkit-autofill {
   box-shadow: 0 6px 16px rgba(0, 158, 227, 0.4);
 }
 
+.pro-banner {
+  display: grid;
+  justify-items: center;
+  gap: 0.9rem;
+  margin: clamp(2.5rem, 6vw, 5rem) auto 0;
+  padding: clamp(2rem, 5vw, 3rem) clamp(1.25rem, 3vw, 2rem);
+  max-width: 800px;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--card-bg), rgba(var(--primary-rgb), 0.12));
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+}
+
+.pro-banner h2 {
+  margin: 0;
+  color: var(--text-color);
+  font-size: clamp(1.5rem, 3vw + 0.3rem, 2.4rem);
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+}
+
+.pro-banner p {
+  margin: 0;
+  color: var(--muted-color);
+  max-width: 50ch;
+}
+
+.pro-banner .btn-pro {
+  margin-top: 0.6rem;
+}
+
+.pro-confirm {
+  justify-items: center;
+  text-align: center;
+}
+
+.pro-confirm > p {
+  max-width: 60ch;
+}
+
+.benefits-box {
+  display: grid;
+  gap: 0.6rem;
+  width: 100%;
+  margin: 1.5rem 0;
+  padding: clamp(1.1rem, 3vw, 1.5rem);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background: rgba(var(--primary-rgb), 0.06);
+  text-align: left;
+}
+
+.benefits-box ul {
+  display: grid;
+  gap: 0.5rem;
+  padding-left: 1.25rem;
+  margin: 0;
+}
+
 /* ============================================================
    Página de noticias: filtros
    ============================================================ */
