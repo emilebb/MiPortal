@@ -83,11 +83,11 @@
 
 ### Tareas de Configuración Pendientes
 1. **Dominio real**: Las referencias públicas usan `https://www.miportal.me/`.
-2. **Datos de contacto**: Reemplazar `CONFIGURAR_CORREO@ejemplo.com` con correo real
-3. **Datos del proyecto**: Completar `CONFIGURAR_NOMBRE_RESPONSABLE` y otros campos
-4. **Fecha legal**: Actualizar `CONFIGURAR_FECHA` en documentos legales
-5. **Secciones legales**: Completar campos CONFIGURAR con asesoramiento legal
-6. **GTM Container**: Verificar que GTM-MRGDJ643 sea el container correcto
+2. **Datos del proyecto**: Completar `CONFIGURAR_NOMBRE_RESPONSABLE` (marcado como "Pendiente de completar" en las páginas).
+3. **Fecha legal**: Actualizar `CONFIGURAR_FECHA` en documentos legales.
+4. **Secciones legales**: Completar campos pendientes con asesoramiento legal.
+5. **Grupo VIP Pro**: Completar la invitación real de WhatsApp en `gracias-pro.html`.
+6. **GTM Container**: Verificar que GTM-MRGDJ643 sea el container correcto.
 
 ### Tareas de Mejora Continua
 1. **Performance**: Optimizar carga de fuentes e imágenes

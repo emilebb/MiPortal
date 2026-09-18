@@ -105,12 +105,9 @@
 
 ## Campos CONFIGURAR Pendientes
 
-### Datos de Contacto
-- `CONFIGURAR_CORREO@ejemplo.com` - Reemplazar en:
-  - sobre-nosotros.html (2 veces)
-  - contacto.html
-  - politica-de-privacidad.html (2 veces)
-  - terminos-y-condiciones.html (2 veces)
+> Estado: el correo real `emile.123455@gmail.com` ya reemplazó a
+> `CONFIGURAR_CORREO@ejemplo.com` en todas las páginas públicas. Siguen
+> pendientes los datos personales y legales que solo puede proveer el responsable.
 
 ### Datos del Proyecto
 - `CONFIGURAR_NOMBRE_RESPONSABLE` - Reemplazar en:
@@ -126,6 +123,10 @@
 - `CONFIGURAR_FECHA` - Reemplazar en:
   - politica-de-privacidad.html
   - terminos-y-condiciones.html
+
+### Página de confirmación Pro
+- Grupo VIP de WhatsApp: enlazado a `#` y oculto en `gracias-pro.html` hasta
+  completar la invitación real del grupo.
 
 ### Secciones Legales (requieren asesoramiento legal)
 - **Política de privacidad:**
