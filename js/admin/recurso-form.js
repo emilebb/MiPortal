@@ -166,9 +166,15 @@
           .update(payload)
           .eq('id', resourceId);
         if (error) throw new Error(error.message);
+        if (payload.published) window.Admin.notifyPublished(resourceId);
       } else {
-        const { error } = await window.Admin.supabase.from('resources').insert(payload);
+        const { data, error } = await window.Admin.supabase
+          .from('resources')
+          .insert(payload)
+          .select('id')
+          .single();
         if (error) throw new Error(error.message);
+        if (payload.published) window.Admin.notifyPublished(data?.id);
       }
 
       window.location.replace('./?toast=guardado');

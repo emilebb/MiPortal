@@ -1,6 +1,7 @@
-const { createHmac, timingSafeEqual } = require('node:crypto');
+const { createHmac } = require('node:crypto');
 const { isIP } = require('node:net');
 const { buildWelcomeEmail } = require('../lib/emails');
+const { tokenFor, readToken } = require('../lib/tokens');
 
 const origins = new Set([
   'https://www.miportal.me', 'https://miportal.me',
@@ -22,27 +23,6 @@ function validEmail(value) {
 
 function jsonResponse(res, status, body) {
   return res.status(status).json(body);
-}
-
-function tokenFor(hash, expiresAt, secret) {
-  const payload = `${hash}.${expiresAt}`;
-  const signature = createHmac('sha256', secret).update(payload).digest('base64url');
-  return `${Buffer.from(payload).toString('base64url')}.${signature}`;
-}
-
-function readToken(token, secret) {
-  if (typeof token !== 'string') return null;
-  const [encoded, signature] = token.split('.');
-  if (!encoded || !signature) return null;
-  let payload;
-  try { payload = Buffer.from(encoded, 'base64url').toString('utf8'); } catch { return null; }
-  const [hash, expiresAt] = payload.split('.');
-  const expected = createHmac('sha256', secret).update(payload).digest('base64url');
-  if (!/^[a-f0-9]{64}$/.test(hash) || !/^\d+$/.test(expiresAt) ||
-      signature.length !== expected.length ||
-      !timingSafeEqual(Buffer.from(signature), Buffer.from(expected)) ||
-      Number(expiresAt) < Date.now()) return null;
-  return hash;
 }
 
 function config() {
@@ -179,8 +159,10 @@ module.exports = async function handler(req, res) {
     const url = new URL(req.url, 'https://www.miportal.me');
     const action = url.searchParams.get('action');
     if (action !== 'confirm' && action !== 'unsubscribe') return fail(400, 'Acción no válida.');
-    const hash = readToken(url.searchParams.get('token'), env.NEWSLETTER_HASH_SECRET);
-    if (!hash) return fail(400, 'El enlace no es válido o caducó.');
+    const payload = readToken(url.searchParams.get('token'), env.NEWSLETTER_HASH_SECRET);
+    const [hash, expiresAt] = payload ? payload.split('.') : [];
+    if (!/^[a-f0-9]{64}$/.test(hash || '') || !/^\d+$/.test(expiresAt || '') ||
+        Number(expiresAt) < Date.now()) return fail(400, 'El enlace no es válido o caducó.');
     try {
       await rpc({ env, database }, 'update_newsletter_status',
         { p_email_hash: hash, p_status: action === 'confirm' ? 'confirmed' : 'unsubscribed' });
@@ -218,9 +200,9 @@ module.exports = async function handler(req, res) {
 
   const email = body.email.trim().toLowerCase();
   const hash = createHmac('sha256', configured.env.NEWSLETTER_HASH_SECRET).update(email).digest('hex');
-  const expiresAt = Date.now() + tokenLifetime;
-  const confirmUrl = `https://www.miportal.me/api/newsletter?action=confirm&token=${encodeURIComponent(tokenFor(hash, expiresAt, configured.env.NEWSLETTER_HASH_SECRET))}`;
-  const unsubscribeUrl = `https://www.miportal.me/api/newsletter?action=unsubscribe&token=${encodeURIComponent(tokenFor(hash, expiresAt, configured.env.NEWSLETTER_HASH_SECRET))}`;
+  const payload = `${hash}.${Date.now() + tokenLifetime}`;
+  const confirmUrl = `https://www.miportal.me/api/newsletter?action=confirm&token=${encodeURIComponent(tokenFor(payload, configured.env.NEWSLETTER_HASH_SECRET))}`;
+  const unsubscribeUrl = `https://www.miportal.me/api/newsletter?action=unsubscribe&token=${encodeURIComponent(tokenFor(payload, configured.env.NEWSLETTER_HASH_SECRET))}`;
   try {
     const limit = await rpc(configured, 'reserve_newsletter_attempt',
       { p_sender_hash: createHmac('sha256', configured.env.NEWSLETTER_HASH_SECRET).update(`ip:${ip}`).digest('hex') });

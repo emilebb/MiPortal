@@ -88,6 +88,30 @@
     }, 6000);
   }
 
+  // Dispara la novedad automáticamente tras guardar/publicar un recurso.
+  // No es un botón manual: se llama justo después de que el guardado en
+  // Supabase tuvo éxito. El envío real vive en la base (cola durable) y en
+  // api/newsletter-send.js; si esta llamada falla o el navegador se cierra,
+  // la próxima publicación procesará también lo pendiente.
+  async function notifyPublished(resourceId) {
+    if (!resourceId || !supabase) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) return;
+      await fetch('/api/newsletter-send', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ resourceId }),
+        signal: AbortSignal.timeout(12000)
+      });
+    } catch {
+      // Intencionalmente silencioso: la cola es durable y se reintentará.
+    }
+  }
+
   const ResourceAPI = {
     async listAll() {
       const { data, error } = await supabase
@@ -117,6 +141,7 @@
     requireAdmin,
     signOut,
     showToast,
+    notifyPublished,
     ResourceAPI
   };
 

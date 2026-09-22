@@ -143,6 +143,7 @@
     try {
       await window.Admin.ResourceAPI.setPublished(resource.id, target);
       toast(target ? 'Recurso publicado.' : 'Recurso despublicado.', 'success');
+      if (target) window.Admin.notifyPublished(resource.id);
       await loadList();
     } catch (error) {
       toast(`No se pudo actualizar: ${error.message}`, 'error');
