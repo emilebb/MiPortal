@@ -10,6 +10,7 @@
     sending = true;
     button.disabled = true;
     form.setAttribute('aria-busy', 'true');
+    status.dataset.state = 'sending';
     status.textContent = 'Suscribiendo…';
     try {
       const response = await fetch('/api/newsletter', {
@@ -19,14 +20,17 @@
       });
       const result = await response.json().catch(() => ({}));
       if (response.ok) {
+        status.dataset.state = 'success';
         status.textContent = typeof result?.message === 'string'
           ? result.message : '¡Gracias! Te has suscrito correctamente.';
         form.reset();
         return;
       }
+      status.dataset.state = 'error';
       status.textContent = typeof result?.error === 'string'
         ? result.error : 'No se pudo completar la suscripción. Probá nuevamente.';
     } catch {
+      status.dataset.state = 'error';
       status.textContent = 'No se pudo completar la suscripción. Probá nuevamente.';
     } finally {
       sending = false;

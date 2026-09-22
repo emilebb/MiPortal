@@ -22,7 +22,16 @@
   padding-inline: max(var(--container-gutter), calc((100% - var(--container-max)) / 2));
   background-color: var(--card-bg);
   border-bottom: 1px solid var(--border-color);
-  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.04);
+  box-shadow: 0 1px 0 rgba(16, 24, 40, 0.03);
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .admin-header {
+    background: color-mix(in srgb, var(--card-bg) 82%, transparent);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    backdrop-filter: blur(14px) saturate(160%);
+  }
 }
 
 .admin-header .logo-text {
@@ -145,20 +154,26 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
+  gap: 0.5rem;
   min-height: 2.75rem;
-  padding: 0.6rem 1.1rem;
+  padding: 0.6rem 1.2rem;
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   background: var(--card-bg);
   color: var(--text-color);
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   text-decoration: none;
   cursor: pointer;
   line-height: 1.25;
   transition: background-color var(--transition), border-color var(--transition),
     color var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+
+.btn:focus-visible {
+  outline: 3px solid var(--ring-color);
+  outline-offset: 2px;
 }
 
 .btn:hover {
@@ -180,11 +195,12 @@
 .btn-primary {
   border-color: var(--primary-color);
   background: var(--primary-color);
-  color: #fff;
+  color: var(--on-primary);
 }
 
 .btn-primary:hover {
   background: var(--primary-dark);
+  border-color: var(--primary-dark);
   box-shadow: var(--shadow-md);
 }
 
@@ -408,9 +424,9 @@ body.dark-mode .badge-publicado {
 
 .login-card {
   width: min(440px, 100%);
-  padding: clamp(1.25rem, 4vw, 2rem);
+  padding: clamp(1.4rem, 4vw, 2rem);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   background: var(--card-bg);
   box-shadow: var(--shadow-lg);
 }

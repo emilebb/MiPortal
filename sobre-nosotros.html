@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self'; connect-src https://api.rss2json.com https://*.supabase.co; img-src 'self' data: https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://api.rss2json.com https://*.supabase.co; img-src 'self' data: https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
   
   <!-- SEO Básico -->
   <title>Sobre Nosotros - Conocé el Proyecto MiPortal</title>
@@ -46,6 +46,9 @@
   }
   </script>
   
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -53,7 +56,9 @@
 
   <header class="main-header">
     <div class="logo">
-      <div class="logo-text">MiPortal<span>.me</span></div>
+      <a class="logo-link" href="index.html" aria-label="MiPortal — Inicio">
+        <span class="logo-text">MiPortal<span>.me</span></span>
+      </a>
     </div>
     <button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="mainNav">
       <span class="nav-toggle-icon" aria-hidden="true">
@@ -102,13 +107,28 @@
 
   <footer class="main-footer">
     <div class="footer-inner">
-      <p class="footer-tagline">MiPortal — noticias y recursos de desarrollo web en un solo lugar.</p>
-      <nav aria-label="Enlaces legales y de información">
+      <div class="footer-brand">
+        <span class="logo-text footer-brand-name">MiPortal<span>.me</span></span>
+        <p class="footer-tagline">Noticias y recursos de desarrollo web en un solo lugar.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Información y legal">
+        <span class="footer-title">Información</span>
+        <a href="sobre-nosotros.html">Sobre nosotros</a>
         <a href="politica-de-privacidad.html">Política de privacidad</a>
         <a href="terminos-y-condiciones.html">Términos y condiciones</a>
-        <a href="contacto.html">Contacto</a>
-        <a href="sobre-nosotros.html">Sobre nosotros</a>
       </nav>
+      <nav class="footer-nav" aria-label="Navegación del sitio">
+        <span class="footer-title">Navegación</span>
+        <a href="index.html">Inicio</a>
+        <a href="noticias.html">Noticias</a>
+        <a href="recursos.html">Recursos</a>
+        <a href="contacto.html">Contacto</a>
+      </nav>
+      <div class="footer-contact">
+        <span class="footer-title">Contacto</span>
+        <a href="contacto.html">Formulario de contacto</a>
+        <a href="mailto:emile.123455@gmail.com">emile.123455@gmail.com</a>
+      </div>
     </div>
     <p class="footer-copy">&copy; 2026 MiPortal. Todos los derechos reservados.</p>
   </footer>

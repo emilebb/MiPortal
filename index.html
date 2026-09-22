@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self'; connect-src 'self' https://api.rss2json.com https://*.supabase.co; img-src 'self' data: https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://api.rss2json.com https://*.supabase.co; img-src 'self' data: https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
   
   <!-- SEO Básico -->
   <title>MiPortal - Noticias y Recursos de Desarrollo Web</title>
@@ -59,6 +59,9 @@
   </script>
   
   <!-- Estilos globales y modulares -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -67,7 +70,9 @@
   <!-- Encabezado y Navegación Principal -->
   <header class="main-header">
     <div class="logo">
-      <div class="logo-text">MiPortal<span>.me</span></div>
+      <a class="logo-link" href="index.html" aria-label="MiPortal — Inicio">
+        <span class="logo-text">MiPortal<span>.me</span></span>
+      </a>
     </div>
     <button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="mainNav">
       <span class="nav-toggle-icon" aria-hidden="true">
@@ -92,14 +97,14 @@
   <main id="main-content" class="home-page container">
     <h1 class="visually-hidden">MiPortal - Noticias y Recursos de Desarrollo Web</h1>
     <section class="home-hero">
-      <div>
+      <div class="hero-copy">
         <span class="eyebrow">Portal de información</span>
         <h2>Noticias y recursos de desarrollo web en un solo lugar</h2>
-        <p>Descubrí novedades de desarrollo web y aprendé con documentación en español de HTML, CSS, JavaScript, React y accesibilidad. Todo en una interfaz simple y organizada.</p>
+        <p class="hero-lead">Descubrí novedades de desarrollo web y aprendé con documentación en español de HTML, CSS, JavaScript, React y accesibilidad. Todo en una interfaz simple y organizada.</p>
         <div class="home-actions">
-          <a class="primary-action" href="noticias.html">Ver noticias</a>
-          <a class="secondary-action" href="recursos.html">Explorar recursos</a>
-          <button type="button" hidden class="btn-pro js-pro-checkout">
+          <a class="btn btn-primary primary-action btn-lg" href="noticias.html">Ver noticias</a>
+          <a class="btn btn-secondary secondary-action btn-lg" href="recursos.html">Explorar recursos</a>
+          <button type="button" hidden class="btn btn-pro js-pro-checkout">
             Obtener Versión Pro ($19.999 COP)
           </button>
         </div>
@@ -130,7 +135,7 @@
           <span class="feature-number">03</span>
           <h3>Versión Pro</h3>
           <p>Desbloqueá una experiencia 100% limpia sin anuncios, herramientas sin límites y contenido VIP exclusivo.</p>
-          <button type="button" class="btn-pro btn-pro-card js-pro-checkout">
+          <button type="button" class="btn btn-pro btn-pro-card js-pro-checkout">
             Suscribirse Pro
           </button>
         </article>
@@ -145,11 +150,29 @@
       <p>Las noticias provienen de Paradigma Digital, campusMVP, Smashing Magazine, CSS-Tricks y React. Podés buscar entre las entradas disponibles y elegir solo español. Los recursos de desarrollo web enlazan a documentación oficial y sitios de referencia. Todo el contenido abre en su fuente original.</p>
     </section>
 
+    <section class="newsletter-band" aria-labelledby="newsletter-title">
+      <div>
+        <span class="eyebrow">Novedades</span>
+        <h2 id="newsletter-title">Recibí novedades del portal</h2>
+        <p>Suscribite para enterarte de nuevas noticias y recursos. Sin publicidad, solo contenido. Podrás darte de baja cuando quieras.</p>
+      </div>
+      <form id="newsletterForm" class="newsletter-form" action="/api/newsletter" method="post">
+        <label for="newsletterEmail">Correo electrónico
+          <input id="newsletterEmail" name="email" type="email" autocomplete="email" placeholder="tucorreo@ejemplo.com" required aria-required="true">
+        </label>
+        <label class="visually-hidden" aria-hidden="true">Sitio web
+          <input name="website" tabindex="-1" autocomplete="off">
+        </label>
+        <button type="submit" class="btn btn-primary">Suscribirme</button>
+        <p id="newsletterStatus" class="newsletter-status" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
     <section class="pro-banner" aria-labelledby="pro-title">
       <p class="eyebrow">MiPortal Pro</p>
       <h2 id="pro-title">Obtén MiPortal Pro</h2>
       <p>Accede a herramientas ilimitadas, contenido exclusivo y una experiencia sin anuncios.</p>
-      <button type="button" hidden class="btn-pro js-pro-checkout">
+      <button type="button" hidden class="btn btn-pro js-pro-checkout">
         Obtener Versión Pro — $19.999 COP
       </button>
     </section>
@@ -158,13 +181,28 @@
   <!-- Pie de Página -->
   <footer class="main-footer">
     <div class="footer-inner">
-      <p class="footer-tagline">MiPortal — noticias y recursos de desarrollo web en un solo lugar.</p>
-      <nav aria-label="Enlaces legales y de información">
+      <div class="footer-brand">
+        <span class="logo-text footer-brand-name">MiPortal<span>.me</span></span>
+        <p class="footer-tagline">Noticias y recursos de desarrollo web en un solo lugar.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Información y legal">
+        <span class="footer-title">Información</span>
+        <a href="sobre-nosotros.html">Sobre nosotros</a>
         <a href="politica-de-privacidad.html">Política de privacidad</a>
         <a href="terminos-y-condiciones.html">Términos y condiciones</a>
-        <a href="contacto.html">Contacto</a>
-        <a href="sobre-nosotros.html">Sobre nosotros</a>
       </nav>
+      <nav class="footer-nav" aria-label="Navegación del sitio">
+        <span class="footer-title">Navegación</span>
+        <a href="index.html">Inicio</a>
+        <a href="noticias.html">Noticias</a>
+        <a href="recursos.html">Recursos</a>
+        <a href="contacto.html">Contacto</a>
+      </nav>
+      <div class="footer-contact">
+        <span class="footer-title">Contacto</span>
+        <a href="contacto.html">Formulario de contacto</a>
+        <a href="mailto:emile.123455@gmail.com">emile.123455@gmail.com</a>
+      </div>
     </div>
     <p class="footer-copy">&copy; 2026 MiPortal. Todos los derechos reservados.</p>
   </footer>
@@ -175,5 +213,6 @@
   <script src="js/supabase-client.js"></script>
   <script src="js/auth-nav.js"></script>
   <script src="main.js"></script>
+  <script src="js/newsletter.js"></script>
 </body>
 </html>
