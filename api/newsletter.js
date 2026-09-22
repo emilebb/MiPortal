@@ -127,12 +127,20 @@ async function rpc(configured, name, payload) {
   return response.json();
 }
 
-async function sendWelcome(configured, to, urls, key) {
+async function sendWelcome(configured, to, urls, idempotencyPayload) {
   const { html, text } = buildWelcomeEmail(urls);
+  // Clave de idempotencia ÚNICA por solicitud: deriva del payload firmado
+  // (hash del correo + expiración), no del correo a secas. Reutilizar la
+  // misma clave con un cuerpo distinto (p. ej. otro correo de bienvenida
+  // para el mismo email con tokens URL nuevos) hace que Resend responda
+  // HTTP 409 invalid_idempotent_request. Los reintentos de UNA misma
+  // solicitud conservan su clave y siguen protegidos por idempotencia.
+  const idempotencyKey = `newsletter/welcome/${createHmac('sha256', configured.env.NEWSLETTER_HASH_SECRET)
+    .update(String(idempotencyPayload)).digest('hex')}`;
   const response = await fetch('https://api.resend.com/emails', {
     method: 'POST', redirect: 'error',
     headers: { Authorization: `Bearer ${configured.env.RESEND_API_KEY}`,
-      'Content-Type': 'application/json', 'Idempotency-Key': `newsletter/${key}` },
+      'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
     body: JSON.stringify({ from: `MiPortal <${configured.env.RESEND_FROM_EMAIL}>`,
       to: [to], subject: '¡Bienvenido a MiPortal! 🎉', html, text }),
     signal: AbortSignal.timeout(8000)
@@ -212,7 +220,7 @@ module.exports = async function handler(req, res) {
     }
     const result = await rpc(configured, 'upsert_newsletter_subscriber', { p_email: email, p_email_hash: hash });
     try {
-      await sendWelcome(configured, email, { confirmUrl, unsubscribeUrl }, hash);
+      await sendWelcome(configured, email, { confirmUrl, unsubscribeUrl }, payload);
     } catch (error) {
       logUpstream(error);
     }

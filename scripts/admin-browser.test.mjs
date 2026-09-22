@@ -13,6 +13,8 @@ const mock = `
   window.pending = [];
   window.writes = [];
   window.networkAttempts = [];
+  window.notifyCalls = [];
+  window.apiRespondError = true;
   window.fetch = (...args) => {
     networkAttempts.push(args);
     throw new Error('Network is forbidden in this fixture');
@@ -24,18 +26,27 @@ const mock = `
       writes.push({ type: 'update', payload });
       return { eq: async (key, id) => {
         writes[writes.length - 1].id = id;
-        return { error: { message: 'Fixture write intercepted' } };
+        return window.apiRespondError
+          ? { error: { message: 'Fixture write intercepted' } }
+          : { error: null };
       } };
     },
-    async insert(payload) {
+    insert(payload) {
       writes.push({ type: 'insert', payload });
-      return { error: { message: 'Fixture write intercepted' } };
+      return {
+        select() { return {
+          single: async () => window.apiRespondError
+            ? { data: null, error: { message: 'Fixture write intercepted' } }
+            : { data: { id: 'new-resource-inserted-id' }, error: null }
+        }; }
+      };
     }
   };
   window.Admin = {
     supabase: { from: () => query },
     requireAdmin: async () => Admin.supabase,
     showToast() {},
+    notifyPublished: async id => { notifyCalls.push(id); return true; },
     ResourceAPI: {
       listAll: () => new Promise((resolve, reject) =>
         pending.push(result => result.error ?
@@ -48,7 +59,7 @@ test('admin browser regressions with isolated fixtures',
   { timeout: 60000 }, async t => {
     const allowed = new Set([
       '/admin/index.html', '/admin/recurso-form.html', '/admin/admin.css',
-      '/styles.css', '/js/admin/index.js', '/js/admin/recurso-form.js'
+      '/styles.css', '/js/admin/index.js', '/js/admin/recurso-form.js', '/js/admin/publish-decision.js'
     ]);
     const server = createServer(async (req, res) => {
       const path = new URL(req.url, 'http://localhost').pathname;
@@ -57,6 +68,9 @@ test('admin browser regressions with isolated fixtures',
         res.end(mock);
         return;
       }
+      // El form redirige con location.replace a ./?toast=guardado; un 204
+      // mantiene el documento actual del fixture para seguir asertando.
+      if (path === '/admin/') { res.statusCode = 204; res.end(); return; }
       if (!allowed.has(path)) { res.writeHead(404).end(); return; }
       let content = await readFile(new URL(path.slice(1), root), 'utf8');
       if (path.endsWith('.html')) {
@@ -230,6 +244,63 @@ test('admin browser regressions with isolated fixtures',
       await waitFor('writes.length === 1');
       assert.equal(await evaluate('writes[0].payload.title.length'), 160);
       assert.equal(await evaluate('writes[0].type'), 'insert');
+      await noNetwork();
+    });
+
+    await t.test('creating a new published resource fires the newsletter dispatch once', async () => {
+      await navigate('/admin/recurso-form.html');
+      await evaluate('window.apiRespondError = false');
+      await change('title', 'Nuevo publicado');
+      await change('description', 'Descripción del recurso nuevo');
+      await change('url', 'https://example.test/nuevo-publicado');
+      await change('category', 'React');
+      await evaluate(`document.getElementById('resourceForm').requestSubmit()`);
+      await waitFor('writes.length === 1');
+      await waitFor('notifyCalls.length === 1');
+      assert.deepEqual(await evaluate('notifyCalls'), ['new-resource-inserted-id']);
+      assert.equal(await evaluate('writes[0].payload.published'), true);
+      await noNetwork();
+    });
+
+    await t.test('publishing an existing draft (false → true) fires the dispatch exactly once', async () => {
+      const draft = fixtures[1];
+      await navigate(`/admin/recurso-form.html?id=${draft.id}`);
+      await settle({ data: draft });
+      await evaluate('window.apiRespondError = false');
+      await evaluate(`document.getElementById('published').checked = true`);
+      await evaluate(`document.getElementById('resourceForm').requestSubmit()`);
+      await waitFor('writes.length === 1');
+      await waitFor('notifyCalls.length === 1');
+      assert.deepEqual(await evaluate('notifyCalls'), [draft.id]);
+      assert.equal(await evaluate('writes[0].payload.published'), true);
+      await noNetwork();
+    });
+
+    await t.test('editing an already published resource does NOT dispatch again', async () => {
+      const published = fixtures[0];
+      await navigate(`/admin/recurso-form.html?id=${published.id}`);
+      await settle({ data: published });
+      await evaluate('window.apiRespondError = false');
+      await change('title', 'Solo se ajusta el título');
+      await evaluate(`document.getElementById('resourceForm').requestSubmit()`);
+      await waitFor('writes.length === 1');
+      assert.deepEqual(await evaluate('notifyCalls'), []);
+      assert.equal(await evaluate('writes[0].payload.published'), true);
+      await noNetwork();
+    });
+
+    await t.test('saving a draft does NOT dispatch', async () => {
+      await navigate('/admin/recurso-form.html');
+      await evaluate('window.apiRespondError = false');
+      await change('title', 'Borrador sin disparo');
+      await change('description', 'Descripción del borrador');
+      await change('url', 'https://example.test/borrador');
+      await change('category', 'CSS');
+      await evaluate(`document.getElementById('published').checked = false`);
+      await evaluate(`document.getElementById('resourceForm').requestSubmit()`);
+      await waitFor('writes.length === 1');
+      assert.deepEqual(await evaluate('notifyCalls'), []);
+      assert.equal(await evaluate('writes[0].payload.published'), false);
       await noNetwork();
     });
   });

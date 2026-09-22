@@ -198,6 +198,54 @@ test('newsletter API keeps a registered subscription when the welcome email fail
   spy.mock.restore();
 });
 
+test('welcome email uses a unique idempotency key per subscription request (no HTTP 409)', async t => {
+  withEnv(t);
+  let fakeNow = 1000;
+  t.mock.method(Date, 'now', () => fakeNow);
+  const keys = [];
+  t.mock.method(global, 'fetch', async (url, options) => {
+    if (url.includes('resend.com/emails')) {
+      keys.push(options.headers['Idempotency-Key']);
+      return response(200, { id: `mock-email-id-${fakeNow}` });
+    }
+    if (url.includes('/reserve_newsletter_attempt')) return response(200, { allowed: true });
+    if (url.includes('/upsert_newsletter_subscriber')) return response(200, { status: 'pending' });
+    return response(200, { id: 'mock-email-id' });
+  });
+
+  const first = await run();
+  assert.equal(first.code, 202);
+  fakeNow = 2000;
+  const second = await run();
+  assert.equal(second.code, 202);
+
+  assert.equal(keys.length, 2, 'dos suscripciones del mismo correo → dos intentos de welcome');
+  assert.ok(keys.every(key => /^newsletter\/welcome\/[0-9a-f]{64}$/.test(key)),
+    'formato de clave estable y acotado');
+  assert.notEqual(keys[0], keys[1], 'cada solicitud distinta usa una clave distinta');
+  assert.equal(JSON.stringify(keys).includes('mock-provider-secret'), false);
+});
+
+test('the exact same welcome request retried keeps the same idempotency key', async t => {
+  withEnv(t);
+  t.mock.method(Date, 'now', () => 5000);
+  const keys = [];
+  t.mock.method(global, 'fetch', async (url, options) => {
+    if (url.includes('resend.com/emails')) {
+      keys.push(options.headers['Idempotency-Key']);
+      return response(200, { id: 'mock-email-id' });
+    }
+    if (url.includes('/reserve_newsletter_attempt')) return response(200, { allowed: true });
+    if (url.includes('/upsert_newsletter_subscriber')) return response(200, { status: 'pending' });
+    return response(200, { id: 'mock-email-id' });
+  });
+
+  await run();
+  await run();
+  assert.equal(keys.length, 2);
+  assert.equal(keys[0], keys[1], 'repetir la misma solicitud reutiliza la misma clave (idempotencia intacta)');
+});
+
 test('newsletter API timeout returns 504 and never leaks secrets to logs', async t => {
   withEnv(t);
   const logs = [];

@@ -24,6 +24,10 @@
   const params = new URLSearchParams(window.location.search);
   const resourceId = params.get('id');
 
+  // Estado published con el que se cargó el recurso en modo edición. Solo una
+  // transición real (nuevo publicado, o false → true) dispara la novedad.
+  let wasPublished = false;
+
   const toast = (message, type) => window.Admin.showToast(message, type, region);
 
   // Normaliza y valida una URL exigiendo protocolo https (igual que la parte
@@ -103,6 +107,7 @@
       categoryInput.value = data.category || '';
       imageUrlInput.value = data.image_url || '';
       publishedInput.checked = Boolean(data.published);
+      wasPublished = Boolean(data.published);
     } catch (error) {
       showLoadError(`No se pudo cargar el recurso: ${error.message}`);
     }
@@ -159,14 +164,26 @@
 
     setBusy(true);
 
+    // Decide ANTES de guardar si esta publicación dispara la novedad: solo si
+    // queda en true y hubo transición real (recurso nuevo o false → true).
+    // El fallback mantiene la misma regla si publish-decision.js no cargó.
+    const publishDecision = window.MiPortalPublishDecision;
+    const notifyNewsletter = publishDecision
+      ? publishDecision.shouldNotifyNewsletter({
+          isNew: !resourceId,
+          wasPublished,
+          willBePublished: payload.published
+        })
+      : Boolean(payload.published && (!resourceId || !wasPublished));
+
     try {
+      let savedId = resourceId;
       if (resourceId) {
         const { error } = await window.Admin.supabase
           .from('resources')
           .update(payload)
           .eq('id', resourceId);
         if (error) throw new Error(error.message);
-        if (payload.published) window.Admin.notifyPublished(resourceId);
       } else {
         const { data, error } = await window.Admin.supabase
           .from('resources')
@@ -174,7 +191,13 @@
           .select('id')
           .single();
         if (error) throw new Error(error.message);
-        if (payload.published) window.Admin.notifyPublished(data?.id);
+        savedId = data?.id;
+      }
+
+      // El envío de la novedad NUNCA debe impedir que el recurso quede
+      // guardado: notifyPublished aísla sus propios errores y solo loguea.
+      if (notifyNewsletter && savedId) {
+        await window.Admin.notifyPublished(savedId);
       }
 
       window.location.replace('./?toast=guardado');

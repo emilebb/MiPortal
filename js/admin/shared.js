@@ -90,15 +90,25 @@
 
   // Dispara la novedad automáticamente tras guardar/publicar un recurso.
   // No es un botón manual: se llama justo después de que el guardado en
-  // Supabase tuvo éxito. El envío real vive en la base (cola durable) y en
-  // api/newsletter-send.js; si esta llamada falla o el navegador se cierra,
-  // la próxima publicación procesará también lo pendiente.
+  // Supabase tuvo éxito, y solo cuando hubo una transición real a publicado
+  // (lo decide publish-decision.js en el form). El envío real vive en la
+  // base (cola durable) y en api/newsletter-send.js; si esta llamada falla o
+  // el navegador se cierra, la próxima publicación procesará lo pendiente.
+  // Nunca lanza hacia el guardado: cualquier fallo aquí solo se loguea.
   async function notifyPublished(resourceId) {
-    if (!resourceId || !supabase) return;
+    if (!resourceId || !supabase) {
+      console.warn('[newsletter-dispatch] sin resourceId o cliente; no se notifica');
+      return false;
+    }
+    console.info(`[newsletter-dispatch] recurso publicado: ${resourceId}`);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.access_token) return;
-      await fetch('/api/newsletter-send', {
+      if (!session?.access_token) {
+        console.warn('[newsletter-dispatch] sesión no disponible; reintentará la cola en la próxima publicación');
+        return false;
+      }
+      console.info('[newsletter-dispatch] llamando /api/newsletter-send');
+      const response = await fetch('/api/newsletter-send', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -107,8 +117,17 @@
         body: JSON.stringify({ resourceId }),
         signal: AbortSignal.timeout(12000)
       });
-    } catch {
-      // Intencionalmente silencioso: la cola es durable y se reintentará.
+      if (!response.ok) {
+        const detail = (await response.text().catch(() => '')) || response.status;
+        console.error(`[newsletter-dispatch] ERROR: /api/newsletter-send respondió ${detail}`);
+        return false;
+      }
+      console.info('[newsletter-dispatch] notificación aceptada por el servidor');
+      return true;
+    } catch (error) {
+      // Intencionalmente aislado: la cola es durable y se reintentará.
+      console.error(`[newsletter-dispatch] ERROR: ${error?.name || 'no se pudo notificar'} (reintentará la cola)`);
+      return false;
     }
   }
 
