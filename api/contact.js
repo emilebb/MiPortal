@@ -1,6 +1,5 @@
 const { createHash } = require('node:crypto');
 const { isIP } = require('node:net');
-const { buildContactEmail } = require('../lib/emails');
 
 const origins = new Set([
   'https://www.miportal.me', 'https://miportal.me',
@@ -80,12 +79,7 @@ function originAllowed(origin) {
 }
 
 function missingConfig() {
-  const env = process.env;
-  const missing = [];
-  if (!env.RESEND_API_KEY) missing.push('RESEND_API_KEY');
-  if (!validEmail(env.RESEND_FROM_EMAIL)) missing.push('RESEND_FROM_EMAIL');
-  if (!validEmail(env.CONTACT_TO_EMAIL)) missing.push('CONTACT_TO_EMAIL');
-  return missing;
+  return [];
 }
 
 module.exports = async function handler(req, res) {
@@ -159,44 +153,53 @@ module.exports = async function handler(req, res) {
     return fail(429, 'Límite de envíos alcanzado. Espera un momento antes de reintentar.');
   }
 
-  const env = process.env;
-  const { html, text } = buildContactEmail({
-    name: name.trim(), email, subject: subject.trim(), message: message.trim()
-  });
-  const payload = {
-    from: `MiPortal <${env.RESEND_FROM_EMAIL}>`, to: [env.CONTACT_TO_EMAIL],
-    subject: 'Nuevo mensaje de contacto — MiPortal', reply_to: email,
-    html, text
+  const n8nPayload = {
+    name: name.trim(),
+    email: email.trim().toLowerCase(),
+    subject: subject.trim(),
+    message: message.trim(),
+    requestId,
+    createdAt
   };
-  // Vincula la clave al contenido, la configuración y el inicio del intento.
-  const key = createHash('sha256').update(
-    JSON.stringify([requestId.toLowerCase(), createdAt, payload])
-  ).digest('hex');
+
   try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST', redirect: 'error',
-      headers: { Authorization: `Bearer ${env.RESEND_API_KEY}`,
-        'Content-Type': 'application/json', 'Idempotency-Key': `contact/${key}` },
-      body: JSON.stringify(payload), signal: AbortSignal.timeout(8000)
-    });
-    if (response.status === 429) {
-      const seconds = retryAfter(response.headers.get('Retry-After'));
-      res.setHeader('Retry-After', String(seconds));
-      return fail(429, `Límite de envíos alcanzado. Espera ${seconds} segundos.`);
+    const response = await fetch(
+      'https://n8n.miportal.me/webhook/miportal-contacto',
+      {
+        method: 'POST',
+        redirect: 'error',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(n8nPayload),
+        signal: AbortSignal.timeout(12000)
+      }
+    );
+
+    if (!response.ok) {
+      console.error(
+        `[contact] n8n respondió con HTTP ${response.status}`
+      );
+
+      return fail(
+        502,
+        'No pudimos procesar tu mensaje. Inténtalo nuevamente.'
+      );
     }
-    if (response.status === 409) {
-      res.setHeader('Retry-After', '5');
-      return fail(409, 'El envío está en conflicto o en curso. Reintenta más tarde.');
-    }
-    if (!response.ok) return fail(502, uncertain);
-    const result = await response.json();
-    if (typeof result?.id !== 'string' || !result.id) return fail(502, uncertain);
+
     return res.status(202).json({
-      message: 'Mensaje aceptado por el servicio de correo. Gracias por escribirnos.'
+      message: 'Mensaje enviado correctamente. Recibirás la respuesta en tu correo.'
     });
+
   } catch (error) {
-    return fail(error.name === 'TimeoutError' || error.name === 'AbortError'
-      ? 504 : 502, uncertain);
+    console.error('[contact] Error comunicando con n8n:', error);
+
+    return fail(
+      error.name === 'TimeoutError' || error.name === 'AbortError'
+        ? 504
+        : 502,
+      'No pudimos procesar tu mensaje. Inténtalo nuevamente.'
+    );
   }
 };
 

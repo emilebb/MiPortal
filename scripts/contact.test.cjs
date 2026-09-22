@@ -3,15 +3,12 @@ const assert = require('node:assert/strict');
 const handler = require('../api/contact');
 
 const input = () => ({
-  name: 'Prueba local', email: 'test@example.com',
+  name: 'Prueba local', email: 'Test@Example.com',
   subject: 'Consulta sobre MiPortal',
   message: 'Mensaje ficticio de prueba.', website: '',
   requestId: 'da287f3e-669e-4f10-9640-f987e23a9f40', createdAt: Date.now()
 });
-const config = {
-  RESEND_API_KEY: 'mock-provider-secret', RESEND_FROM_EMAIL: 'contact@example.test',
-  CONTACT_TO_EMAIL: 'emile.123455@gmail.com', VERCEL: '1'
-};
+const config = { VERCEL: '1' };
 async function run(body = input(), headers = {}, method = 'POST') {
   const res = {
     headers: {}, setHeader(k, v) { this.headers[k] = v; },
@@ -30,75 +27,57 @@ const reply = (status, body, headers = {}) => ({
   json: async () => body, headers: new Headers(headers)
 });
 
-test('contact API sends through Resend with validation and bounded abuse', async t => {
+test('contact API forwards the form to the n8n webhook with validation and bounded abuse', async t => {
   const saved = { ...process.env };
   Object.assign(process.env, config);
   t.after(() => { process.env = saved; });
   let calls = [];
-  let provider = () => reply(200, { id: 'mock-email-id' });
+  let provider = () => reply(202, {});
   t.mock.method(global, 'fetch', async (url, options) => {
     calls.push({ url, ...options, payload: JSON.parse(options.body) });
-    assert.equal(url, 'https://api.resend.com/emails');
+    assert.equal(url, 'https://n8n.miportal.me/webhook/miportal-contacto');
     return provider(options);
   });
 
-  await t.test('acceptance sends name, email, subject and message to the server recipient',
+  await t.test('acceptance sends name, email, subject, message, requestId and createdAt',
     async () => {
       handler.resetRateLimit();
       calls = [];
       const body = input();
       const response = await run(body);
       assert.equal(response.code, 202);
-      assert.match(response.body.message, /aceptado/i);
+      assert.equal(response.body.message, 'Mensaje enviado correctamente. Recibirás la respuesta en tu correo.');
       assert.equal(calls.length, 1);
-      const mail = calls[0].payload;
-      assert.equal(mail.from, `MiPortal <${config.RESEND_FROM_EMAIL}>`);
-      assert.deepEqual(mail.to, [config.CONTACT_TO_EMAIL]);
-      assert.equal(mail.reply_to, body.email);
-      assert.equal(mail.subject, 'Nuevo mensaje de contacto — MiPortal');
-      assert.equal(typeof mail.html, 'string');
-      assert.match(mail.html, /Nuevo mensaje de contacto/);
-      assert.match(mail.html, /Prueba local/);
-      assert.match(mail.html, /mailto:test@example\.com/);
-      assert.match(mail.html, /RESPONDER AL USUARIO/);
-      assert.match(mail.html, /MiPortal/);
-      assert.match(mail.html, /Fecha/);
-      assert.equal(mail.html.includes('<script'), false);
-      assert.match(mail.text, /Nombre: Prueba local/);
-      assert.match(mail.text, /Correo: test@example.com/);
-      assert.match(mail.text, /Asunto: Consulta sobre MiPortal/);
-      assert.match(mail.text, /Mensaje ficticio/);
-      assert.match(mail.text, /mailto:test@example\.com/);
-      assert.match(calls[0].headers['Idempotency-Key'], /^contact\/[a-f0-9]{64}$/);
-      assert.equal(JSON.stringify(mail).includes('mock-provider-secret'), false);
+      const sent = calls[0];
+      assert.equal(sent.method, 'POST');
+      assert.equal(sent.redirect, 'error');
+      assert.equal(sent.headers['Content-Type'], 'application/json');
+      assert.equal(sent.payload.name, 'Prueba local');
+      assert.equal(sent.payload.email, 'test@example.com');
+      assert.equal(sent.payload.subject, 'Consulta sobre MiPortal');
+      assert.equal(sent.payload.message, 'Mensaje ficticio de prueba.');
+      assert.equal(sent.payload.requestId, body.requestId);
+      assert.equal(sent.payload.createdAt, body.createdAt);
+      assert.equal(Object.keys(sent.payload).length, 6);
     });
 
-  await t.test('escapes user input before inserting it into the HTML email',
+  await t.test('forwards user input as plain fields after trim and lowercase only',
     async () => {
       handler.resetRateLimit();
       calls = [];
       const body = {
         ...input(),
-        name: 'Al <script>alert(1)</script>',
-        subject: 'A & B <b>"cita"</b>',
-        message: 'Línea 1\n<script>alert(2)</script>\n" & \' < >'
+        name: '  Al <script>alert(1)</script>  ',
+        subject: '  A & B <b>"cita"</b>  ',
+        message: ' Línea 1\n<script>alert(2)</script>\n" & \' < > '
       };
       assert.equal((await run(body)).code, 202);
-      const mail = calls[0].payload;
-      assert.equal(mail.html.includes('<script>'), false);
-      assert.match(mail.html, /&lt;script&gt;/);
-      assert.match(mail.html, /A &amp; B &lt;b&gt;/);
+      const sent = calls[0].payload;
+      assert.equal(sent.name, 'Al <script>alert(1)</script>');
+      assert.equal(sent.subject, 'A & B <b>"cita"</b>');
+      assert.equal(sent.message, 'Línea 1\n<script>alert(2)</script>\n" & \' < >');
+      assert.equal(JSON.stringify(sent).includes('mock-provider-secret'), false);
     });
-
-  await t.test('unchanged retries reuse the same idempotency key', async () => {
-    handler.resetRateLimit();
-    calls = [];
-    const body = input();
-    assert.equal((await run(body)).code, 202);
-    assert.equal((await run(body)).code, 202);
-    assert.equal(calls[0].headers['Idempotency-Key'],
-      calls[1].headers['Idempotency-Key']);
-  });
 
   await t.test('rejects malformed, oversized and hostile requests before I/O',
     async () => {
@@ -142,23 +121,17 @@ test('contact API sends through Resend with validation and bounded abuse', async
     assert.equal((await run(input(), { origin: 'http://localhost:3000' })).code, 403);
   });
 
-  await t.test('fails closed for missing config and untrusted IP', async () => {
+  await t.test('works without Resend config and rejects untrusted IP', async () => {
     handler.resetRateLimit();
     calls = [];
-    for (const key of Object.keys(config)) {
-      if (key === 'VERCEL') continue;
-      delete process.env[key];
-      assert.equal((await run()).code, 500, key);
-      process.env[key] = config[key];
+    for (const key of Object.keys(process.env)) {
+      if (key.startsWith('RESEND_')) delete process.env[key];
     }
-    process.env.RESEND_FROM_EMAIL = 'Unverified <test@resend.dev>';
-    assert.equal((await run()).code, 500);
-    process.env.RESEND_FROM_EMAIL = config.RESEND_FROM_EMAIL;
+    assert.equal((await run()).code, 202);
     for (const ip of [undefined, 'invalid', '192.0.2.1, 192.0.2.2']) {
       assert.equal((await run(input(), { 'x-vercel-forwarded-for': ip,
         'x-forwarded-for': '192.0.2.1' })).code, 400);
     }
-    assert.equal(calls.length, 0);
   });
 
   await t.test('in-memory rate limit returns Retry-After without sending', async () => {
@@ -172,7 +145,7 @@ test('contact API sends through Resend with validation and bounded abuse', async
   });
 
   await t.test('provider failures are safe and do not claim success', async () => {
-    for (const status of [400, 401, 403, 422, 500, 503]) {
+    for (const status of [400, 401, 403, 429, 409, 500, 503]) {
       handler.resetRateLimit();
       provider = () => reply(status, { message: 'mock-provider-secret' });
       const response = await run();
@@ -181,23 +154,15 @@ test('contact API sends through Resend with validation and bounded abuse', async
     }
     handler.resetRateLimit();
     provider = () => reply(200, {});
-    assert.equal((await run()).code, 502);
-    handler.resetRateLimit();
-    provider = () => reply(429, {}, { 'Retry-After': '120' });
-    const limited = await run();
-    assert.equal(limited.code, 429);
-    assert.equal(limited.headers['Retry-After'], '120');
-    handler.resetRateLimit();
-    provider = () => reply(409, { name: 'concurrent_idempotent_requests' });
-    assert.equal((await run()).code, 409);
+    assert.equal((await run()).code, 202);
   });
 
-  await t.test('provider timeout is bounded and retry keeps idempotency', async () => {
+  await t.test('provider timeout is bounded late and maps to 504', async () => {
     handler.resetRateLimit();
     calls = [];
     const timeout = AbortSignal.timeout.bind(AbortSignal);
     const spy = t.mock.method(AbortSignal, 'timeout', ms => {
-      assert.ok(ms > 0 && ms <= 8000);
+      assert.ok(ms > 0 && ms <= 12000);
       return timeout(5);
     });
     provider = options => new Promise((resolve, reject) => {
@@ -207,13 +172,9 @@ test('contact API sends through Resend with validation and bounded abuse', async
         reject(options.signal.reason);
       }, { once: true });
     });
-    const body = input();
-    const response = await run(body);
-    assert.equal(response.code, 504);
-    provider = () => reply(200, { id: 'mock-email-id' });
-    assert.equal((await run(body)).code, 202);
-    assert.equal(calls[1].headers['Idempotency-Key'],
-      calls[0].headers['Idempotency-Key']);
+    assert.equal((await run()).code, 504);
+    provider = () => reply(202, {});
+    assert.equal((await run()).code, 202);
     spy.mock.restore();
   });
 });
