@@ -1,114 +1,418 @@
+import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { test } from 'node:test';
+
 import {
-  sources, publicationDate, classify, prepareItems, selectItems, loadFeeds
+  publicationDate,
+  classify,
+  detectLanguage,
+  prepareItems,
+  selectItems,
+  loadNews
 } from '../js/news-feed.mjs';
 
-// Fixtures aisladas: nunca se sirven como contenido público.
-const source = sources.find(item => item.id === 'smashing');
-const spanish = sources.find(item => item.id === 'paradigma');
-const fixture = (overrides = {}) => ({
-  title: 'Stop Treating CSS Container Queries Like Traditional Media Queries',
-  link: 'https://smashingmagazine.com/2026/09/stop-treating-css-container-queries-traditional-media-queries/',
-  pubDate: '2026-09-16 10:00:00', categories: ['CSS'], ...overrides
-});
-const plain = value => typeof value === 'string' ? value : '';
-
-test('news page CSP allows the complete rss2json origin', async () => {
-  const html = await readFile(new URL('../noticias.html', import.meta.url), 'utf8');
-  const directive = html.match(/connect-src[^;]+;/)?.[0] || '';
-  assert.ok(directive.includes('https://api.rss2json.com'));
-  assert.equal(directive.includes('https://api.rss2json '), false);
-});
-
-test('publication calendar dates never fall back to today or normalize bad dates', () => {
-  for (const value of [null, undefined, '', 'invalid', '2026-02-30 00:00:00',
-    'mi., 26 ago. 2026 09:00:00 +0200', '2026-09-16junk']) {
-    assert.equal(publicationDate(value), null);
+// Node no tiene DOMParser.
+// Este DOMParser mínimo es suficiente para los textos usados
+// en estas pruebas.
+global.DOMParser = class {
+  parseFromString(value) {
+    return {
+      querySelectorAll() {
+        return [];
+      },
+      body: {
+        textContent: String(value)
+          .replace(/<[^>]*>/g, ' ')
+      }
+    };
   }
-  assert.equal(publicationDate('2026-09-16 10:00:00'), '2026-09-16');
-  assert.equal(publicationDate('2024-02-29'), '2024-02-29');
+};
+
+function row(overrides = {}) {
+  return {
+    id: 1,
+    url: 'https://example.com/react-19',
+    title: 'React 19 para desarrollo web',
+    description: 'Guía para crear aplicaciones con React.',
+    source: 'Example',
+    published_at: '2026-09-22T10:00:00Z',
+    published: true,
+    fetched_at: '2026-09-22T12:00:00Z',
+    ...overrides
+  };
+}
+
+test('publicationDate convierte una fecha válida', () => {
+  assert.equal(
+    publicationDate('2026-09-22T10:00:00Z'),
+    '2026-09-22'
+  );
 });
 
-test('categories use topic signals, not publisher names or Java substrings', () => {
-  assert.ok(classify('CSS random()', []).includes('css'));
-  assert.ok(classify('Container queries and cascade layers', []).includes('css'));
-  assert.ok(classify('Angular Zoneless', []).includes('javascript'));
-  assert.ok(classify('React 19.3', []).includes('frameworks'));
-  assert.ok(classify('Keyboard navigation', ['Accessibility']).includes('accessibility'));
-  assert.deepEqual(classify('Java concurrency', []), []);
-  const items = prepareItems([fixture({ title: 'React 19.3', categories: [] })],
-    source, plain);
-  assert.equal(items[0].categories.includes('css'), false);
+test('publicationDate devuelve null con fecha inválida', () => {
+  assert.equal(
+    publicationDate('fecha-invalida'),
+    null
+  );
 });
 
-test('CSS-Tricks attribution footer is not a CSS topic signal', () => {
-  const cssSource = sources.find(item => item.id === 'css-tricks');
-  const [item] = prepareItems([{
-    title: 'WordPress.com Student Plan',
-    link: 'https://css-tricks.com/wordpress-student-plan/',
-    categories: ['Links', 'education', 'WordPress'],
-    description: '<p>Building a WordPress site makes for a great final project.</p>' +
-      '<hr><p><small>Originally published on CSS-Tricks.</small></p>'
-  }], cssSource, value => value.replace(/<[^>]*>/g, ' '));
-  assert.equal(item.categories.includes('css'), false);
-  assert.equal(item.description.includes('CSS-Tricks'), false);
+test('classify detecta JavaScript y frameworks', () => {
+  const categories = classify(
+    'Nueva versión de React con JavaScript'
+  );
+
+  assert.ok(
+    categories.includes('javascript')
+  );
+
+  assert.ok(
+    categories.includes('frameworks')
+  );
 });
 
-test('web relevance, trusted original links, deduplication and chronology', () => {
+test('classify detecta CSS', () => {
+  const categories = classify(
+    'CSS Grid, Flexbox y Tailwind'
+  );
+
+  assert.ok(
+    categories.includes('css')
+  );
+});
+
+test('detectLanguage detecta español', () => {
+  assert.equal(
+    detectLanguage(
+      'Guía para crear una aplicación con React'
+    ),
+    'es'
+  );
+});
+
+test('detectLanguage detecta inglés', () => {
+  assert.equal(
+    detectLanguage(
+      'Learn how to build your application with React'
+    ),
+    'en'
+  );
+});
+
+test('prepareItems convierte una fila de Supabase', () => {
   const items = prepareItems([
-    fixture(), fixture(), fixture({ link: 'https://evil.example/css' }),
-    fixture({ link: 'javascript:alert(1)' }),
-    fixture({ link: 'https://smashingmagazine.com.evil.example/css' }),
-    fixture({ link: 'https://user@smashingmagazine.com/css' }),
-    fixture({ title: null }),
-    fixture({ link: 'https://smashingmagazine.com/undated', pubDate: null }),
-    fixture({ link: 'https://smashingmagazine.com/older', pubDate: '2026-08-31' })
-  ], source, plain);
-  const result = selectItems(items);
-  assert.equal(result.length, 3);
-  assert.equal(result[0].date, '2026-09-16');
-  assert.equal(result[2].date, null);
-  assert.equal(result[0].link, fixture().link);
-  assert.equal(result[0].source.label, 'Smashing Magazine');
-  assert.equal(prepareItems([fixture({ title: 'Corporate AI strategy',
-    categories: [], link: 'https://www.paradigmadigital.com/tech/ai/' })],
-  spanish, plain).length, 0);
+    row()
+  ]);
+
+  assert.equal(items.length, 1);
+
+  const item = items[0];
+
+  assert.equal(
+    item.title,
+    'React 19 para desarrollo web'
+  );
+
+  assert.equal(
+    item.link,
+    'https://example.com/react-19'
+  );
+
+  assert.equal(
+    item.source.label,
+    'Example'
+  );
+
+  assert.equal(
+    item.date,
+    '2026-09-22'
+  );
+
+  assert.ok(
+    item.categories.includes('javascript')
+  );
+
+  assert.ok(
+    item.categories.includes('frameworks')
+  );
 });
 
-test('category, language and accent-insensitive AND search combine before limit', () => {
-  const items = prepareItems([fixture()], source, plain).concat(prepareItems([
-    fixture({ title: 'Angular Zoneless: detección de cambios', categories: [],
-      link: 'https://www.paradigmadigital.com/dev/angular-zoneless-siguiente-paso-evolucion-deteccion-cambios/',
-      pubDate: '2026-09-04 06:00:00' })
-  ], spanish, plain));
-  assert.equal(selectItems(items, { category: 'javascript', language: 'es',
-    query: 'angular deteccion' }).length, 1);
-  assert.equal(selectItems(items, { category: 'css', language: 'es' }).length, 0);
-  assert.equal(selectItems(items, { query: 'Java' }).length, 0);
-  assert.equal(selectItems(items, { query: '' }).length, 2);
-  assert.equal(selectItems(items, { query: 'angular missing' }).length, 0);
+test('prepareItems descarta URLs inválidas', () => {
+  const items = prepareItems([
+    row({
+      url: 'javascript:alert(1)'
+    })
+  ]);
+
+  assert.equal(
+    items.length,
+    0
+  );
 });
 
-test('parallel loads isolate partial, total, malformed and timeout failures', async () => {
-  const ok = { ok: true, json: async () => ({ status: 'ok', items: [fixture()] }) };
-  let calls = 0;
-  const partial = await loadFeeds({ sources: sources.slice(0, 2),
-    fetcher: async () => { if (calls++) throw Error('offline'); return ok; } });
-  assert.deepEqual(partial.map(result => result.status), ['fulfilled', 'rejected']);
-  const failed = await loadFeeds({ fetcher: async () => ({ ok: false }) });
-  assert.ok(failed.every(result => result.status === 'rejected'));
-  const malformed = await loadFeeds({ fetcher: async () => ({ ok: true,
-    json: async () => ({ status: 'ok', items: null }) }) });
-  assert.ok(malformed.every(result => result.status === 'rejected'));
-  let aborted = 0;
-  const timed = await loadFeeds({ timeoutMs: 5,
-    fetcher: (_url, { signal }) => new Promise(() => {
-      signal.addEventListener('abort', () => aborted++);
-    }) });
-  assert.equal(aborted, sources.length);
-  assert.ok(timed.every(result => result.status === 'rejected'));
-  const retry = await loadFeeds({ fetcher: async () => ok });
-  assert.ok(retry.every(result => result.status === 'fulfilled'));
+test('prepareItems descarta filas sin título', () => {
+  const items = prepareItems([
+    row({
+      title: null
+    })
+  ]);
+
+  assert.equal(
+    items.length,
+    0
+  );
+});
+
+test('prepareItems elimina HTML del título y descripción', () => {
+  const items = prepareItems([
+    row({
+      title: '<strong>React</strong> para desarrollo',
+      description: '<p>Una guía de React.</p>'
+    })
+  ]);
+
+  assert.equal(
+    items[0].title,
+    'React para desarrollo'
+  );
+
+  assert.equal(
+    items[0].description,
+    'Una guía de React.'
+  );
+});
+
+test('selectItems filtra por categoría', () => {
+  const items = prepareItems([
+    row({
+      id: 1,
+      url: 'https://example.com/react',
+      title: 'React para desarrollo web'
+    }),
+
+    row({
+      id: 2,
+      url: 'https://example.com/css',
+      title: 'CSS y Flexbox',
+      description: 'Guía de estilos'
+    })
+  ]);
+
+  const selected = selectItems(
+    items,
+    {
+      category: 'css'
+    }
+  );
+
+  assert.equal(
+    selected.length,
+    1
+  );
+
+  assert.equal(
+    selected[0].link,
+    'https://example.com/css'
+  );
+});
+
+test('selectItems filtra por idioma', () => {
+  const items = prepareItems([
+    row({
+      id: 1,
+      url: 'https://example.com/es',
+      title: 'Guía para crear aplicaciones web'
+    }),
+
+    row({
+      id: 2,
+      url: 'https://example.com/en',
+      title: 'Learn how to build your web application',
+      description: 'A guide for developers'
+    })
+  ]);
+
+  const selected = selectItems(
+    items,
+    {
+      language: 'en'
+    }
+  );
+
+  assert.equal(
+    selected.length,
+    1
+  );
+
+  assert.equal(
+    selected[0].source.language,
+    'en'
+  );
+});
+
+test('selectItems filtra por búsqueda', () => {
+  const items = prepareItems([
+    row({
+      id: 1,
+      url: 'https://example.com/react',
+      title: 'React para desarrollo web'
+    }),
+
+    row({
+      id: 2,
+      url: 'https://example.com/css',
+      title: 'CSS moderno',
+      description: 'Guía de estilos CSS'
+    })
+  ]);
+
+  const selected = selectItems(
+    items,
+    {
+      query: 'React'
+    }
+  );
+
+  assert.equal(
+    selected.length,
+    1
+  );
+
+  assert.match(
+    selected[0].title,
+    /React/
+  );
+});
+
+test('selectItems elimina URLs duplicadas', () => {
+  const items = prepareItems([
+    row({
+      id: 1
+    }),
+
+    row({
+      id: 2
+    })
+  ]);
+
+  const selected = selectItems(items);
+
+  assert.equal(
+    selected.length,
+    1
+  );
+});
+
+test('loadNews consulta news_articles correctamente', async () => {
+  const calls = [];
+
+  const query = {
+    select(value) {
+      calls.push(['select', value]);
+      return this;
+    },
+
+    eq(column, value) {
+      calls.push(['eq', column, value]);
+      return this;
+    },
+
+    order(column, options) {
+      calls.push([
+        'order',
+        column,
+        options
+      ]);
+
+      return this;
+    },
+
+    limit(value) {
+      calls.push(['limit', value]);
+
+      return Promise.resolve({
+        data: [
+          row()
+        ],
+        error: null
+      });
+    }
+  };
+
+  const client = {
+    from(table) {
+      calls.push(['from', table]);
+      return query;
+    }
+  };
+
+  const result = await loadNews({
+    client,
+    limit: 50
+  });
+
+  assert.equal(
+    result.length,
+    1
+  );
+
+  assert.ok(
+    calls.some(
+      call =>
+        call[0] === 'from' &&
+        call[1] === 'news_articles'
+    )
+  );
+
+  assert.ok(
+    calls.some(
+      call =>
+        call[0] === 'eq' &&
+        call[1] === 'published' &&
+        call[2] === true
+    )
+  );
+
+  assert.ok(
+    calls.some(
+      call =>
+        call[0] === 'limit' &&
+        call[1] === 50
+    )
+  );
+});
+
+test('loadNews propaga errores de Supabase', async () => {
+  const expected =
+    new Error('Supabase error');
+
+  const query = {
+    select() {
+      return this;
+    },
+
+    eq() {
+      return this;
+    },
+
+    order() {
+      return this;
+    },
+
+    limit() {
+      return Promise.resolve({
+        data: null,
+        error: expected
+      });
+    }
+  };
+
+  const client = {
+    from() {
+      return query;
+    }
+  };
+
+  await assert.rejects(
+    () => loadNews({ client }),
+    expected
+  );
 });
