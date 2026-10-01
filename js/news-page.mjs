@@ -175,9 +175,7 @@ function dateNode(item) {
 function media(item) {
   const wrapper = element('div', 'card-media');
 
-  /* news_articles no trae imagen: se muestra un marcador de marca. Si algún
-     día la consulta incluye una portada, se usa y el marcador queda de
-     respaldo si la imagen falla. */
+  // La marca queda de respaldo cuando no hay portada o la imagen falla.
   if (item.image) {
     const image = document.createElement('img');
 
