@@ -26,17 +26,22 @@
      22 · Responsive
      23 · Animaciones y movimiento reducido
 
-   Contrato con JavaScript (no cambiar nombres):
-     main.js, auth-nav.js, news-page.mjs, newsletter.js, contact.js,
-     recovery.js, register.js, reset-password.js y admin/* consultan estas
-     clases e IDs: #themeToggle, #navToggle, #mainNav, #auth-nav-item,
-     .main-footer nav, .cookie-accept, .cookie-reject, .js-pro-checkout,
-     .pro-container, .ad-container, .adsbygoogle, .home-actions, .pro-status,
-     .pro-badge, .card, .card-body, .tag, .card-description, .read-more,
-     .news-date, .news-card, .loading-state, .loading-spinner, .empty-state,
-     .empty-icon, .error-state, .error-icon, .retry-button, .search-submit,
-     .nav-auth, #newsletterForm, #newsletterStatus, #contactStatus y
-     [data-state="sending|success|error"].
+Contrato con JavaScript (no cambiar nombres):
+      main.js, auth-nav.js, news-page.mjs, newsletter.js, contact.js,
+      recovery.js, register.js, reset-password.js y admin/* consultan estas
+      clases e IDs: #themeToggle, #navToggle, #mainNav, #auth-nav-item,
+      .main-footer nav, .cookie-accept, .cookie-reject, .js-pro-checkout,
+      .pro-container, .ad-container, .adsbygoogle, .home-actions, .pro-status,
+      .pro-badge, .card, .card-body, .tag, .card-description, .read-more,
+      .news-date, .news-card, .loading-state, .loading-spinner, .empty-state,
+      .empty-icon, .error-state, .error-icon, .retry-button, .search-submit,
+      .nav-auth, #newsletterForm, #newsletterStatus, #contactStatus y
+      [data-state="sending|success|error"].
+
+      news-page.mjs (noticias.html) además escribe #newsCount, #newsWarning y
+      #resetNews, y genera .card-media, .card-title, .card-meta, .card-link,
+      .skeleton-card y .empty-actions. home-news.mjs sigue usando el bloque
+      anterior (.loading-spinner, .empty-state, .error-state).
 
    Compatibilidad: las clases legacy (primary-action, secondary-action,
    search-submit, retry-button) siguen mapeadas al sistema de botones .btn.
@@ -1432,6 +1437,14 @@ body.dark-mode .btn-theme .icon-sun {
 
 /* ============================================================================
    11 · NOTICIAS
+   ----------------------------------------------------------------------------
+   11.1 Contenedores  ·  11.2 Encabezado  ·  11.3 Buscador
+   11.4 Categorías     ·  11.5 Listado     ·  11.6 Tarjetas
+   11.7 Skeletons      ·  11.8 Estados     ·  11.9 Procedencia
+
+   Todo lo nuevo queda bajo `.news-page` (noticias.html) para no alterar la
+   portada (home-news.mjs) ni recursos.html, que comparten `.card`,
+   `.cards-grid`, `.filter-btn` y `.news-date`.
    ========================================================================== */
 
 .home-news-grid {
@@ -1441,16 +1454,12 @@ body.dark-mode .btn-theme .icon-sun {
   margin-top: clamp(1.5rem, 3vw, 2.25rem);
 }
 
-/* Alias histórico usado por recursos.html. */
+/* resources.html. Se mantiene intacto: usa su propio grid. */
 .cards-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
   gap: clamp(1rem, 2.5vw, 1.5rem);
   margin-top: clamp(1.25rem, 3vw, 1.5rem);
-}
-
-.cards-grid-content {
-  display: contents;
 }
 
 /* news-page.mjs añade .news-card junto a .card; ambos comparten tokens. */
@@ -1461,115 +1470,584 @@ body.dark-mode .btn-theme .icon-sun {
   font-size: 0.78rem;
 }
 
+/* --- 11.1 Contenedor de la página -------------------------------------- */
+
+/* En escritorio las noticias ocupan todo el ancho: la barra lateral que
+   existía en la versión anterior se eliminó al mover la información y el
+   newsletter debajo del listado. */
+.main-layout.news-page {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* --- 11.2 Encabezado compacto ------------------------------------------ */
+
+.news-hero {
+  max-width: 62ch;
+  padding-block: clamp(0.5rem, 2vw, 1.25rem) 0;
+}
+
+.news-hero-badge {
+  margin-bottom: 1rem;
+}
+
+.news-hero h1 {
+  margin: 0;
+  font-size: clamp(1.85rem, 4.6vw, 2.9rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+.news-hero-lead {
+  max-width: 58ch;
+  margin-top: 0.85rem;
+  color: var(--text-secondary);
+  font-size: clamp(1rem, 1.6vw, 1.1rem);
+  line-height: 1.6;
+}
+
+/* --- 11.3 Buscador ------------------------------------------------------ */
+
+.news-search {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: clamp(1.5rem, 3vw, 2rem);
+}
+
+.news-search-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.news-search-icon {
+  position: absolute;
+  left: 1rem;
+  width: 1.15rem;
+  height: 1.15rem;
+  color: var(--text-secondary);
+  pointer-events: none;
+}
+
+#searchInput {
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.8rem 1rem 0.8rem 2.85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: border-color var(--transition), box-shadow var(--transition),
+    background-color var(--transition);
+}
+
+#searchInput::placeholder {
+  color: var(--text-secondary);
+  opacity: 0.8;
+}
+
+#searchInput:hover {
+  border-color: var(--border-strong);
+}
+
+#searchInput:focus {
+  border-color: var(--brand);
+  outline: none;
+  box-shadow: 0 0 0 4px var(--focus-glow);
+}
+
+/* Quita el botón nativo de "x" para mantener el campo limpio y con el
+   mismo ancho en todos los navegadores. */
+#searchInput::-webkit-search-cancel-button {
+  appearance: none;
+  width: 1rem;
+  height: 1rem;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 6l12 12M18 6L6 18'/%3E%3C/svg%3E")
+    center / contain no-repeat;
+  cursor: pointer;
+}
+
+.search-submit .icon {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.news-search-help {
+  margin-top: 0.7rem;
+  color: var(--text-secondary);
+  font-size: 0.83rem;
+  line-height: 1.5;
+}
+
+/* --- 11.4 Categorías ---------------------------------------------------- */
+
+/* Píldoras compactas. En móvil se desplazan en horizontal sin ensanchar la
+   página; a partir de 640px vuelven a fluir en varias líneas. */
+.news-chips {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+  padding-bottom: 0.25rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.news-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.news-chips .filter-btn {
+  flex: 0 0 auto;
+  min-height: 2.35rem;
+  padding: 0.35rem 0.9rem;
+  border-color: var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  box-shadow: none;
+  transition: background-color var(--transition), border-color var(--transition),
+    color var(--transition);
+}
+
+.news-chips .filter-btn:hover {
+  translate: none;
+  border-color: var(--brand);
+  background: var(--brand-faint);
+  color: var(--brand);
+}
+
+.news-chips .filter-btn.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--on-primary);
+}
+
+/* --- 11.5 Listado ------------------------------------------------------- */
+
+.news-list-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem 1.5rem;
+  margin-top: clamp(2rem, 4vw, 2.75rem);
+  padding-top: clamp(1.5rem, 3vw, 2rem);
+  border-top: 1px solid var(--border);
+}
+
+.news-list-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.3rem 0.75rem;
+  min-width: 0;
+}
+
+.news-list-title h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2.6vw, 1.75rem);
+  letter-spacing: -0.02em;
+}
+
+.news-count {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+}
+
+.news-list-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.news-status {
+  min-height: 1.25rem;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.news-clear .icon,
+.news-refresh .icon {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.news-clear[hidden] {
+  display: none;
+}
+
+.news-lang-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.news-lang-select {
+  min-height: 2.35rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full);
+  background: var(--surface);
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.news-lang-select:hover {
+  border-color: var(--border-strong);
+}
+
+.news-lang-select:focus-visible {
+  border-color: var(--brand);
+  outline: none;
+  box-shadow: 0 0 0 4px var(--focus-glow);
+}
+
+.news-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  margin: 1.25rem 0 0;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--warning);
+  border-radius: var(--radius-md);
+  background: rgb(180 83 9 / 0.08);
+  color: var(--text-secondary);
+  font-size: 0.87rem;
+}
+
+.news-warning[hidden] {
+  display: none;
+}
+
+.news-grid {
+  margin-top: clamp(1.25rem, 2.5vw, 1.75rem);
+}
+
+/* 1 columna en móvil, 2 en tablet, 3 en escritorio. */
+.cards-grid-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(1rem, 2.5vw, 1.5rem);
+}
+
 .last-updated {
-  grid-column: 1 / -1;
   width: fit-content;
-  margin: 1rem auto 0;
+  margin: 1.5rem 0 0;
   padding: 0.35rem 0.9rem;
   border-radius: var(--radius-full);
-  background: var(--brand-soft);
+  background: var(--surface-secondary);
   color: var(--text-secondary);
   font-size: 0.78rem;
   text-align: center;
 }
 
-/* ============================================================================
-   12 · RECURSOS Y FILTROS
-   ========================================================================== */
+.last-updated:empty {
+  display: none;
+}
 
-.filter-section {
+/* --- 11.6 Tarjetas ------------------------------------------------------ */
+
+.news-page .card.news-card {
+  transition: translate var(--transition), box-shadow var(--transition),
+    border-color var(--transition);
+}
+
+.news-page .card.news-card:hover {
+  translate: 0 -3px;
+  border-color: rgb(var(--brand-rgb) / 0.38);
+  box-shadow: var(--shadow-md);
+}
+
+.card-media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border-subtle);
+  background:
+    radial-gradient(120% 130% at 18% 0%, rgb(var(--brand-rgb) / 0.18), transparent 62%),
+    radial-gradient(110% 110% at 88% 100%, rgb(var(--accent-rgb) / 0.16), transparent 60%),
+    var(--surface-secondary);
+}
+
+.card-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: scale var(--transition-slow);
+}
+
+.news-page .card.news-card:hover .card-media img {
+  scale: 1.02;
+}
+
+/* Placeholder cuando la noticia no trae imagen: nunca un icono roto. */
+.card-media-mark {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: rgb(var(--brand-rgb) / 0.32);
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  user-select: none;
+}
+
+.card-kicker {
   display: flex;
-  flex-direction: column;
-  gap: 0.9rem;
-  padding: clamp(1.1rem, 3vw, 1.5rem);
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+}
+
+.card-tag {
+  display: inline-block;
+  padding: 0.22rem 0.6rem;
+  border-radius: var(--radius-full);
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.055em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+.card-source-label {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.card-source-label::before {
+  content: "·";
+  margin-right: 0.45rem;
+  color: var(--border-strong);
+}
+
+.news-page .card-title {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0 0 0.5rem;
+  font-size: 1.12rem;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.news-page .card-description {
+  display: -webkit-box;
+  overflow: hidden;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem 0.4rem;
+  margin: 0.9rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.card-date::before {
+  content: "·";
+  margin-right: 0.4rem;
+}
+
+.card-link {
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+.card-link-arrow {
+  transition: translate var(--transition);
+}
+
+.card-link:hover .card-link-arrow {
+  translate: 3px 0;
+}
+
+/* --- 11.7 Skeletons de carga ------------------------------------------- */
+
+.skeleton-card {
+  pointer-events: none;
+}
+
+.skeleton-card .card-media {
+  background: var(--surface-secondary);
+}
+
+.skeleton-line {
+  border-radius: var(--radius-xs);
+  background: var(--surface-secondary);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.skeleton-tag {
+  width: 5.5rem;
+  height: 1.15rem;
+  border-radius: var(--radius-full);
+}
+
+.skeleton-title {
+  width: 88%;
+  height: 1.1rem;
+  margin-top: 0.7rem;
+}
+
+.skeleton-text {
+  width: 100%;
+  height: 0.8rem;
+  margin-top: 0.55rem;
+}
+
+.skeleton-text--short {
+  width: 62%;
+  margin-top: 0.35rem;
+}
+
+.skeleton-meta {
+  width: 45%;
+  height: 0.75rem;
+  margin-top: 1rem;
+}
+
+@keyframes skeleton-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.45;
+  }
+}
+
+/* --- 11.8 Estados sin resultados / error -------------------------------- */
+
+.news-page .empty-state {
+  border: 1px dashed var(--border);
+  background: var(--surface);
+}
+
+.news-page .error-state {
+  border: 1px dashed var(--danger);
+  background: var(--danger-soft);
+}
+
+.news-page .empty-state h3,
+.news-page .error-state h3 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.news-page .empty-state p,
+.news-page .error-state p {
+  max-width: 46ch;
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.news-page .empty-icon,
+.news-page .error-icon {
+  font-size: 2.2rem;
+  line-height: 1;
+}
+
+/* --- 11.9 Procedencia de las noticias ---------------------------------- */
+
+.news-about {
+  margin-top: clamp(2.5rem, 5vw, 3.5rem);
+}
+
+.news-about-details {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow-sm);
 }
 
-.filter-section h1 {
-  margin: 0;
-  font-size: clamp(1.5rem, 4vw, 2.2rem);
-  line-height: 1.15;
-}
-
-#searchForm {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  min-width: 0;
-}
-
-#searchInput,
-#newsLanguage {
-  width: 100%;
-  min-height: 2.9rem;
-  padding: 0.65rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  color: var(--text-primary);
-  transition: border-color var(--transition), box-shadow var(--transition);
-}
-
-#searchInput::placeholder {
-  color: var(--text-secondary);
-}
-
-#searchInput:focus,
-#newsLanguage:focus {
-  border-color: var(--brand);
-  outline: none;
-  box-shadow: 0 0 0 4px var(--focus-glow);
-}
-
-.privacy-note {
-  max-width: 70ch;
-  color: var(--text-secondary);
-  font-size: 0.82rem;
-}
-
-.filter-section > label[for="newsLanguage"] {
-  color: var(--text-primary);
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.filter-btn {
-  min-height: 2.6rem;
-  padding: 0.45rem 1rem;
-  border-color: var(--border);
-  border-radius: var(--radius-full);
-  background: var(--surface);
-  color: var(--text-secondary);
-  font-size: 0.87rem;
-  box-shadow: none;
-}
-
-.filter-btn:hover {
-  border-color: var(--brand);
-  background: var(--brand-faint);
-  color: var(--brand);
-}
-
-.filter-btn.active {
-  border-color: var(--primary);
-  background: var(--primary);
-  color: var(--on-primary);
-  box-shadow: var(--shadow-brand);
-}
-
-.category-filters {
+.news-about-summary {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.6rem 0.9rem;
+  padding: 1.1rem clamp(1.1rem, 2.5vw, 1.5rem);
+  border-radius: inherit;
+  cursor: pointer;
+  list-style: none;
+  transition: background-color var(--transition);
 }
 
-.news-status {
-  min-height: 1.5rem;
+.news-about-summary::-webkit-details-marker {
+  display: none;
+}
+
+.news-about-summary::after {
+  content: "";
+  width: 1.1rem;
+  height: 1.1rem;
+  margin-left: auto;
+  flex: 0 0 auto;
+  border-right: 2px solid var(--text-secondary);
+  border-bottom: 2px solid var(--text-secondary);
+  rotate: 45deg;
+  translate: 0 -0.2rem;
+  transition: rotate var(--transition), translate var(--transition);
+}
+
+.news-about-summary:hover {
+  background: var(--surface-inset);
+}
+
+.news-about-details[open] .news-about-summary::after {
+  rotate: -135deg;
+  translate: 0 0.2rem;
+}
+
+.news-about-summary .eyebrow {
+  margin: 0;
+}
+
+.news-about-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+}
+
+.news-about-body {
+  display: grid;
+  gap: 0.75rem;
+  padding: 0 clamp(1.1rem, 2.5vw, 1.5rem) 1.35rem;
+  max-width: 78ch;
+}
+
+.news-about-body p {
   color: var(--text-secondary);
-  font-size: 0.9rem;
+  font-size: 0.92rem;
+  line-height: 1.65;
 }
 
 /* ============================================================================
@@ -2493,46 +2971,18 @@ body.dark-mode .config-pending {
 }
 
 @media (min-width: 640px) {
-  .filter-section {
-    flex-flow: row wrap;
-    align-items: center;
-    gap: 1rem 1.25rem;
-  }
-
-  .filter-section h1,
-  .privacy-note {
-    flex-basis: 100%;
-  }
-
-  #searchForm {
-    flex: 1 1 420px;
-    flex-direction: row;
+  .news-search {
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
   }
 
-  #searchInput {
-    flex: 1 1 auto;
+  .news-chips {
+    overflow: visible;
+    flex-wrap: wrap;
   }
 
-  .search-submit {
-    flex: 0 0 auto;
-  }
-
-  .filter-section > label[for="newsLanguage"] {
-    flex: 0 0 auto;
-  }
-
-  #newsLanguage {
-    width: auto;
-    flex: 0 1 210px;
-  }
-
-  .category-filters {
-    flex-basis: 100%;
-  }
-
-  .category-filters .filter-btn {
-    flex: 0 1 auto;
+  .cards-grid-content {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .cookie-notice {
@@ -2655,6 +3105,10 @@ body.dark-mode .config-pending {
   .main-layout {
     grid-template-columns: minmax(0, 3fr) minmax(240px, 1fr);
     gap: 2.5rem;
+  }
+
+  .cards-grid-content {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .pro-panel {
@@ -2798,8 +3252,20 @@ body.dark-mode .config-pending {
   .tech-card:hover .tech-card-arrow,
   .btn:hover,
   .btn-secondary:hover,
-  .btn-pro:hover {
+  .btn-pro:hover,
+  .news-page .card.news-card:hover {
     translate: none;
+  }
+
+  .card-media img,
+  .card-link-arrow {
+    scale: none;
+    translate: none;
+  }
+
+  .skeleton-line {
+    animation: none;
+    opacity: 0.6;
   }
 
   .float-card {

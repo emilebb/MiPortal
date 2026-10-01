@@ -146,6 +146,11 @@ export function prepareItems(rows = []) {
       description,
       link,
       date: publicationDate(row.published_at),
+      /* Portada opcional. `news_articles` todavía no expone una columna de
+         imagen, así que aquí siempre es null y la tarjeta usa su marcador de
+         marca. Se lee sin modificar la consulta: si algún día la tabla
+         incluye la columna y la URL es válida, la tarjeta la muestra. */
+      image: safeUrl(row.image_url),
 
       source: {
         label: sourceLabel,

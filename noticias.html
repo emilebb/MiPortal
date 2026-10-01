@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co; img-src 'self' data: https://www.googletagmanager.com https://web.dev https://storage.googleapis.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co; img-src 'self' data: https:; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
   
   <!-- SEO Básico -->
   <title>Noticias de desarrollo web | MiPortal</title>
-  <meta name="description" content="Novedades de desarrollo web de fuentes especializadas en español e inglés. Filtrá por CSS, JavaScript, frameworks, accesibilidad e idioma.">
+  <meta name="description" content="Novedades de desarrollo web de fuentes especializadas en español e inglés. Filtra por CSS, JavaScript, frameworks, accesibilidad e idioma.">
   <link rel="canonical" href="https://www.miportal.me/noticias.html">
   
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.miportal.me/noticias.html">
   <meta property="og:title" content="Noticias de desarrollo web | MiPortal">
-  <meta property="og:description" content="Novedades de desarrollo web de fuentes especializadas en español e inglés. Filtrá por tema e idioma y visitá la fuente original.">
+  <meta property="og:description" content="Novedades de desarrollo web de fuentes especializadas en español e inglés. Filtra por tema e idioma y visita la fuente original.">
   <meta property="og:image" content="https://www.miportal.me/og-image.svg">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -24,7 +24,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:url" content="https://www.miportal.me/noticias.html">
   <meta name="twitter:title" content="Noticias de desarrollo web | MiPortal">
-  <meta name="twitter:description" content="Novedades de desarrollo web de fuentes especializadas en español e inglés. Filtrá por tema e idioma y visitá la fuente original.">
+  <meta name="twitter:description" content="Novedades de desarrollo web de fuentes especializadas en español e inglés. Filtra por tema e idioma y visita la fuente original.">
   <meta name="twitter:image" content="https://www.miportal.me/og-image.svg">
   
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
@@ -62,6 +62,8 @@
     <symbol id="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></symbol>
     <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6.5L9.2 17.3 4 12.1"/></symbol>
     <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4.5 12h15"/><path d="M12.5 5l7 7-7 7"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.5 4.5V10h-5.5"/></symbol>
   </svg>
 
   <header class="main-header">
@@ -98,56 +100,112 @@
     </div>
   </header>
 
-  <div class="container main-layout">
+  <div class="container main-layout news-page">
     <main id="main-content" class="content-area">
-      <section class="filter-section">
-        <h1>Noticias de desarrollo web</h1>
-        <form id="searchForm">
-          <label for="searchInput" class="visually-hidden">Buscar noticias</label>
-          <input type="search" id="searchInput" name="q" placeholder="Buscar noticias de desarrollo web..." autocomplete="off" maxlength="120" aria-describedby="searchHelp">
-          <button type="submit" class="btn btn-primary search-submit">Buscar noticias</button>
-        </form>
-        <p class="privacy-note" id="searchHelp">Buscá palabras completas en títulos, resúmenes y etiquetas originales. Deben coincidir todas; los acentos no importan. La búsqueda se combina con categoría e idioma.</p>
-        <label for="newsLanguage">Idioma original</label>
-        <select id="newsLanguage">
-          <option value="">Todos los idiomas</option>
-          <option value="es">Solo español</option>
-        </select>
-        <button type="button" class="filter-btn" id="resetNews">Restablecer filtros</button>
-        <button type="button" class="filter-btn" id="refreshNews">Actualizar fuentes</button>
-        <div class="category-filters" role="group" aria-label="Filtros de categoría">
-          <button type="button" class="filter-btn active" data-query="" aria-pressed="true">🌐 Todas</button>
-          <button type="button" class="filter-btn" data-query="css" aria-pressed="false">🎨 CSS</button>
-          <button type="button" class="filter-btn" data-query="javascript" aria-pressed="false">💻 JavaScript</button>
-          <button type="button" class="filter-btn" data-query="frameworks" aria-pressed="false">Frameworks</button>
-          <button type="button" class="filter-btn" data-query="accessibility" aria-pressed="false">Accesibilidad</button>
-          <button type="button" class="filter-btn" data-query="platform" aria-pressed="false">HTML y navegadores</button>
-        </div>
+      <!-- ============================================================
+           Encabezado compacto: las noticias son el protagonista.
+           ============================================================ -->
+      <section class="news-hero" aria-labelledby="newsTitle">
+        <span class="eyebrow news-hero-badge">Actualidad</span>
+        <h1 id="newsTitle">Noticias de desarrollo web</h1>
+        <p class="news-hero-lead">Las últimas novedades de JavaScript, CSS, React y el ecosistema web, reunidas en un solo lugar.</p>
       </section>
-      <p id="newsStatus" class="news-status" role="status" aria-live="polite"></p>
-      <section class="cards-grid">
-        <div id="cardsContainer" class="cards-grid-content">
-          <div class="loading-state">
-            <div class="loading-spinner"></div>
-            <p>Cargando noticias de desarrollo web...</p>
-          </div>
+
+      <!-- ============================================================
+           Buscador: principal punto de interacción de la página.
+           ============================================================ -->
+      <form id="searchForm" class="news-search" role="search" aria-label="Buscar noticias">
+        <div class="news-search-field">
+          <svg class="icon news-search-icon" aria-hidden="true" focusable="false"><use href="#i-search"/></svg>
+          <label for="searchInput" class="visually-hidden">Buscar noticias, tecnologías o temas</label>
+          <input type="search" id="searchInput" name="q" placeholder="Buscar noticias, tecnologías o temas..." autocomplete="off" maxlength="120" aria-describedby="searchHelp">
         </div>
-        <div id="lastUpdated" class="last-updated" aria-live="polite"></div>
-      </section>
-    </main>
-    <aside class="sidebar">
-      <div class="widget">
-        <h2>Sobre las noticias</h2>
-        <p>Las noticias de MiPortal provienen de fuentes externas especializadas en desarrollo web y tecnología. Los artículos son recopilados automáticamente y almacenados en nuestra base de datos antes de mostrarse en esta página.</p>
-        <p>Cada noticia conserva el nombre de su fuente original y un enlace directo al artículo correspondiente.</p>
-        <p>Las noticias publicadas en MiPortal se obtienen desde nuestra base de datos y provienen de fuentes externas especializadas. Podés filtrar los artículos por tema e idioma, y cada noticia enlaza directamente a su fuente original.</p>
+        <button type="submit" class="btn btn-primary search-submit">
+          <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-search"/></svg>
+          <span>Buscar</span>
+        </button>
+      </form>
+      <p class="news-search-help" id="searchHelp">La búsqueda revisa títulos y resúmenes; combínala con una categoría o un idioma para afinar.</p>
+
+      <!-- ============================================================
+           Categorías.
+           ============================================================ -->
+      <div class="category-filters news-chips" role="group" aria-label="Filtrar noticias por categoría">
+        <button type="button" class="filter-btn active" data-query="" aria-pressed="true">Todas</button>
+        <button type="button" class="filter-btn" data-query="css" aria-pressed="false">CSS</button>
+        <button type="button" class="filter-btn" data-query="javascript" aria-pressed="false">JavaScript</button>
+        <button type="button" class="filter-btn" data-query="frameworks" aria-pressed="false">Frameworks</button>
+        <button type="button" class="filter-btn" data-query="platform" aria-pressed="false">HTML</button>
+        <button type="button" class="filter-btn" data-query="accessibility" aria-pressed="false">Accesibilidad</button>
       </div>
-      <div class="widget newsletter-widget">
-        <h2>Recibí novedades</h2>
-        <p>Dejanos tu correo y te avisamos cuando hay novedades de desarrollo web.</p>
+
+      <!-- ============================================================
+           Cabecera del listado.
+           ============================================================ -->
+      <header class="news-list-head">
+        <div class="news-list-title">
+          <h2>Últimas noticias</h2>
+          <p id="newsCount" class="news-count"></p>
+        </div>
+        <div class="news-list-tools">
+          <p id="newsStatus" class="news-status" role="status" aria-live="polite"></p>
+          <button type="button" class="btn btn-secondary btn-sm news-clear" id="resetNews" hidden>
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-check"/></svg>
+            <span>Limpiar filtros</span>
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm news-refresh" id="refreshNews">
+            <svg class="icon" aria-hidden="true" focusable="false"><use href="#i-refresh"/></svg>
+            <span>Actualizar</span>
+          </button>
+          <label class="news-lang-label" for="newsLanguage">Idioma
+            <select id="newsLanguage" class="news-lang-select">
+              <option value="">Todos</option>
+              <option value="es">Solo español</option>
+              <option value="en">Solo inglés</option>
+            </select>
+          </label>
+        </div>
+      </header>
+
+      <p id="newsWarning" class="news-warning" role="status" hidden></p>
+
+      <!-- ============================================================
+           Listado de noticias.
+           ============================================================ -->
+      <section class="news-grid" aria-labelledby="newsListTitle">
+        <h2 id="newsListTitle" class="visually-hidden">Listado de noticias</h2>
+        <div id="cardsContainer" class="cards-grid-content"></div>
+        <p id="lastUpdated" class="last-updated"></p>
+      </section>
+
+      <!-- ============================================================
+           Procedencia de las noticias.
+           ============================================================ -->
+      <section class="news-about" aria-labelledby="newsAboutTitle">
+        <details class="news-about-details">
+          <summary class="news-about-summary">
+            <span class="eyebrow">Fuentes</span>
+            <span id="newsAboutTitle" class="news-about-title">¿De dónde vienen las noticias?</span>
+          </summary>
+          <div class="news-about-body">
+            <p>MiPortal reúne contenido de fuentes especializadas en desarrollo web. Las noticias se recopilan automáticamente y se guardan en nuestra base de datos antes de mostrarse aquí, así que la lista no depende de una consulta directa a cada editorial.</p>
+            <p>Cada noticia conserva el nombre de su fuente y enlaza directamente al artículo original. Puedes filtrar por tema e idioma, y abrir la fuente oficial para leer el texto completo.</p>
+          </div>
+        </details>
+      </section>
+
+      <!-- ============================================================
+           Newsletter: mismo endpoint y formulario que la portada.
+           ============================================================ -->
+      <section class="newsletter-band" id="newsletter" aria-labelledby="newsletter-title">
+        <div>
+          <span class="eyebrow">Novedades</span>
+          <h2 id="newsletter-title">No te pierdas ninguna novedad</h2>
+          <p>Recibe las novedades de MiPortal directamente en tu correo.</p>
+        </div>
         <form id="newsletterForm" class="newsletter-form" action="/api/newsletter" method="post">
           <label for="newsletterEmail">Correo electrónico
-            <input id="newsletterEmail" name="email" type="email" autocomplete="email" required aria-required="true">
+            <input id="newsletterEmail" name="email" type="email" autocomplete="email" placeholder="tu@email.com" required aria-required="true">
           </label>
           <label class="visually-hidden" aria-hidden="true">Sitio web
             <input name="website" tabindex="-1" autocomplete="off">
@@ -155,8 +213,8 @@
           <button type="submit" class="btn btn-primary">Suscribirme</button>
           <p id="newsletterStatus" class="newsletter-status" role="status" aria-live="polite"></p>
         </form>
-      </div>
-    </aside>
+      </section>
+    </main>
   </div>
 
   <footer class="main-footer">

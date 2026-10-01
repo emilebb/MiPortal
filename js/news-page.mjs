@@ -1,3 +1,19 @@
+/* ============================================================================
+   MiPortal — página de Noticias
+   ----------------------------------------------------------------------------
+   Renderiza el listado de noticias de `news_articles` (Supabase) usando el
+   módulo de datos compartido js/news-feed.mjs: la consulta, la detección de
+   idioma, la clasificación por temas y la deduplicación no cambian. Aquí solo
+   se cambia la presentación (tarjetas, esqueletos, estados y cabecera).
+
+   Contrato con styles.css y con el resto del sitio:
+     · ids  — #cardsContainer, #searchForm, #searchInput, #newsLanguage,
+              #resetNews, #refreshNews, #newsStatus, #newsCount, #newsWarning,
+              #lastUpdated
+     · CSS  — .card .news-card, .card-media, .card-body, .card-title,
+              .card-description, .card-meta, .card-link, .skeleton-card,
+              .empty-state, .error-state, .retry-button, .news-clear
+   ========================================================================== */
 import {
   prepareItems,
   selectItems,
@@ -10,8 +26,31 @@ const input = document.getElementById('searchInput');
 const language = document.getElementById('newsLanguage');
 const refresh = document.getElementById('refreshNews');
 const notice = document.getElementById('newsStatus');
+const counter = document.getElementById('newsCount');
+const warning = document.getElementById('newsWarning');
+const reset = document.getElementById('resetNews');
 const updated = document.getElementById('lastUpdated');
 const buttons = document.querySelectorAll('.filter-btn[data-query]');
+
+/* Etiquetas legibles de las categorías que news-feed.mjs detecta. El orden
+   coincide con el de las píldoras de la página. */
+const CATEGORY_LABELS = {
+  css: 'CSS',
+  javascript: 'JavaScript',
+  frameworks: 'Frameworks',
+  platform: 'HTML',
+  accessibility: 'Accesibilidad'
+};
+
+const CATEGORY_ORDER = [
+  'css',
+  'javascript',
+  'frameworks',
+  'platform',
+  'accessibility'
+];
+
+const SKELETON_COUNT = 6;
 
 let items = [];
 let category = '';
@@ -19,13 +58,158 @@ let loading = false;
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
-  node.className = className;
+
+  if (className) {
+    node.className = className;
+  }
 
   if (text) {
     node.textContent = text;
   }
 
   return node;
+}
+
+/* --- Presentación de datos ---------------------------------------------- */
+
+function categoryLabel(item) {
+  const found = CATEGORY_ORDER.find(key =>
+    item.categories.includes(key)
+  );
+
+  return found ? CATEGORY_LABELS[found] : 'Web';
+}
+
+/* Fechas sin zona horaria: publicationDate() ya entrega "YYYY-MM-DD", así que
+   se formatea desde las partes para no desplazar el día según el navegador. */
+const MONTHS = [
+  'ene', 'feb', 'mar', 'abr', 'may', 'jun',
+  'jul', 'ago', 'sept', 'oct', 'nov', 'dic'
+];
+
+function formatDate(value) {
+  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(
+    value || ''
+  );
+
+  if (!parts) {
+    return null;
+  }
+
+  const [, year, month, day] = parts;
+
+  return `${Number(day)} ${MONTHS[Number(month) - 1]} ${year}`;
+}
+
+/* Antigüedad aproximada en español neutro: "hace 2 h". */
+function relativeTime(value) {
+  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(
+    value || ''
+  );
+
+  if (!parts) {
+    return null;
+  }
+
+  /* Medianoche en hora local: comparar fechas en UTC movería el día. */
+  const published = new Date(
+    Number(parts[1]),
+    Number(parts[2]) - 1,
+    Number(parts[3])
+  );
+
+  if (!Number.isFinite(published.getTime())) {
+    return null;
+  }
+
+  const minutes = Math.round(
+    (Date.now() - published.getTime()) / 60000
+  );
+
+  if (minutes < 1) return 'hace instantes';
+  if (minutes < 60) return `hace ${minutes} min`;
+
+  const hours = Math.round(minutes / 60);
+
+  if (hours < 24) return `hace ${hours} h`;
+
+  const days = Math.round(hours / 24);
+
+  if (days === 1) return 'ayer';
+  if (days < 7) return `hace ${days} días`;
+
+  return formatDate(value);
+}
+
+/* Marca la fecha completa para lectores de pantalla; el texto visible es la
+   fecha corta. */
+function dateNode(item) {
+  if (!item.date) {
+    return null;
+  }
+
+  const absolute = formatDate(item.date);
+  const relative = relativeTime(item.date);
+  const node = element(
+    'time',
+    'card-date',
+    absolute || ''
+  );
+
+  node.dateTime = item.date;
+
+  if (absolute && relative) {
+    node.setAttribute(
+      'aria-label',
+      `Publicado el ${absolute} (${relative})`
+    );
+
+    node.title = absolute;
+  }
+
+  return node;
+}
+
+/* --- Tarjeta ------------------------------------------------------------- */
+
+function media(item) {
+  const wrapper = element('div', 'card-media');
+
+  /* news_articles no trae imagen: se muestra un marcador de marca. Si algún
+     día la consulta incluye una portada, se usa y el marcador queda de
+     respaldo si la imagen falla. */
+  if (item.image) {
+    const image = document.createElement('img');
+
+    image.src = item.image;
+    image.alt = '';
+    image.loading = 'lazy';
+    image.decoding = 'async';
+    image.width = 640;
+    image.height = 360;
+    image.addEventListener(
+      'error',
+      () => {
+        image.remove();
+        wrapper.append(
+          element('span', 'card-media-mark', 'MP')
+        );
+      },
+      { once: true }
+    );
+
+    wrapper.append(image);
+  } else {
+    wrapper.append(
+      element(
+        'span',
+        'card-media-mark',
+        'MP'
+      )
+    );
+  }
+
+  return wrapper;
 }
 
 function card(item) {
@@ -39,123 +223,204 @@ function card(item) {
     'card-body'
   );
 
-  const languageLabel =
-    item.source.language === 'es'
-      ? 'Español'
-      : 'Inglés';
+  const kicker = element(
+    'p',
+    'card-kicker'
+  );
 
-  body.append(
+  kicker.append(
     element(
       'span',
-      'tag',
-      `${item.source.label} · ${languageLabel}`
+      'card-tag',
+      categoryLabel(item)
+    ),
+    element(
+      'span',
+      'card-source-label',
+      item.source.label
     )
   );
 
   const title = element(
     'h3',
-    '',
+    'card-title',
     item.title
   );
+
+  title.lang = item.source.language;
 
   const description = element(
     'p',
     'card-description',
     item.description ||
-      'Leé el artículo completo en su fuente original.'
+      'Lee el artículo completo en su fuente original.'
   );
 
-  title.lang = item.source.language;
-  description.lang = item.source.language;
+  description.lang = item.description
+    ? item.source.language
+    : 'es';
 
-  body.append(
-    title,
-    description
+  const meta = element(
+    'p',
+    'card-meta'
   );
 
-  const date = element(
-    item.date ? 'time' : 'span',
-    'news-date'
-  );
+  const date = dateNode(item);
 
-  if (item.date) {
-    date.dateTime = item.date;
-
-    const [year, month, day] =
-      item.date.split('-');
-
-    date.textContent =
-      `Publicado: ${day}/${month}/${year}`;
-  } else {
-    date.textContent =
-      'Fecha no disponible';
+  if (date) {
+    meta.append(date);
   }
 
+  body.append(
+    kicker,
+    title,
+    description,
+    meta
+  );
+
+  /* Enlace principal de la tarjeta. El texto visible ya es corto; el
+     complementary label indica la fuente y la apertura en otra pestaña. */
   const link = element(
     'a',
-    'read-more',
-    `Leer en ${item.source.label} →`
+    'read-more card-link'
   );
 
   link.href = item.link;
   link.target = '_blank';
   link.rel = 'noopener noreferrer';
 
-  body.append(
-    date,
-    link
+  link.append(
+    element('span', null, 'Leer noticia'),
+    element(
+      'span',
+      'card-link-arrow',
+      '→'
+    ),
+    element(
+      'span',
+      'visually-hidden',
+      ` en ${item.source.label} (se abre en una pestaña nueva)`
+    )
   );
 
-  article.append(body);
+  body.append(link);
+  article.append(media(item), body);
 
   return article;
 }
 
+/* --- Estados ------------------------------------------------------------- */
+
+function skeleton() {
+  const article = element(
+    'article',
+    'card news-card skeleton-card'
+  );
+
+  const body = element(
+    'div',
+    'card-body'
+  );
+
+  ['skeleton-line skeleton-tag', 'skeleton-line skeleton-title',
+    'skeleton-line skeleton-text', 'skeleton-line skeleton-text skeleton-text--short',
+    'skeleton-line skeleton-meta'
+  ].forEach(className => {
+    body.append(
+      element('div', className)
+    );
+  });
+
+  article.setAttribute(
+    'aria-hidden',
+    'true'
+  );
+
+  article.append(
+    element('div', 'card-media'),
+    body
+  );
+
+  return article;
+}
+
+function skeletons() {
+  return Array.from(
+    { length: SKELETON_COUNT },
+    skeleton
+  );
+}
+
 function state(
   type,
+  heading,
   text,
-  retry = false
+  action
 ) {
   const wrapper = element(
     'div',
     `${type}-state`
   );
 
-  const icon = element(
-    'div',
-    type === 'loading'
-      ? 'loading-spinner'
-      : `${type}-icon`,
-    type === 'empty'
-      ? '📭'
-      : type === 'error'
-        ? '⚠️'
-        : ''
-  );
-
   wrapper.append(
-    icon,
-    element('p', '', text)
+    element(
+      'div',
+      type === 'empty'
+        ? 'empty-icon'
+        : `${type}-icon`,
+      type === 'empty'
+        ? ''
+        : ''
+    ),
+    element('h3', '', heading)
   );
 
-  if (retry) {
+  if (text) {
+    wrapper.append(
+      element('p', '', text)
+    );
+  }
+
+  if (action) {
     const button = element(
       'button',
-      'retry-button',
-      'Intentar nuevamente'
+      action === 'retry'
+        ? 'btn btn-primary retry-button'
+        : 'btn btn-secondary',
+      action === 'retry'
+        ? 'Intentar nuevamente'
+        : 'Limpiar filtros'
     );
 
     button.type = 'button';
-
     button.addEventListener(
       'click',
-      refreshNews
+      action === 'retry'
+        ? refreshNews
+        : clearFilters
     );
 
     wrapper.append(button);
   }
 
   grid.replaceChildren(wrapper);
+}
+
+/* --- Encabezado del listado --------------------------------------------- */
+
+function updateTools() {
+  const hasFilters =
+    input.value.trim() !== '' ||
+    category !== '' ||
+    language.value !== '';
+
+  /* "Limpiar filtros" solo existe cuando hay algo que limpiar. */
+  reset.hidden = !hasFilters;
+}
+
+function setCount(value) {
+  counter.textContent =
+    `${value} noticia${value === 1 ? '' : 's'}`;
 }
 
 function render() {
@@ -168,24 +433,52 @@ function render() {
     }
   );
 
+  notice.textContent = '';
+
   if (!items.length) {
     state(
       'empty',
-      'Todavía no hay noticias publicadas.'
+      'Todavía no hay noticias',
+      'Aún no publicamos artículos. Vuelve en un rato para ver las novedades.'
     );
+
+    counter.textContent = '';
   } else if (!selected.length) {
+    const query = input.value.trim();
+
     state(
       'empty',
-      'No hay artículos para estos filtros. Probá otra categoría, otro idioma o restablecé los filtros.'
+      'No encontramos noticias',
+      query
+        ? `No hay resultados para «${query}». Prueba con otra búsqueda o quita los filtros.`
+        : 'No hay artículos para estos filtros. Prueba con otra categoría o con otro idioma.',
+      'clear'
     );
+
+    counter.textContent = '0 noticias';
   } else {
     grid.replaceChildren(
       ...selected.map(card)
     );
+
+    setCount(selected.length);
   }
 
-  notice.textContent =
-    `${selected.length} artículos disponibles.`;
+  updateTools();
+}
+
+/* --- Acciones ------------------------------------------------------------ */
+
+function clearFilters() {
+  input.value = '';
+  language.value = '';
+
+  if (buttons.length) {
+    buttons[0].click();
+  } else {
+    category = '';
+    render();
+  }
 }
 
 async function refreshNews() {
@@ -201,14 +494,11 @@ async function refreshNews() {
     'true'
   );
 
-  notice.textContent =
-    'Consultando noticias…';
+  notice.textContent = 'Cargando noticias…';
+  counter.textContent = '';
 
   if (!items.length) {
-    state(
-      'loading',
-      'Cargando noticias de desarrollo web…'
-    );
+    grid.replaceChildren(...skeletons());
   }
 
   try {
@@ -219,10 +509,11 @@ async function refreshNews() {
     updated.textContent =
       `Última consulta: ${
         new Date().toLocaleString(
-          'es-CO'
+          'es-ES'
         )
       }.`;
 
+    warning.hidden = true;
     render();
   } catch (error) {
     console.error(
@@ -230,14 +521,26 @@ async function refreshNews() {
       error
     );
 
-    notice.textContent =
-      'No se pudieron cargar las noticias.';
+    if (items.length) {
+      /* Fallo puntual: se conserva el listado ya disponible. */
+      warning.hidden = false;
+      warning.textContent =
+        'No pudimos actualizar algunas fuentes. Se muestran las noticias disponibles.';
 
-    state(
-      'error',
-      'No se pudieron consultar las noticias. Probá nuevamente.',
-      true
-    );
+      notice.textContent = '';
+      setCount(items.length);
+      updateTools();
+    } else {
+      state(
+        'error',
+        'No pudimos cargar las noticias',
+        'Vuelve a intentarlo en unos segundos.',
+        'retry'
+      );
+
+      notice.textContent = '';
+      counter.textContent = '';
+    }
   } finally {
     loading = false;
     refresh.disabled = false;
@@ -247,6 +550,8 @@ async function refreshNews() {
     );
   }
 }
+
+/* --- Enlaces de la página ------------------------------------------------ */
 
 form.addEventListener(
   'submit',
@@ -298,22 +603,10 @@ buttons.forEach(
     )
 );
 
-document
-  .getElementById('resetNews')
-  .addEventListener(
-    'click',
-    () => {
-      input.value = '';
-      language.value = '';
-
-      if (buttons.length) {
-        buttons[0].click();
-      } else {
-        category = '';
-        render();
-      }
-    }
-  );
+reset.addEventListener(
+  'click',
+  clearFilters
+);
 
 refresh.addEventListener(
   'click',
