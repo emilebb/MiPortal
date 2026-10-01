@@ -20,10 +20,12 @@
   const renderLoggedOut = () => {
     const loginLink = document.createElement('a');
     loginLink.href = '/login.html';
+    loginLink.className = 'nav-login';
     loginLink.textContent = 'Iniciar sesión';
 
     const registerLink = document.createElement('a');
     registerLink.href = '/register.html';
+    registerLink.className = 'nav-register';
     registerLink.textContent = 'Registrarse';
 
     authItem.replaceChildren(loginLink, registerLink);

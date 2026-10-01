@@ -430,6 +430,59 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Sombra del navbar al hacer scroll (una sola escucha, sin scroll en cada frame).
+  const header = document.querySelector('.main-header');
+  if (header) {
+    const updateHeaderState = () => {
+      header.classList.toggle('is-scrolled', window.scrollY > 8);
+    };
+    updateHeaderState();
+    window.addEventListener('scroll', updateHeaderState, { passive: true });
+  }
+
+  // Aparición progresiva de las secciones. Con prefers-reduced-motion el CSS
+  // ya neutraliza la animación, pero evitamos observar para no gastar trabajo.
+  const prefersReducedMotion =
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const revealTargets = document.querySelectorAll('.reveal');
+
+  if (revealTargets.length) {
+    if (prefersReducedMotion || typeof IntersectionObserver !== 'function') {
+      revealTargets.forEach((el) => el.classList.add('is-visible'));
+    } else {
+      // Sólo se oculta el contenido cuando el observador está realmente
+      // instalado: si main.js fallara, el texto nunca quedaría invisible.
+      document.documentElement.classList.add('js-reveal');
+
+      const revealObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        });
+      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+      revealTargets.forEach((el) => revealObserver.observe(el));
+
+      // Red de seguridad: si el observador no llegara a disparar, el scroll,
+      // el resize o la carga revelan igualmente lo que ya está en pantalla.
+      const revealInViewport = () => {
+        revealTargets.forEach((el) => {
+          if (el.classList.contains('is-visible')) return;
+          if (el.getBoundingClientRect().top < window.innerHeight) {
+            el.classList.add('is-visible');
+            revealObserver.unobserve(el);
+          }
+        });
+      };
+
+      window.addEventListener('scroll', revealInViewport, { passive: true });
+      window.addEventListener('resize', revealInViewport);
+      window.addEventListener('load', revealInViewport);
+      revealInViewport();
+    }
+  }
+
   if (navToggleBtn && mainNav) {
     navToggleBtn.addEventListener('click', () => {
       const isOpen = mainNav.classList.toggle('open');
