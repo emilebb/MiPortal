@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const themeToggleBtn = document.getElementById('themeToggle');
   const navToggleBtn = document.getElementById('navToggle');
   const mainNav = document.getElementById('mainNav');
+  const themeKey = 'miportal-theme';
 
   const getSafeHttpsUrl = (value) => {
     try {
@@ -422,11 +423,28 @@ document.addEventListener('DOMContentLoaded', () => {
   setupRecursos();
 
   if (themeToggleBtn) {
+    // El tema vive en <html data-theme>; body.dark-mode se conserva porque es
+    // el contrato que usa el resto de la hoja de estilos.
+    const applyTheme = (isDark) => {
+      document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      document.body.classList.toggle('dark-mode', isDark);
+      themeToggleBtn.setAttribute('aria-pressed', String(isDark));
+      themeToggleBtn.setAttribute('aria-label', isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+    };
+
+    const isDarkNow = () => document.documentElement.getAttribute('data-theme') === 'dark';
+
+    // Sincroniza el botón con el tema que js/theme-init.js ya aplicó.
+    applyTheme(isDarkNow());
+
     themeToggleBtn.addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    themeToggleBtn.textContent = isDark ? '☀️' : '🌙';
-    themeToggleBtn.setAttribute('aria-label', isDark ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro');
+      const nextIsDark = !isDarkNow();
+      applyTheme(nextIsDark);
+      try {
+        window.localStorage.setItem(themeKey, nextIsDark ? 'dark' : 'light');
+      } catch {
+        // Almacenamiento no disponible: el tema sigue funcionando en esta página.
+      }
     });
   }
 
