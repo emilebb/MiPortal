@@ -13,6 +13,11 @@ Disallow: /.DS_Store
 
 # El panel administrativo no debe indexarse ni seguirse
 Disallow: /admin/
+Disallow: /login.html
+Disallow: /register.html
+Disallow: /recovery.html
+Disallow: /reset-password.html
+Disallow: /gracias-pro.html
 
 # Sitemap
 Sitemap: https://www.miportal.me/sitemap.xml
