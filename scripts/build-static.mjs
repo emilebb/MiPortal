@@ -11,6 +11,11 @@ const outDir = fileURLToPath(new URL('../public/', import.meta.url));
 
 const entries = [
   'index.html',
+  'tutoriales.html',
+  'tutorial.html',
+  'productos.html',
+  'automatizaciones-n8n.html',
+  'automatizaciones-gratis.html',
   'noticias.html',
   'recursos.html',
   'contacto.html',

@@ -133,6 +133,46 @@ Contrato con JavaScript (no cambiar nombres):
     "Liberation Mono", monospace;
 }
 
+/* Contenido editorial estático: reglas acotadas para no alterar tarjetas
+   dinámicas, formularios ni componentes de las páginas heredadas. */
+.article-page {
+  max-width: 74ch;
+  margin-inline: auto;
+}
+
+.article-page > .news-hero {
+  margin-block: 1.5rem;
+}
+
+.article-content {
+  max-width: 72ch;
+  color: var(--text-secondary);
+}
+
+.article-content h2 {
+  margin: 2rem 0 0.75rem;
+  color: var(--text-primary);
+  font-size: clamp(1.3rem, 2.5vw, 1.7rem);
+}
+
+.article-content p,
+.article-content li {
+  line-height: 1.75;
+}
+
+.article-content pre {
+  overflow-x: auto;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface-secondary);
+  color: var(--text-primary);
+}
+
+.article-content code {
+  font-family: var(--font-mono);
+}
+
 /* --- Tema oscuro: grises azulados, nunca negro puro ni blanco puro ---
    `body.dark-mode` es el contrato histórico (main.js); `html[data-theme]`
    lo aplica theme-init.js antes del primer pintado para evitar el destello. */

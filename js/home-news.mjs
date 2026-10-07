@@ -19,7 +19,7 @@ import {
 const grid = document.getElementById('homeNewsGrid');
 
 if (grid) {
-  const MAX_ITEMS = 3;
+  const MAX_ITEMS = 6;
 
   const element = (tag, className, text) => {
     const node = document.createElement(tag);
