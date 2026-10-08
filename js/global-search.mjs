@@ -75,6 +75,10 @@ function render() {
   if (!hasSearchQuery(queryInput.value)) {
     resultsRegion.replaceChildren();
     status.textContent = 'Escribe un término para comenzar la búsqueda.';
+    const emptyState = document.createElement('p');
+    emptyState.className = 'global-search-empty-state';
+    emptyState.textContent = 'Busca noticias, tutoriales y recursos de MiPortal.';
+    resultsRegion.append(emptyState);
     return;
   }
   const shown = filterResults(matchingResults, filterInput.value);
@@ -110,6 +114,10 @@ async function runSearch(query) {
   resultsRegion.replaceChildren();
   if (!hasSearchQuery(normalized)) {
     status.textContent = 'Escribe un término para comenzar la búsqueda.';
+    const emptyState = document.createElement('p');
+    emptyState.className = 'global-search-empty-state';
+    emptyState.textContent = 'Busca noticias, tutoriales y recursos de MiPortal.';
+    resultsRegion.append(emptyState);
     return;
   }
   status.textContent = 'Buscando en el contenido publicado…';

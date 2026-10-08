@@ -97,11 +97,14 @@ function renderArticle(row) {
   content.append(header);
 
   const image = document.createElement('img');
-  image.className = 'news-detail-image';
+  image.className = `news-detail-image${safeNewsUrl(row.image_url) ? '' : ' news-detail-image--fallback'}`;
   image.src = safeNewsUrl(row.image_url) || fallbackImage;
   image.alt = title;
   image.loading = 'eager';
-  image.addEventListener('error', () => { image.src = fallbackImage; }, { once: true });
+  image.addEventListener('error', () => {
+    image.classList.add('news-detail-image--fallback');
+    image.src = fallbackImage;
+  }, { once: true });
   content.append(image);
 
   if (typeof row.description === 'string' && row.description.trim()) {
