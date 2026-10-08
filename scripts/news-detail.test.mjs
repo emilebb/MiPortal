@@ -1,0 +1,43 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+
+import {
+  isNewsId,
+  safeNewsUrl,
+  newsDetailUrl,
+  absoluteNewsDetailUrl,
+  relatedNews
+} from '../js/news-detail-utils.mjs';
+
+const current = '550e8400-e29b-41d4-a716-446655440000';
+
+test('news detail accepts UUIDs only and builds an encoded internal URL', () => {
+  assert.equal(isNewsId(current), true);
+  assert.equal(isNewsId('1'), false);
+  assert.equal(isNewsId('550e8400-e29b-41d4-a716-44665544000z'), false);
+  assert.equal(newsDetailUrl(current), `noticia.html?id=${current}`);
+  assert.equal(newsDetailUrl('invalid'), null);
+  assert.equal(absoluteNewsDetailUrl(current, 'https://miportal.me/news/noticia.html?id=old'), `https://miportal.me/news/noticia.html?id=${current}`);
+  assert.equal(absoluteNewsDetailUrl('invalid', 'https://miportal.me/noticia.html'), null);
+});
+
+test('news detail external URLs allow only HTTP and HTTPS', () => {
+  assert.equal(safeNewsUrl('https://example.com/story'), 'https://example.com/story');
+  assert.equal(safeNewsUrl('http://example.com/story'), 'http://example.com/story');
+  assert.equal(safeNewsUrl('javascript:alert(1)'), null);
+  assert.equal(safeNewsUrl('//example.com/story'), null);
+});
+
+test('related news excludes the current item, unpublished and incomplete rows, and caps at three', () => {
+  const rows = [
+    { id: current, published: true, title: 'Current', url: 'https://example.com/current' },
+    ...[1, 2, 3, 4].map((n) => ({ id: `550e8400-e29b-41d4-a716-44665544000${n}`, published: true, title: `Story ${n}` })),
+    { id: '550e8400-e29b-41d4-a716-446655440099', published: false, title: 'Draft', url: 'https://example.com/draft' },
+    { id: '550e8400-e29b-41d4-a716-446655440098', published: true, url: 'https://example.com/missing' }
+  ];
+  assert.deepEqual(relatedNews(rows, current).map((item) => item.id), [
+    '550e8400-e29b-41d4-a716-446655440001',
+    '550e8400-e29b-41d4-a716-446655440002',
+    '550e8400-e29b-41d4-a716-446655440003'
+  ]);
+});

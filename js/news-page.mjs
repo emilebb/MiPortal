@@ -19,6 +19,7 @@ import {
   selectItems,
   loadNews
 } from './news-feed.mjs';
+import { newsDetailUrl } from './news-detail-utils.mjs';
 
 const grid = document.getElementById('cardsContainer');
 const form = document.getElementById('searchForm');
@@ -239,11 +240,14 @@ function card(item) {
     )
   );
 
-  const title = element(
-    'h3',
-    'card-title',
-    item.title
-  );
+  const title = element('h3', 'card-title');
+  const titleLink = element('a', null, item.title);
+  titleLink.href = newsDetailUrl(item.id) || item.link;
+  if (!newsDetailUrl(item.id)) {
+    titleLink.target = '_blank';
+    titleLink.rel = 'noopener noreferrer';
+  }
+  title.append(titleLink);
 
   title.lang = item.source.language;
 
@@ -283,9 +287,11 @@ function card(item) {
     'read-more card-link'
   );
 
-  link.href = item.link;
-  link.target = '_blank';
-  link.rel = 'noopener noreferrer';
+  link.href = newsDetailUrl(item.id) || item.link;
+  if (!newsDetailUrl(item.id)) {
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+  }
 
   link.append(
     element('span', null, 'Leer noticia'),

@@ -17,6 +17,7 @@ const entries = [
   'automatizaciones-n8n.html',
   'automatizaciones-gratis.html',
   'noticias.html',
+  'noticia.html',
   'recursos.html',
   'contacto.html',
   'sobre-nosotros.html',

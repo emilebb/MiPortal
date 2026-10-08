@@ -3590,3 +3590,30 @@ body.dark-mode .config-pending {
     flex-direction: column;
   }
 }
+/* Individual news article */
+.news-detail-page { max-width: 900px; min-height: 65vh; padding-block: 2rem 4rem; }
+.news-detail-breadcrumb { margin-bottom: 2rem; color: var(--text-secondary); font-size: .9rem; }
+.news-detail-breadcrumb a { color: var(--text-primary); }
+.article-state { padding: 2rem 1rem; text-align: center; color: var(--text-secondary); }
+.article-state--error, .article-state--not-found { border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-secondary); }
+.news-detail-article { max-width: 760px; margin-inline: auto; }
+.news-detail-header { margin-bottom: 1.5rem; }
+.news-detail-header h1 { max-width: 20ch; margin: .5rem 0; font-size: clamp(2rem, 6vw, 3.5rem); line-height: 1.12; letter-spacing: -.04em; }
+.news-detail-date { color: var(--text-secondary); font-size: .9rem; }
+.news-detail-image { display: block; width: 100%; max-height: 480px; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--radius-lg); background: var(--surface-secondary); }
+.news-detail-description { margin-block: 1.5rem; color: var(--text-secondary); font-size: clamp(1.05rem, 2vw, 1.25rem); line-height: 1.75; white-space: pre-line; }
+.news-detail-disclosure { margin-block: 1.5rem 0; padding: 1rem 1.25rem; border-left: 3px solid var(--accent); border-radius: 0 var(--radius-md) var(--radius-md) 0; background: var(--surface-secondary); color: var(--text-secondary); line-height: 1.6; }
+.news-detail-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-block: 1.5rem 3rem; }
+.related-news-section { margin-top: 4rem; }
+.related-news-section h2 { margin-bottom: 1rem; }
+.related-news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 1rem; }
+.related-news-card { display: block; padding: 1.25rem; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface); color: var(--text-primary); text-decoration: none; }
+.related-news-card h3 { margin: .5rem 0 0; font-size: 1.05rem; line-height: 1.45; }
+.related-news-card:hover { border-color: var(--accent); }
+@media (max-width: 600px) {
+  .news-detail-page { padding-block: 1.25rem 3rem; }
+  .news-detail-breadcrumb { margin-bottom: 1.25rem; }
+  .news-detail-header h1 { font-size: clamp(1.8rem, 9vw, 2.5rem); }
+  .news-detail-actions { flex-direction: column; }
+  .news-detail-actions .btn { justify-content: center; }
+}

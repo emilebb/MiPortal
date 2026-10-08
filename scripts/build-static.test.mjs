@@ -23,6 +23,9 @@ test('el build genera una navegación y un pie compartidos en todo HTML público
       assert.match(html, new RegExp(`href="/?${route}"`), `${page}: enlace a ${route}`);
     }
   }
+  const detail = readFileSync(new URL('noticia.html', `file://${output}`), 'utf8');
+  assert.match(detail, /js\/news-detail\.mjs/);
+  assert.match(detail, /id="newsArticle"/);
 });
 
 test('el lead magnet conserva el contrato del newsletter y declara que el recurso está pendiente', () => {

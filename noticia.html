@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co; img-src 'self' data: https:; object-src 'none'; base-uri 'none'; form-action 'self';">
+  <title>Noticia | MiPortal</title>
+  <meta name="description" content="Lee noticias de desarrollo web en MiPortal.">
+  <link rel="canonical" href="https://www.miportal.me/noticia.html">
+  <meta property="og:type" content="article"><meta property="og:title" content="Noticia | MiPortal"><meta property="og:description" content="Lee noticias de desarrollo web en MiPortal."><meta property="og:url" content="https://www.miportal.me/noticia.html"><meta property="og:image" content="https://www.miportal.me/og-image.svg"><meta property="og:locale" content="es_ES">
+  <meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="Noticia | MiPortal"><meta name="twitter:description" content="Lee noticias de desarrollo web en MiPortal."><meta name="twitter:image" content="https://www.miportal.me/og-image.svg">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="styles.css"><script src="js/theme-init.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Saltar al contenido</a>
+  <header class="main-header"><div class="header-inner"><div class="logo"><a class="logo-link" href="index.html" aria-label="MiPortal — Inicio"><span class="logo-mark" aria-hidden="true">MP</span><span class="logo-text">MiPortal<span>.me</span></span></a></div><nav class="main-nav" id="mainNav" aria-label="Navegación principal"><ul><li><a href="index.html">Inicio</a></li><li><a href="noticias.html" class="active">Noticias</a></li><li><a href="recursos.html">Recursos</a></li><li><a href="tutoriales.html">Tutoriales</a></li><li><a href="productos.html">Productos</a></li><li><a href="contacto.html">Contacto</a></li><li class="auth-nav" id="auth-nav-item"><a class="nav-login" href="/login.html">Iniciar sesión</a><a class="nav-register" href="/register.html">Registrarse</a></li></ul></nav><button id="themeToggle" class="btn-theme" type="button" aria-label="Cambiar a modo oscuro" aria-pressed="false">◐</button><button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="mainNav"><span class="nav-toggle-icon" aria-hidden="true"><span class="nav-toggle-line"></span><span class="nav-toggle-line"></span><span class="nav-toggle-line"></span></span></button></div></header>
+  <main id="main-content" class="container news-detail-page">
+    <nav class="news-detail-breadcrumb" aria-label="Ruta de navegación"><a href="index.html">Inicio</a><span aria-hidden="true"> &gt; </span><a href="noticias.html">Noticias</a><span aria-hidden="true"> &gt; </span><span id="breadcrumbTitle">Noticia</span></nav>
+    <p id="articleStatus" class="article-state article-state--loading" role="status" aria-live="polite">Cargando noticia…</p>
+    <div id="newsArticle"></div>
+    <section id="relatedSection" class="related-news-section" aria-labelledby="relatedTitle" hidden><h2 id="relatedTitle">También te puede interesar</h2><div id="relatedNews" class="related-news-grid"></div></section>
+  </main>
+  <footer class="main-footer"><div class="footer-inner"><div class="footer-brand"><span class="logo-text footer-brand-name">MiPortal<span>.me</span></span><p class="footer-tagline">Noticias y recursos de desarrollo web en un solo lugar.</p></div><nav class="footer-nav" aria-label="Explorar"><span class="footer-title">Explorar</span><a href="noticias.html">Noticias</a><a href="recursos.html">Recursos</a><a href="tutoriales.html">Tutoriales</a></nav><nav class="footer-nav" aria-label="Información"><span class="footer-title">Información</span><a href="contacto.html">Contacto</a></nav></div><p class="footer-copy">&copy; 2026 MiPortal. Todos los derechos reservados.</p></footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="js/supabase-client.js"></script><script src="js/auth-nav.js"></script><script src="main.js"></script><script type="module" src="js/news-detail.mjs"></script>
+</body>
+</html>

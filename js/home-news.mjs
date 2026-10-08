@@ -15,6 +15,7 @@ import {
   prepareItems,
   selectItems
 } from './news-feed.mjs';
+import { newsDetailUrl } from './news-detail-utils.mjs';
 
 const grid = document.getElementById('homeNewsGrid');
 
@@ -51,8 +52,15 @@ if (grid) {
       element('span', 'tag', `${item.source.label} · ${languageLabel(item)}`)
     );
 
-    const title = element('h3', '', item.title);
-    title.lang = item.source.language;
+    const title = element('h3');
+    const titleLink = element('a', '', item.title);
+    titleLink.href = newsDetailUrl(item.id) || item.link;
+    if (!newsDetailUrl(item.id)) {
+      titleLink.target = '_blank';
+      titleLink.rel = 'noopener noreferrer';
+    }
+    titleLink.lang = item.source.language;
+    title.append(titleLink);
     body.append(title);
 
     const description = element(
@@ -73,9 +81,11 @@ if (grid) {
     body.append(date);
 
     const link = element('a', 'read-more', 'Leer noticia →');
-    link.href = item.link;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
+    link.href = newsDetailUrl(item.id) || item.link;
+    if (!newsDetailUrl(item.id)) {
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+    }
     body.append(link);
 
     article.append(body);
