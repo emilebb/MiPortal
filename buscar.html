@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,follow">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co; img-src 'self' https:; object-src 'none'; base-uri 'none'; form-action 'self';">
+  <title>Buscar en MiPortal</title>
+  <meta name="description" content="Busca noticias, tutoriales y recursos publicados en MiPortal.">
+  <link rel="canonical" href="https://www.miportal.me/buscar.html">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="js/theme-init.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Saltar al contenido</a>
+  <main id="main-content" class="container home-page global-search">
+    <section class="news-hero" aria-labelledby="search-title">
+      <span class="eyebrow">Explora MiPortal</span>
+      <h1 id="search-title">Buscar en MiPortal</h1>
+      <p class="news-hero-lead">Encuentra noticias, tutoriales, recursos y artículos publicados.</p>
+    </section>
+    <form id="globalSearchForm" class="global-search-form" role="search">
+      <label for="globalSearchQuery">¿Qué quieres encontrar?</label>
+      <div class="global-search-controls">
+        <input id="globalSearchQuery" name="q" type="search" maxlength="120" autocomplete="off" aria-describedby="searchHelp" value="">
+        <button class="btn btn-primary" type="submit">Buscar</button>
+      </div>
+      <p id="searchHelp">Busca en noticias, tutoriales y recursos publicados.</p>
+      <label for="globalSearchFilter">Filtrar resultados</label>
+      <select id="globalSearchFilter" name="tipo">
+        <option value="all">Todos</option>
+        <option value="news">Noticias</option>
+        <option value="tutorial">Tutoriales</option>
+        <option value="resource">Recursos</option>
+      </select>
+    </form>
+    <p id="globalSearchStatus" class="global-search-status" role="status" aria-live="polite" aria-atomic="true">Escribe un término para comenzar la búsqueda.</p>
+    <section id="globalSearchResults" class="global-search-results" aria-label="Resultados de búsqueda"></section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="main.js"></script>
+  <script type="module" src="js/global-search.mjs"></script>
+</body>
+</html>

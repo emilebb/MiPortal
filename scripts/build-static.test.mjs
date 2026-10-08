@@ -19,13 +19,21 @@ test('el build genera una navegación y un pie compartidos en todo HTML público
     assert.match(html, /id="themeToggle"/, `${page}: tema`);
     assert.match(html, /id="auth-nav-item"/, `${page}: navegación de cuenta`);
     assert.match(html, /class="main-footer"/, `${page}: footer`);
-    for (const route of ['noticias.html', 'tutoriales.html', 'recursos.html', 'productos.html', 'contacto.html']) {
+    for (const route of ['noticias.html', 'tutoriales.html', 'recursos.html', 'buscar.html', 'productos.html', 'contacto.html']) {
       assert.match(html, new RegExp(`href="/?${route}"`), `${page}: enlace a ${route}`);
     }
   }
   const detail = readFileSync(new URL('noticia.html', `file://${output}`), 'utf8');
   assert.match(detail, /js\/news-detail\.mjs/);
   assert.match(detail, /id="newsArticle"/);
+});
+
+test('la búsqueda global se incluye en el sitio y se marca para no indexación', () => {
+  const html = readFileSync(new URL('buscar.html', `file://${output}`), 'utf8');
+  assert.match(html, /name="robots" content="noindex,follow"/);
+  assert.match(html, /id="globalSearchForm"/);
+  assert.match(html, /js\/global-search\.mjs/);
+  assert.match(html, /href="\/buscar\.html">Buscar<\/a>/);
 });
 
 test('el lead magnet conserva el contrato del newsletter y declara que el recurso está pendiente', () => {

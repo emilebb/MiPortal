@@ -6,6 +6,7 @@
   "scripts": {
     "build": "node scripts/generate-config.mjs && node scripts/build-static.mjs",
     "test:build": "node --test scripts/build-static.test.mjs",
+    "test:search": "node --test scripts/global-search-utils.test.mjs",
     "dev": "node scripts/generate-config.mjs",
     "test:contact": "node --test scripts/contact.test.cjs scripts/contact-browser.test.mjs",
     "test:newsletter": "node --test scripts/newsletter.test.cjs scripts/newsletter-send.test.cjs scripts/admin-publish.test.cjs",
