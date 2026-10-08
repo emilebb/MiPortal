@@ -1,5 +1,4 @@
 import { dailyContentClass, getSafeDailyUrl, prepareDailyItems } from './home-daily-utils.mjs';
-import { isImageWidthSufficient } from './image-utils.mjs';
 
 const root = document.getElementById('homeDaily');
 
@@ -46,14 +45,10 @@ if (root) {
       image.alt = '';
       image.loading = 'lazy';
       image.decoding = 'async';
-      const useFallback = () => {
+      image.addEventListener('error', () => {
         media.classList.remove('has-image');
         image.remove();
-      };
-      image.addEventListener('load', () => {
-        if (!isImageWidthSufficient(image.naturalWidth)) useFallback();
       }, { once: true });
-      image.addEventListener('error', useFallback, { once: true });
       media.classList.add('has-image');
       media.append(image);
     }

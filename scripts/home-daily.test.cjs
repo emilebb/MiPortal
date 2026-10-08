@@ -101,13 +101,16 @@ test('Daily reads only the newest row and renders exactly its existing items saf
     assert.equal(nodes.filter((node) => node.tagName === 'article' && node.className.includes('daily-card')).length, 2);
     assert.ok(nodes.some((node) => node.className === 'daily-content daily-content--items-2'));
     assert.equal(nodes.filter((node) => node.tagName === 'img').length, 1);
+    assert.equal(nodes.filter((node) => node.className.includes('daily-image-fallback')).length, 2);
     const links = nodes.filter((node) => node.tagName === 'a');
     assert.equal(links.length, 2);
     assert.ok(links.every((link) => link.target === '_blank' && link.rel === 'noopener noreferrer'));
 
     const image = nodes.find((node) => node.tagName === 'img');
-    image.naturalWidth = 319;
-    image.listeners.load();
+    image.naturalWidth = 119;
+    assert.equal(image.removed, undefined);
+    assert.ok(nodes.includes(image));
+    image.listeners.error();
     assert.equal(image.removed, true);
     assert.ok(nodes.some((node) => node.className.includes('daily-image-fallback')));
   } finally {

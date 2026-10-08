@@ -1,5 +1,5 @@
 import { isNewsId, safeNewsUrl, newsDetailUrl, absoluteNewsDetailUrl, relatedNews } from './news-detail-utils.mjs';
-import { isImageWidthSufficient } from './image-utils.mjs';
+import { createArticleImage, createRelatedImage } from './news-detail-media.mjs';
 
 const $ = (id) => document.getElementById(id);
 const status = $('articleStatus');
@@ -48,17 +48,8 @@ function renderRelated(items) {
   for (const item of items) {
     const link = node('a', 'related-news-card');
     link.href = newsDetailUrl(item.id);
-    const image = document.createElement('img');
     const imageUrl = safeNewsUrl(item.image_url);
-    image.src = imageUrl || fallbackImage;
-    image.alt = '';
-    image.loading = 'lazy';
-    if (imageUrl) {
-      image.addEventListener('load', () => {
-        if (!isImageWidthSufficient(image.naturalWidth)) image.src = fallbackImage;
-      }, { once: true });
-    }
-    image.addEventListener('error', () => { image.src = fallbackImage; }, { once: true });
+    const image = createRelatedImage(imageUrl, fallbackImage);
     const date = publishedDate(item.published_at);
     const dateNode = node('time', 'news-detail-date', date
       ? new Intl.DateTimeFormat('es', { dateStyle: 'long' }).format(date)
@@ -86,9 +77,10 @@ function renderArticle(row) {
   setMeta('meta[property="og:url"]', location.href);
   setMeta('meta[name="twitter:title"]', document.title);
   setMeta('meta[name="twitter:description"]', description);
-  const imageUrl = safeNewsUrl(row.image_url) || new URL(fallbackImage, location.href).href;
-  setMeta('meta[property="og:image"]', imageUrl);
-  setMeta('meta[name="twitter:image"]', imageUrl);
+  const imageUrl = safeNewsUrl(row.image_url);
+  const metadataImageUrl = imageUrl || new URL(fallbackImage, location.href).href;
+  setMeta('meta[property="og:image"]', metadataImageUrl);
+  setMeta('meta[name="twitter:image"]', metadataImageUrl);
   const canonical = document.querySelector('link[rel="canonical"]');
   if (canonical) canonical.href = location.href;
 
@@ -103,23 +95,7 @@ function renderArticle(row) {
   }
   content.append(header);
 
-  const image = document.createElement('img');
-  image.className = `news-detail-image${safeNewsUrl(row.image_url) ? '' : ' news-detail-image--fallback'}`;
-  image.src = imageUrl;
-  image.alt = '';
-  image.loading = 'eager';
-  if (safeNewsUrl(row.image_url)) {
-    image.addEventListener('load', () => {
-      if (!isImageWidthSufficient(image.naturalWidth)) {
-        image.classList.add('news-detail-image--fallback');
-        image.src = fallbackImage;
-      }
-    }, { once: true });
-  }
-  image.addEventListener('error', () => {
-    image.classList.add('news-detail-image--fallback');
-    image.src = fallbackImage;
-  }, { once: true });
+  const image = createArticleImage(imageUrl, fallbackImage);
   content.append(image);
 
   if (typeof row.description === 'string' && row.description.trim()) {

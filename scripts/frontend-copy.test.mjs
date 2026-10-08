@@ -109,15 +109,6 @@ test('news pagination buttons expose disabled states and keep focus on the new r
   assert.match(page, /button\.addEventListener\([\s\S]*?currentPage = 1/);
 });
 
-test('all editorial image renderers use the intrinsic-width fallback threshold', () => {
-  for (const path of ['js/news-page.mjs', 'js/home-daily.mjs', 'js/news-detail.mjs']) {
-    const source = read(path);
-    assert.match(source, /isImageWidthSufficient\(image\.naturalWidth\)/);
-    assert.match(source, /addEventListener\('load'/);
-  }
-  assert.doesNotMatch(read('js/news-page.mjs'), /image\.width\s*=\s*640|image\.height\s*=\s*360/);
-});
-
 test('the news static newsletter composer preserves one source form and adds one script', async () => {
   const { composeNewsletterOutput } = await import('../scripts/static-build-utils.mjs');
   const source = read('automatizaciones-n8n.html');

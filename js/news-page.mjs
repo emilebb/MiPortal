@@ -21,7 +21,7 @@ import {
 } from './news-feed.mjs';
 import { newsDetailUrl } from './news-detail-utils.mjs';
 import { paginateItems, relativeDateLabel } from './news-page-utils.mjs';
-import { isImageWidthSufficient } from './image-utils.mjs';
+import { createNewsCardMedia } from './news-page-media.mjs';
 
 const grid = document.getElementById('cardsContainer');
 const form = document.getElementById('searchForm');
@@ -141,40 +141,6 @@ function dateNode(item) {
 
 /* --- Tarjeta ------------------------------------------------------------- */
 
-function media(item) {
-  const wrapper = element('div', 'card-media');
-
-  // La marca queda de respaldo cuando no hay portada o la imagen falla.
-  if (item.image) {
-    const image = document.createElement('img');
-
-    image.src = item.image;
-    image.alt = '';
-    image.loading = 'lazy';
-    image.decoding = 'async';
-    const useFallback = () => {
-      image.remove();
-      wrapper.append(element('span', 'card-media-mark', 'MP'));
-    };
-    image.addEventListener('load', () => {
-      if (!isImageWidthSufficient(image.naturalWidth)) useFallback();
-    }, { once: true });
-    image.addEventListener('error', useFallback, { once: true });
-
-    wrapper.append(image);
-  } else {
-    wrapper.append(
-      element(
-        'span',
-        'card-media-mark',
-        'MP'
-      )
-    );
-  }
-
-  return wrapper;
-}
-
 function card(item) {
   const article = element(
     'article',
@@ -272,7 +238,7 @@ function card(item) {
   );
 
   body.append(link);
-  article.append(media(item), body);
+  article.append(createNewsCardMedia(item), body);
 
   return article;
 }

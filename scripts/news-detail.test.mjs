@@ -1,7 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { isImageWidthSufficient } from '../js/image-utils.mjs';
 
 import {
   isNewsId,
@@ -50,9 +49,4 @@ test('news detail uses visual-only breadcrumb truncation and responsive related 
   assert.match(css, /\.news-detail-header h1\s*\{[^}]*font-size:\s*clamp\(1\.65rem/);
   assert.match(css, /\.related-news-grid\s*\{[^}]*auto-fit/);
   assert.match(css, /\.related-news-card img\s*\{[^}]*aspect-ratio:\s*16\s*\/\s*9/);
-});
-
-test('image width policy keeps reasonable media and rejects undersized sources', () => {
-  for (const width of [0, 1, 319, 479, NaN, Infinity]) assert.equal(isImageWidthSufficient(width), false);
-  for (const width of [480, 640, 1920]) assert.equal(isImageWidthSufficient(width), true);
 });
