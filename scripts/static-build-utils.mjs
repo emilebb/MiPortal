@@ -1,4 +1,25 @@
 const NEWSLETTER_SCRIPT = '<script src="js/newsletter.js"></script>';
+const ASSISTANT_PAGES = new Set([
+  'index.html', 'tutoriales.html', 'tutorial.html', 'productos.html',
+  'automatizaciones-n8n.html', 'automatizaciones-gratis.html', 'noticias.html',
+  'buscar.html', 'noticia.html', 'recursos.html', 'contacto.html',
+  'sobre-nosotros.html', 'politica-de-privacidad.html', 'terminos-y-condiciones.html'
+]);
+
+export function injectAssistantAssets(html, file) {
+  if (!ASSISTANT_PAGES.has(file)) return html;
+  const stylesheet = '<link rel="stylesheet" href="miportal-assistant.css" data-miportal-assistant="style">';
+  const bootstrap = '<script type="module" src="js/miportal-assistant.mjs" data-miportal-assistant="bootstrap"></script>';
+  if (!html.includes('data-miportal-assistant="style"')) {
+    if (!/<\/head>/i.test(html)) throw new Error(`Missing </head> for assistant injection in ${file}`);
+    html = html.replace(/<\/head>/i, `${stylesheet}</head>`);
+  }
+  if (!html.includes('data-miportal-assistant="bootstrap"')) {
+    if (!/<\/body>/i.test(html)) throw new Error(`Missing </body> for assistant injection in ${file}`);
+    html = html.replace(/<\/body>/i, `${bootstrap}</body>`);
+  }
+  return html;
+}
 
 export function composeNewsletterOutput(html, fallbackSection) {
   const formCount = [...html.matchAll(/id="newsletterForm"/g)].length;

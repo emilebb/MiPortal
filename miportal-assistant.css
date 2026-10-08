@@ -1,0 +1,23 @@
+.mp-assistant { position: fixed; z-index: 120; right: max(1rem, env(safe-area-inset-right)); bottom: max(1rem, env(safe-area-inset-bottom)); font-family: var(--font-family); }
+.mp-assistant__open { display: grid; place-items: center; width: 3.5rem; height: 3.5rem; border: 0; border-radius: 50%; background: var(--primary); color: var(--on-primary); box-shadow: var(--shadow-lg); font-size: 1.4rem; cursor: pointer; }
+.mp-assistant__panel { position: absolute; right: 0; bottom: calc(100% + .75rem); display: flex; flex-direction: column; width: min(24rem, calc(100vw - 2rem)); max-height: min(38rem, calc(100dvh - 6rem - env(safe-area-inset-top))); overflow: hidden; border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); color: var(--text-primary); box-shadow: var(--shadow-lg); }
+.mp-assistant__panel[hidden] { display: none; }
+.mp-assistant__header { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .85rem 1rem; border-bottom: 1px solid var(--border); background: var(--surface-secondary); }
+.mp-assistant__header h2 { font-size: 1rem; }
+.mp-assistant__close, .mp-assistant__send { min-height: 2.5rem; padding: .45rem .8rem; border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--surface); color: var(--text-primary); }
+.mp-assistant__messages { display: flex; flex: 1 1 auto; flex-direction: column; gap: .75rem; min-height: 7rem; padding: .9rem; overflow: auto; overscroll-behavior: contain; }
+.mp-assistant__message { max-width: 95%; padding: .7rem .85rem; border: 1px solid var(--border); border-radius: var(--radius-md); background: var(--surface-secondary); overflow-wrap: anywhere; }
+.mp-assistant__message p { margin: 0; white-space: pre-wrap; }
+.mp-assistant__message--user { align-self: flex-end; border-color: var(--primary); background: var(--primary); color: var(--on-primary); }
+.mp-assistant__links { display: grid; gap: .25rem; margin: .5rem 0 0; padding-left: 1.2rem; }
+.mp-assistant__status { min-height: 1.35rem; margin: 0; padding-inline: .9rem; color: var(--text-secondary); font-size: .85rem; }
+.mp-assistant__form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .45rem; padding: .75rem; border-top: 1px solid var(--border); }
+.mp-assistant__input { grid-column: 1 / -1; width: 100%; min-height: 3.25rem; max-height: 8rem; resize: vertical; padding: .65rem .75rem; }
+.mp-assistant__count { align-self: center; color: var(--text-secondary); font-size: .75rem; }
+.mp-assistant__send { justify-self: end; border-color: var(--primary); background: var(--primary); color: var(--on-primary); font-weight: 700; }
+.mp-assistant :focus-visible { outline: 3px solid var(--brand); outline-offset: 2px; }
+@media (max-width: 480px) {
+  .mp-assistant { right: max(.65rem, env(safe-area-inset-right)); bottom: max(.65rem, env(safe-area-inset-bottom)); }
+  .mp-assistant__panel { position: fixed; right: max(.5rem, env(safe-area-inset-right)); bottom: max(4.5rem, calc(env(safe-area-inset-bottom) + 4rem)); width: min(26rem, calc(100vw - 1rem)); max-height: min(70dvh, calc(100dvh - 5rem - env(safe-area-inset-top) - env(safe-area-inset-bottom))); }
+}
+@media (prefers-reduced-motion: reduce) { .mp-assistant *, .mp-assistant *::before, .mp-assistant *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; } }
