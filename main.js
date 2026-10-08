@@ -91,18 +91,25 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const notice = document.createElement('aside');
+    const returnFocus = document.activeElement;
     notice.className = 'cookie-notice';
     notice.setAttribute('aria-label', 'Aviso sobre cookies');
     notice.setAttribute('role', 'dialog');
     notice.innerHTML = `
       <div>
         <h2>Uso de cookies</h2>
-        <p>Este sitio utiliza Google Tag Manager para analizar el uso del portal y eventualmente mostrar publicidad. El consentimiento para analítica y publicidad se deniega por defecto y solo se activa si aceptás. Podés cambiar tu decisión en cualquier momento desde el footer.</p>
+        <p>Este sitio utiliza Google Tag Manager para gestionar etiquetas de analítica y publicidad. Estas etiquetas se mantienen denegadas hasta que elijas una opción. Puedes cambiar tu decisión desde el enlace de preferencias del pie de página.</p>
       </div>
       <div class="cookie-notice-actions">
         <button type="button" class="cookie-reject">Rechazar todo</button>
         <button type="button" class="cookie-accept">Aceptar todo</button>
+        <button type="button" class="cookie-close">Cerrar aviso</button>
       </div>`;
+
+    const dismissNotice = () => {
+      notice.remove();
+      if (returnFocus?.isConnected && typeof returnFocus.focus === 'function') returnFocus.focus();
+    };
 
     const handleConsent = (value) => {
       localStorage.setItem(cookieConsentKey, value);
@@ -114,12 +121,19 @@ document.addEventListener('DOMContentLoaded', () => {
         updateGtmConsent(false);
       }
 
-      notice.remove();
+      dismissNotice();
     };
 
     notice.querySelector('.cookie-reject').addEventListener('click', () => handleConsent('rejected'));
     notice.querySelector('.cookie-accept').addEventListener('click', () => handleConsent('accepted'));
+    notice.querySelector('.cookie-close').addEventListener('click', dismissNotice);
     document.body.appendChild(notice);
+    notice.querySelector('.cookie-reject').focus();
+    notice.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      dismissNotice();
+    });
   };
 
   const setupCookiePreferences = () => {
@@ -241,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
             status.setAttribute('role', 'alert');
             button.parentElement.appendChild(status);
           }
-          status.textContent = error.message || 'No se pudo iniciar el pago. Probá nuevamente.';
+          status.textContent = error.message || 'No se pudo iniciar el pago. Vuelve a intentarlo.';
         }
       });
     });
@@ -331,7 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (resource.image_url) {
         const image = document.createElement('img');
         image.src = resource.image_url;
-        image.alt = `Imagen de ${resource.title || 'recurso'}`;
+        image.alt = '';
         image.loading = 'lazy';
         image.onerror = function () {
           this.remove();
@@ -383,7 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // variables SUPABASE_URL/SUPABASE_PUBLISHABLE_KEY en el build), avisamos sin
     // romper.
     if (!supabase) {
-      showError('La sección de recursos no está configurada todavía. Completá SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY en Vercel.', false);
+      showError('La sección de recursos todavía no está configurada. Contacta con el equipo de MiPortal.', false);
       return;
     }
 
@@ -401,7 +415,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       if (!data || data.length === 0) {
-        showEmpty('Todavía no hay recursos publicados. Volvé pronto.');
+        showEmpty('Todavía no hay recursos publicados. Vuelve pronto.');
         return;
       }
 
@@ -416,7 +430,7 @@ document.addEventListener('DOMContentLoaded', () => {
       grid.replaceChildren(fragment);
       grid.removeAttribute('aria-busy');
     } catch (error) {
-      showError(`No se pudieron cargar los recursos: ${error.message}. Probá nuevamente en unos segundos.`);
+      showError(`No se pudieron cargar los recursos: ${error.message}. Vuelve a intentarlo en unos segundos.`);
     }
   };
 

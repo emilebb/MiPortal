@@ -28,10 +28,10 @@
       }
       status.dataset.state = 'error';
       status.textContent = typeof result?.error === 'string'
-        ? result.error : 'No se pudo completar la suscripción. Probá nuevamente.';
+        ? result.error : 'No se pudo completar la suscripción. Vuelve a intentarlo.';
     } catch {
       status.dataset.state = 'error';
-      status.textContent = 'No se pudo completar la suscripción. Probá nuevamente.';
+      status.textContent = 'No se pudo completar la suscripción. Vuelve a intentarlo.';
     } finally {
       sending = false;
       button.disabled = false;

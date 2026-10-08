@@ -1,4 +1,5 @@
 import { isNewsId, safeNewsUrl, newsDetailUrl, absoluteNewsDetailUrl, relatedNews } from './news-detail-utils.mjs';
+import { isImageWidthSufficient } from './image-utils.mjs';
 
 const $ = (id) => document.getElementById(id);
 const status = $('articleStatus');
@@ -48,9 +49,15 @@ function renderRelated(items) {
     const link = node('a', 'related-news-card');
     link.href = newsDetailUrl(item.id);
     const image = document.createElement('img');
-    image.src = safeNewsUrl(item.image_url) || fallbackImage;
-    image.alt = item.title;
+    const imageUrl = safeNewsUrl(item.image_url);
+    image.src = imageUrl || fallbackImage;
+    image.alt = '';
     image.loading = 'lazy';
+    if (imageUrl) {
+      image.addEventListener('load', () => {
+        if (!isImageWidthSufficient(image.naturalWidth)) image.src = fallbackImage;
+      }, { once: true });
+    }
     image.addEventListener('error', () => { image.src = fallbackImage; }, { once: true });
     const date = publishedDate(item.published_at);
     const dateNode = node('time', 'news-detail-date', date
@@ -98,9 +105,17 @@ function renderArticle(row) {
 
   const image = document.createElement('img');
   image.className = `news-detail-image${safeNewsUrl(row.image_url) ? '' : ' news-detail-image--fallback'}`;
-  image.src = safeNewsUrl(row.image_url) || fallbackImage;
-  image.alt = title;
+  image.src = imageUrl;
+  image.alt = '';
   image.loading = 'eager';
+  if (safeNewsUrl(row.image_url)) {
+    image.addEventListener('load', () => {
+      if (!isImageWidthSufficient(image.naturalWidth)) {
+        image.classList.add('news-detail-image--fallback');
+        image.src = fallbackImage;
+      }
+    }, { once: true });
+  }
   image.addEventListener('error', () => {
     image.classList.add('news-detail-image--fallback');
     image.src = fallbackImage;

@@ -19,6 +19,11 @@ export function hasSearchQuery(value) {
   return normalizeQuery(value).length > 0;
 }
 
+export function formatResultCount(value) {
+  const count = Math.max(0, Number(value) || 0);
+  return `${count} ${count === 1 ? 'resultado' : 'resultados'}`;
+}
+
 function rank(result, query) {
   const title = normalizeSearchText(result.title);
   if (title === query) return 0;

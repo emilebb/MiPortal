@@ -8,8 +8,33 @@ import {
   searchResults,
   filterResults,
   resourceResultUrl,
-  newsResultUrl
+  newsResultUrl,
+  formatResultCount
 } from '../js/global-search-utils.mjs';
+import { paginateItems } from '../js/news-page-utils.mjs';
+import { relativeDateLabel } from '../js/news-page-utils.mjs';
+
+test('paginates filtered news into stable slices and clamps page bounds', () => {
+  const items = Array.from({ length: 31 }, (_, index) => index + 1);
+  assert.deepEqual(paginateItems(items, 1, 12), {
+    items: items.slice(0, 12), page: 1, pageCount: 3, total: 31
+  });
+  assert.deepEqual(paginateItems(items, 99, 12), {
+    items: items.slice(24), page: 3, pageCount: 3, total: 31
+  });
+  assert.deepEqual(paginateItems([], 1, 12), {
+    items: [], page: 1, pageCount: 0, total: 0
+  });
+});
+
+test('relative news dates use normalized calendar days and a deterministic clock', () => {
+  const now = new Date('2026-03-12T12:30:00.000Z');
+  assert.equal(relativeDateLabel('2026-03-12', now), 'hoy');
+  assert.equal(relativeDateLabel('2026-03-11', now), 'ayer');
+  assert.equal(relativeDateLabel('2026-03-04', now), 'hace 8 días');
+  assert.equal(relativeDateLabel('2026-03-13', now), null);
+  assert.equal(relativeDateLabel('fecha-invalida', now), null);
+});
 
 test('normalizes case, accents, and repeated whitespace and bounds queries', () => {
   assert.equal(normalizeSearchText('  JavaScript   práctico  '), 'javascript practico');
@@ -32,7 +57,14 @@ test('ranks exact title, title prefix, title match, description, then source/cat
 test('filters result types without changing the source results', () => {
   const results = [{ type: 'news' }, { type: 'tutorial' }, { type: 'editorial' }, { type: 'resource' }];
   assert.deepEqual(filterResults(results, 'tutorial'), [results[1]]);
+  assert.deepEqual(filterResults(results, 'editorial'), [results[2]]);
   assert.equal(filterResults(results, 'all').length, 4);
+});
+
+test('formats a single global-search result count for the status region', () => {
+  assert.equal(formatResultCount(0), '0 resultados');
+  assert.equal(formatResultCount(1), '1 resultado');
+  assert.equal(formatResultCount(12), '12 resultados');
 });
 
 test('news result URLs are internal detail routes only for valid UUIDs', () => {

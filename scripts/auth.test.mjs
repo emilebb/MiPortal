@@ -125,11 +125,18 @@ test('registration preserves immediate session and exposes invalid input', async
   const h = await setup('js/register.js');
   await h.submit('registerForm');
   assert.equal(h.node('errorMessages').hidden, false);
+  assert.equal(h.node('errorMessages').textContent, 'Completa todos los campos.');
   h.node('email').value = 'user@example.test';
   h.node('password').value = h.node('confirmPassword').value = 'password';
   await h.submit('registerForm');
   assert.equal(h.calls.signOut, 0);
   assert.equal(h.calls.redirect, '/index.html');
+});
+
+test('registration with missing configuration gives a user-facing message and stays disabled', async () => {
+  const h = await setup('js/register.js', { noConfig: true });
+  assert.equal(h.node('registerAlert').textContent,
+    'El registro no está disponible temporalmente. Contacta con el equipo de MiPortal.');
 });
 
 test('failed logout retains authenticated navigation and reports failure', async () => {
@@ -231,5 +238,6 @@ test('registration awaiting confirmation does not create a fake session', async 
   await h.submit('registerForm');
   assert.equal(h.calls.redirect, undefined);
   assert.equal(h.node('registerForm').hidden, true);
-  assert.match(h.node('registerAlert').textContent, /confirmar/);
+  assert.equal(h.node('registerAlert').textContent,
+    'Revisa tu bandeja de entrada para confirmar tu correo y luego inicia sesión.');
 });

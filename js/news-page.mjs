@@ -20,6 +20,8 @@ import {
   loadNews
 } from './news-feed.mjs';
 import { newsDetailUrl } from './news-detail-utils.mjs';
+import { paginateItems, relativeDateLabel } from './news-page-utils.mjs';
+import { isImageWidthSufficient } from './image-utils.mjs';
 
 const grid = document.getElementById('cardsContainer');
 const form = document.getElementById('searchForm');
@@ -56,6 +58,12 @@ const SKELETON_COUNT = 6;
 let items = [];
 let category = '';
 let loading = false;
+let currentPage = 1;
+const PAGE_SIZE = 12;
+const pagination = document.createElement('nav');
+pagination.className = 'news-pagination';
+pagination.setAttribute('aria-label', 'Paginación de noticias');
+grid.insertAdjacentElement('afterend', pagination);
 
 function element(tag, className, text) {
   const node = document.createElement(tag);
@@ -102,46 +110,6 @@ function formatDate(value) {
   return `${Number(day)} ${MONTHS[Number(month) - 1]} ${year}`;
 }
 
-/* Antigüedad aproximada en español neutro: "hace 2 h". */
-function relativeTime(value) {
-  const parts = /^(\d{4})-(\d{2})-(\d{2})$/.exec(
-    value || ''
-  );
-
-  if (!parts) {
-    return null;
-  }
-
-  /* Medianoche en hora local: comparar fechas en UTC movería el día. */
-  const published = new Date(
-    Number(parts[1]),
-    Number(parts[2]) - 1,
-    Number(parts[3])
-  );
-
-  if (!Number.isFinite(published.getTime())) {
-    return null;
-  }
-
-  const minutes = Math.round(
-    (Date.now() - published.getTime()) / 60000
-  );
-
-  if (minutes < 1) return 'hace instantes';
-  if (minutes < 60) return `hace ${minutes} min`;
-
-  const hours = Math.round(minutes / 60);
-
-  if (hours < 24) return `hace ${hours} h`;
-
-  const days = Math.round(hours / 24);
-
-  if (days === 1) return 'ayer';
-  if (days < 7) return `hace ${days} días`;
-
-  return formatDate(value);
-}
-
 /* Marca la fecha completa para lectores de pantalla; el texto visible es la
    fecha corta. */
 function dateNode(item) {
@@ -150,7 +118,7 @@ function dateNode(item) {
   }
 
   const absolute = formatDate(item.date);
-  const relative = relativeTime(item.date);
+  const relative = relativeDateLabel(item.date);
   const node = element(
     'time',
     'card-date',
@@ -184,18 +152,14 @@ function media(item) {
     image.alt = '';
     image.loading = 'lazy';
     image.decoding = 'async';
-    image.width = 640;
-    image.height = 360;
-    image.addEventListener(
-      'error',
-      () => {
-        image.remove();
-        wrapper.append(
-          element('span', 'card-media-mark', 'MP')
-        );
-      },
-      { once: true }
-    );
+    const useFallback = () => {
+      image.remove();
+      wrapper.append(element('span', 'card-media-mark', 'MP'));
+    };
+    image.addEventListener('load', () => {
+      if (!isImageWidthSufficient(image.naturalWidth)) useFallback();
+    }, { once: true });
+    image.addEventListener('error', useFallback, { once: true });
 
     wrapper.append(image);
   } else {
@@ -436,6 +400,8 @@ function render() {
       language: language.value
     }
   );
+  const page = paginateItems(selected, currentPage, PAGE_SIZE);
+  currentPage = page.page;
 
   notice.textContent = '';
 
@@ -461,14 +427,44 @@ function render() {
 
     counter.textContent = '0 noticias';
   } else {
-    grid.replaceChildren(
-      ...selected.map(card)
-    );
+    grid.replaceChildren(...page.items.map(card));
 
     setCount(selected.length);
   }
 
+  renderPagination(page);
+
   updateTools();
+}
+
+function renderPagination(page) {
+  pagination.replaceChildren();
+  if (page.pageCount < 2) return;
+  const previous = element('button', 'btn btn-secondary btn-sm', 'Anterior');
+  previous.type = 'button';
+  previous.disabled = page.page === 1;
+  previous.setAttribute('aria-controls', 'cardsContainer');
+  previous.addEventListener('click', () => navigatePage(currentPage - 1));
+  const status = element('span', 'news-page-status', `Página ${page.page} de ${page.pageCount}`);
+  status.setAttribute('role', 'status');
+  status.setAttribute('aria-live', 'polite');
+  status.setAttribute('aria-atomic', 'true');
+  const next = element('button', 'btn btn-secondary btn-sm', 'Siguiente');
+  next.type = 'button';
+  next.disabled = page.page === page.pageCount;
+  next.setAttribute('aria-controls', 'cardsContainer');
+  next.addEventListener('click', () => navigatePage(currentPage + 1));
+  pagination.append(previous, status, next);
+}
+
+function navigatePage(page) {
+  currentPage = page;
+  render();
+  const firstLink = grid.querySelector('.card-title a');
+  if (!firstLink) return;
+  firstLink.focus({ preventScroll: true });
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  grid.scrollIntoView({ block: 'start', behavior: reduceMotion ? 'auto' : 'smooth' });
 }
 
 /* --- Acciones ------------------------------------------------------------ */
@@ -561,6 +557,7 @@ form.addEventListener(
   'submit',
   event => {
     event.preventDefault();
+    currentPage = 1;
     render();
   }
 );
@@ -568,6 +565,7 @@ form.addEventListener(
 input.addEventListener(
   'input',
   () => {
+    currentPage = 1;
     render();
   }
 );
@@ -575,6 +573,7 @@ input.addEventListener(
 language.addEventListener(
   'change',
   () => {
+    currentPage = 1;
     render();
   }
 );
@@ -584,6 +583,7 @@ buttons.forEach(
     button.addEventListener(
       'click',
       () => {
+        currentPage = 1;
         category =
           button.dataset.query || '';
 

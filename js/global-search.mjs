@@ -1,5 +1,5 @@
 import { loadNews } from './news-feed.mjs';
-import { filterResults, hasSearchQuery, normalizeQuery, newsResultUrl, resourceResultUrl, searchResults } from './global-search-utils.mjs';
+import { filterResults, formatResultCount, hasSearchQuery, normalizeQuery, newsResultUrl, resourceResultUrl, searchResults } from './global-search-utils.mjs';
 
 const curatedContent = [
   {
@@ -84,8 +84,9 @@ function render() {
   const shown = filterResults(matchingResults, filterInput.value);
   resultsRegion.replaceChildren();
   const heading = document.createElement('h2');
-  heading.textContent = `Resultados para “${queryInput.value}”: ${shown.length} ${shown.length === 1 ? 'resultado' : 'resultados'}`;
+  heading.textContent = `Resultados para “${queryInput.value}”`;
   resultsRegion.append(heading);
+  status.textContent = formatResultCount(shown.length);
   if (!shown.length) {
     status.textContent = matchingResults.length
       ? `No hay resultados para “${queryInput.value}” en esta categoría. Prueba otro filtro.`
@@ -101,7 +102,6 @@ function render() {
     resultsRegion.append(links);
     return;
   }
-  status.textContent = heading.textContent;
   const fragment = document.createDocumentFragment();
   shown.forEach((item) => fragment.append(resultNode(item)));
   resultsRegion.append(fragment);
@@ -146,11 +146,11 @@ async function runSearch(query) {
     if (hasFailure) {
       const count = filterResults(matchingResults, filterInput.value).length;
       status.textContent = count
-        ? `Resultados para “${normalized}”: ${count} ${count === 1 ? 'resultado' : 'resultados'}. Algunos contenidos no pudieron cargarse.`
-        : `Resultados para “${normalized}”: 0 resultados. No se pudieron cargar todos los contenidos; prueba de nuevo más tarde.`;
+        ? `${formatResultCount(count)}. Algunos contenidos no pudieron cargarse.`
+        : '0 resultados. No se pudieron cargar todos los contenidos; prueba de nuevo más tarde.';
     }
   } catch {
-    status.textContent = `Resultados para “${normalized}”: 0 resultados. No se pudo completar la búsqueda; prueba de nuevo más tarde.`;
+    status.textContent = '0 resultados. No se pudo completar la búsqueda; prueba de nuevo más tarde.';
   } finally {
     form.removeAttribute('aria-busy');
   }

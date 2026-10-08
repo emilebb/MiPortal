@@ -7,6 +7,10 @@ export function prepareDailyItems(items) {
     .sort((a, b) => Number(a.ranking) - Number(b.ranking));
 }
 
+export function dailyContentClass(count) {
+  return `daily-content daily-content--items-${count}`;
+}
+
 export function getSafeDailyUrl(value) {
   try {
     const url = new URL(value);

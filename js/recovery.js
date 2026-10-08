@@ -16,7 +16,7 @@
     email.removeAttribute('aria-invalid');
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value.trim())) {
       email.setAttribute('aria-invalid', 'true');
-      alert.textContent = 'Ingresá un correo electrónico válido.';
+      alert.textContent = 'Introduce un correo electrónico válido.';
       email.focus();
       return;
     }
@@ -29,9 +29,9 @@
       });
       if (error) throw error;
       alert.textContent = 'Si el correo tiene una cuenta, recibirás un enlace para ' +
-        'restablecer tu contraseña. Revisá también la carpeta de spam.';
+        'restablecer tu contraseña. Revisa también la carpeta de spam.';
     } catch {
-      alert.textContent = 'No se pudo enviar el enlace. Esperá unos minutos y reintentá.';
+      alert.textContent = 'No se pudo enviar el enlace. Espera unos minutos y vuelve a intentarlo.';
     } finally {
       button.disabled = false;
       form.setAttribute('aria-busy', 'false');

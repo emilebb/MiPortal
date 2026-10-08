@@ -15,8 +15,8 @@
 
   if (isPlaceholder || !window.supabase?.createClient) {
     console.warn(
-      '[supabase] Configuración pendiente: definí SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY ' +
-      'en Vercel (Environment Variables) y redeployá.'
+      '[supabase] Configuración pendiente: define SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY ' +
+      'en las variables de entorno de Vercel y vuelve a desplegar.'
     );
     window.MiPortalSupabase = null;
     return;

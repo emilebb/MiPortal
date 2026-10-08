@@ -18,14 +18,14 @@
   const registered = params.get('registered');
 
   const errorTexts = {
-    config_pendiente: 'La configuración del panel está pendiente. Completá SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY en Vercel.',
-    sesion_expirada: 'Tu sesión expiró. Iniciá sesión nuevamente.',
-    no_autorizado: 'Tu usuario no tiene permisos de administrador. Podés volver al sitio con tu sesión activa.',
-    perfil_no_disponible: 'No se pudieron verificar tus permisos. Probá nuevamente.'
+    config_pendiente: 'La configuración del panel está pendiente. Completa SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY en Vercel.',
+    sesion_expirada: 'Tu sesión expiró. Inicia sesión nuevamente.',
+    no_autorizado: 'Tu usuario no tiene permisos de administrador. Puedes volver al sitio con tu sesión activa.',
+    perfil_no_disponible: 'No se pudieron verificar tus permisos. Vuelve a intentarlo.'
   };
 
   if (registered === '1') {
-    alertRegion.textContent = 'Cuenta creada correctamente. Ahora iniciá sesión.';
+    alertRegion.textContent = 'Cuenta creada correctamente. Ahora inicia sesión.';
     alertRegion.classList.add('is-visible');
   }
 
@@ -80,7 +80,7 @@
   const checkExistingSession = async () => {
     try {
       const { data: { session }, error } = await supabase.auth.getSession();
-      if (error) throw new Error('No se pudo consultar tu sesión. Probá nuevamente.');
+      if (error) throw new Error('No se pudo consultar tu sesión. Vuelve a intentarlo.');
       if (!session) return;
       await redirectSession(session, true);
     } catch (err) {
@@ -136,11 +136,11 @@
     const password = passwordInput.value;
 
     if (!email || !password) {
-      setFieldError(!email ? emailInput : passwordInput, 'Completá el correo y la contraseña.');
+      setFieldError(!email ? emailInput : passwordInput, 'Completa el correo y la contraseña.');
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setFieldError(emailInput, 'Ingresá un correo electrónico válido.');
+      setFieldError(emailInput, 'Introduce un correo electrónico válido.');
       return;
     }
 
@@ -154,7 +154,7 @@
 
       await redirectSession(data);
     } catch (err) {
-      alertRegion.textContent = err.message || 'No se pudo iniciar sesión. Probá nuevamente.';
+      alertRegion.textContent = err.message || 'No se pudo iniciar sesión. Vuelve a intentarlo.';
       alertRegion.classList.add('is-visible');
     } finally {
       setBusy(false);

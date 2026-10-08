@@ -9,7 +9,7 @@
   let busy = false;
   if (!form) return;
   button.disabled = true;
-  const invalidLink = 'El enlace no es válido o expiró. Solicitá uno nuevo.';
+  const invalidLink = 'El enlace no es válido o expiró. Solicita uno nuevo.';
   alert.textContent = client ? 'Verificando enlace de recuperación…' :
     'La recuperación no está disponible. Falta configurar Supabase.';
   if (!client) return;
@@ -20,7 +20,7 @@
     if (event === 'PASSWORD_RECOVERY' && session) {
       recoveryReady = true;
       button.disabled = false;
-      alert.textContent = 'Ingresá y confirmá tu nueva contraseña.';
+      alert.textContent = 'Introduce y confirma tu nueva contraseña.';
       window.history.replaceState(null, '', window.location.pathname);
     } else if (event === 'SIGNED_OUT') {
       recoveryReady = false;
@@ -32,7 +32,7 @@
         window.MiPortalRecoveryUser === data.session.user.id) {
       recoveryReady = true;
       button.disabled = false;
-      alert.textContent = 'Ingresá y confirmá tu nueva contraseña.';
+      alert.textContent = 'Introduce y confirma tu nueva contraseña.';
       window.history.replaceState(null, '', window.location.pathname);
     }
     if (!recoveryReady) {
@@ -72,17 +72,17 @@
       window.MiPortalRecoveryUser = null;
       password.value = confirmation.value = '';
       form.hidden = true;
-      alert.textContent = 'Contraseña actualizada. Ya podés iniciar sesión.';
+      alert.textContent = 'Contraseña actualizada. Ya puedes iniciar sesión.';
       try {
         const { error: logoutError } = await client.auth.signOut();
         if (logoutError) throw logoutError;
       } catch {
         alert.textContent = 'Contraseña actualizada. No se pudo cerrar la sesión ' +
-          'de recuperación; podés cerrarla desde el sitio.';
+          'de recuperación; puedes cerrarla desde el sitio.';
       }
     } catch {
-      alert.textContent = 'No se pudo actualizar la contraseña. Verificá los requisitos ' +
-        'e intentá nuevamente; si el enlace expiró, solicitá uno nuevo.';
+      alert.textContent = 'No se pudo actualizar la contraseña. Verifica los requisitos ' +
+        'y vuelve a intentarlo; si el enlace expiró, solicita uno nuevo.';
     } finally {
       busy = false;
       button.disabled = !recoveryReady;

@@ -1,4 +1,5 @@
-import { getSafeDailyUrl, prepareDailyItems } from './home-daily-utils.mjs';
+import { dailyContentClass, getSafeDailyUrl, prepareDailyItems } from './home-daily-utils.mjs';
+import { isImageWidthSufficient } from './image-utils.mjs';
 
 const root = document.getElementById('homeDaily');
 
@@ -45,10 +46,14 @@ if (root) {
       image.alt = '';
       image.loading = 'lazy';
       image.decoding = 'async';
-      image.addEventListener('error', () => {
+      const useFallback = () => {
         media.classList.remove('has-image');
         image.remove();
+      };
+      image.addEventListener('load', () => {
+        if (!isImageWidthSufficient(image.naturalWidth)) useFallback();
       }, { once: true });
+      image.addEventListener('error', useFallback, { once: true });
       media.classList.add('has-image');
       media.append(image);
     }
@@ -109,12 +114,12 @@ if (root) {
   const renderDaily = (daily) => {
     const items = prepareDailyItems(daily?.items);
     if (!items.length) {
-      showState('empty', 'Todavía no hay un MiPortal Daily disponible. Volvé pronto.');
+      showState('empty', 'Todavía no hay un MiPortal Daily disponible. Vuelve pronto.');
       return;
     }
 
     const featured = createCard(items[0], true);
-    const content = element('div', 'daily-content');
+    const content = element('div', dailyContentClass(items.length));
     content.append(featured);
 
     if (items.length > 1) {
@@ -147,7 +152,7 @@ if (root) {
       if (error) throw error;
       renderDaily(Array.isArray(data) ? data[0] : null);
     } catch {
-      showState('error', 'No pudimos cargar MiPortal Daily. Probá nuevamente más tarde.');
+      showState('error', 'No pudimos cargar MiPortal Daily. Vuelve a intentarlo más tarde.');
     }
   };
 

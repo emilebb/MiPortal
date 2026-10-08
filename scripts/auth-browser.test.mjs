@@ -157,7 +157,7 @@ test('Chrome: real Supabase SDK persistence, guards, recovery and accessible err
       document.getElementById('confirmPassword').value = 'new-fixture-password';
       document.getElementById('resetForm').requestSubmit()`);
     await waitFor(`document.getElementById('resetForm')?.hidden === true`);
-    await waitFor(`document.getElementById('resetAlert')?.textContent.includes('Ya podés')`);
+    await waitFor(`document.getElementById('resetAlert')?.textContent.includes('Ya puedes')`);
     assert.equal(await evaluate(`(await MiPortalSupabase.auth.getSession()).data.session`), null);
     assert.deepEqual(await evaluate(`violations.filter(v => v.startsWith('script-src'))`), []);
   });

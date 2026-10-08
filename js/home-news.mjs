@@ -66,7 +66,7 @@ if (grid) {
     const description = element(
       'p',
       'card-description',
-      item.description || 'Leé el artículo completo en su fuente original.'
+      item.description || 'Lee el artículo completo en su fuente original.'
     );
     description.lang = item.source.language;
     body.append(description);
@@ -135,7 +135,7 @@ if (grid) {
 
         if (!items.length) {
           show(
-            stateBlock('Todavía no hay noticias publicadas. Volvé pronto.', { icon: '📭' }),
+            stateBlock('Todavía no hay noticias publicadas. Vuelve pronto.', { icon: '📭' }),
             'empty'
           );
           return;
@@ -149,7 +149,7 @@ if (grid) {
       })
       .catch(() => {
         show(
-          stateBlock('No pudimos cargar las novedades. Probá nuevamente en unos segundos.', {
+          stateBlock('No pudimos cargar las novedades. Vuelve a intentarlo en unos segundos.', {
             icon: '⚠️',
             retry: true
           }),

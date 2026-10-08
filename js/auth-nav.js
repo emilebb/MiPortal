@@ -52,7 +52,7 @@
         if (error) throw error;
         renderLoggedOut();
       } catch {
-        alert.textContent = 'No se pudo cerrar sesión. Probá nuevamente.';
+        alert.textContent = 'No se pudo cerrar sesión. Vuelve a intentarlo.';
         logoutButton.disabled = false;
       }
     });
@@ -79,7 +79,7 @@
       renderLoggedOut();
       const alert = document.createElement('span');
       alert.setAttribute('role', 'alert');
-      alert.textContent = 'No se pudo consultar tu sesión. Recargá para reintentar.';
+      alert.textContent = 'No se pudo consultar tu sesión. Recarga la página para volver a intentarlo.';
       authItem.replaceChildren(...authItem.children, alert);
       return;
     }
@@ -99,10 +99,10 @@
 
       if (current !== revision) return;
       renderAuthenticated(!error && profile?.role === 'admin',
-        error || !profile ? 'No se pudieron verificar tus permisos. Recargá para reintentar.' : '');
+        error || !profile ? 'No se pudieron verificar tus permisos. Recarga la página para volver a intentarlo.' : '');
     } catch {
       if (current !== revision) return;
-      renderAuthenticated(false, 'No se pudieron verificar tus permisos. Recargá para reintentar.');
+      renderAuthenticated(false, 'No se pudieron verificar tus permisos. Recarga la página para volver a intentarlo.');
     }
   };
 

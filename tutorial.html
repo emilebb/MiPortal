@@ -1,5 +1,93 @@
 <!doctype html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://api.rss2json.com; img-src 'self' data: https:; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';"><title>Crear un formulario HTML accesible | MiPortal</title><meta name="description" content="Guía introductoria para construir formularios HTML claros y accesibles con etiquetas, instrucciones y validación nativa."><link rel="canonical" href="https://www.miportal.me/tutorial.html"><meta property="og:type" content="article"><meta property="og:url" content="https://www.miportal.me/tutorial.html"><meta property="og:title" content="Crear un formulario HTML accesible | MiPortal"><meta property="og:description" content="Guía introductoria de etiquetas, controles y validación nativa en HTML."><meta property="og:image" content="https://www.miportal.me/og-image.svg"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css"><script src="js/theme-init.js"></script><script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Crear un formulario HTML accesible","description":"Guía introductoria para construir formularios HTML claros y accesibles.","mainEntityOfPage":"https://www.miportal.me/tutorial.html","inLanguage":"es","publisher":{"@type":"Organization","name":"MiPortal","url":"https://www.miportal.me/"}}</script></head>
-<body><a class="skip-link" href="#main-content">Saltar al contenido</a><header class="main-header"><div class="header-inner"><div class="logo"><a class="logo-link" href="/"><span class="logo-mark">MP</span><span class="logo-text">MiPortal<span>.me</span></span></a></div><nav class="main-nav" id="mainNav" aria-label="Navegación principal"><ul><li><a href="/">Inicio</a></li><li><a href="noticias.html">Noticias</a></li><li><a href="recursos.html">Recursos</a></li><li><a class="active" aria-current="page" href="tutoriales.html">Tutoriales</a></li><li><a href="productos.html">Productos</a></li><li><a href="contacto.html">Contacto</a></li><li class="auth-nav" id="auth-nav-item"><a class="nav-login" href="/login.html">Iniciar sesión</a><a class="nav-register" href="/register.html">Registrarse</a></li></ul></nav><button id="themeToggle" class="btn-theme" type="button" aria-label="Cambiar a modo oscuro" aria-pressed="false">◐</button><button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="mainNav"><span class="nav-toggle-icon"><span class="nav-toggle-line"></span><span class="nav-toggle-line"></span><span class="nav-toggle-line"></span></span></button></div></header>
-<main id="main-content" class="container home-page"><article class="article-page"><a class="link-arrow" href="tutoriales.html">← Volver a tutoriales</a><header class="news-hero"><span class="eyebrow">HTML · Accesibilidad</span><h1>Crear un formulario HTML accesible</h1><p class="news-hero-lead">Una introducción a la estructura semántica que ayuda a las personas a entender y completar un formulario.</p></header><div class="article-content"><h2>1. Agrupá el formulario con sentido</h2><p>Usá un elemento <code>form</code> y un botón de envío. El texto del botón debe describir la acción; evitá depender solo del contexto visual.</p><h2>2. Asociá cada control con su etiqueta</h2><p>La etiqueta debe identificar el propósito del campo y estar vinculada mediante valores iguales de <code>for</code> e <code>id</code>. El marcador de posición puede mostrar un ejemplo, pero no reemplaza la etiqueta.</p><pre><code>&lt;label for="correo"&gt;Correo electrónico&lt;/label&gt;
-&lt;input id="correo" name="correo" type="email" autocomplete="email" required&gt;</code></pre><p>Elegí un tipo de control adecuado, como <code>email</code>, y agregá atributos de autocompletado cuando correspondan.</p><h2>3. Explicá los campos y errores</h2><p>Si un dato tiene un formato esperado, indicalo en texto junto al campo. La validación nativa con <code>required</code> puede ayudar, aunque conviene presentar también mensajes de error específicos y mantenerlos asociados al control.</p><h2>4. Verificá el recorrido</h2><ul><li>Completá el formulario con teclado, sin usar el mouse.</li><li>Comprobá que cada campo tenga nombre accesible y foco visible.</li><li>Probá entradas vacías y formatos inválidos.</li><li>Confirmá que el resultado del envío se anuncie sin mover el foco inesperadamente.</li></ul><p>Esta guía es introductoria: los formularios con requisitos particulares necesitan pruebas con sus controles, validaciones y tecnologías de asistencia.</p></div><p><a class="btn btn-secondary" href="tutoriales.html">Más tutoriales</a></p></article></main><footer class="main-footer"><div class="footer-inner"><div class="footer-brand"><span class="logo-text footer-brand-name">MiPortal<span>.me</span></span><p class="footer-tagline">Desarrollo web y automatización en español.</p></div><nav class="footer-nav" aria-label="Explorar"><span class="footer-title">Explorar</span><a href="tutoriales.html">Tutoriales</a><a href="productos.html">Productos</a><a href="automatizaciones-n8n.html">Automatizaciones n8n</a></nav><nav class="footer-nav" aria-label="Información"><span class="footer-title">Información</span><a href="contacto.html">Contacto</a><a href="politica-de-privacidad.html">Privacidad</a></nav></div><p class="footer-copy">&copy; 2026 MiPortal.</p></footer><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="js/supabase-client.js"></script><script src="js/auth-nav.js"></script><script src="main.js"></script></body></html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://api.rss2json.com; img-src 'self' data: https:; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
+  <title>Crear un formulario HTML accesible | MiPortal</title>
+  <meta name="description" content="Guía introductoria para construir formularios HTML claros y accesibles con etiquetas, instrucciones y validación nativa.">
+  <link rel="canonical" href="https://www.miportal.me/tutorial.html">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://www.miportal.me/tutorial.html">
+  <meta property="og:title" content="Crear un formulario HTML accesible | MiPortal">
+  <meta property="og:description" content="Guía introductoria de etiquetas, controles y validación nativa en HTML.">
+  <meta property="og:image" content="https://www.miportal.me/og-image.svg">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="js/theme-init.js"></script>
+  <script type="application/ld+json">
+    {"@context":"https://schema.org","@type":"Article","headline":"Crear un formulario HTML accesible","description":"Guía introductoria para construir formularios HTML claros y accesibles.","mainEntityOfPage":"https://www.miportal.me/tutorial.html","inLanguage":"es","publisher":{"@type":"Organization","name":"MiPortal","url":"https://www.miportal.me/"}}
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Saltar al contenido</a>
+  <header class="main-header">
+    <div class="header-inner">
+      <div class="logo">
+        <a class="logo-link" href="/" aria-label="MiPortal — Inicio">
+          <span class="logo-mark">MP</span>
+          <span class="logo-text">MiPortal<span>.me</span></span>
+        </a>
+      </div>
+      <nav class="main-nav" id="mainNav" aria-label="Navegación principal">
+        <ul>
+          <li><a href="/">Inicio</a></li>
+          <li><a href="noticias.html">Noticias</a></li>
+          <li><a href="recursos.html">Recursos</a></li>
+          <li><a class="active" aria-current="page" href="tutoriales.html">Tutoriales</a></li>
+          <li><a href="productos.html">Productos</a></li>
+          <li><a href="contacto.html">Contacto</a></li>
+          <li class="auth-nav" id="auth-nav-item"><a class="nav-login" href="/login.html">Iniciar sesión</a><a class="nav-register" href="/register.html">Registrarse</a></li>
+        </ul>
+      </nav>
+      <button id="themeToggle" class="btn-theme" type="button" aria-label="Cambiar a modo oscuro" aria-pressed="false">◐</button>
+      <button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="mainNav">
+        <span class="nav-toggle-icon" aria-hidden="true"><span class="nav-toggle-line"></span><span class="nav-toggle-line"></span><span class="nav-toggle-line"></span></span>
+      </button>
+    </div>
+  </header>
+  <main id="main-content" class="container home-page">
+    <article class="article-page">
+      <a class="link-arrow" href="tutoriales.html">← Volver a tutoriales</a>
+      <header class="news-hero">
+        <span class="eyebrow">HTML · Accesibilidad</span>
+        <h1>Crear un formulario HTML accesible</h1>
+        <p class="news-hero-lead">Una introducción a la estructura semántica que ayuda a las personas a entender y completar un formulario.</p>
+      </header>
+      <div class="article-content">
+        <h2>1. Agrupa el formulario con sentido</h2>
+        <p>Usa un elemento <code>form</code> y un botón de envío. El texto del botón debe describir la acción; evita depender solo del contexto visual.</p>
+        <h2>2. Asocia cada control con su etiqueta</h2>
+        <p>La etiqueta debe identificar el propósito del campo y estar vinculada mediante valores iguales de <code>for</code> e <code>id</code>. El marcador de posición puede mostrar un ejemplo, pero no reemplaza la etiqueta.</p>
+        <pre><code>&lt;label for="correo"&gt;Correo electrónico&lt;/label&gt;
+&lt;input id="correo" name="correo" type="email" autocomplete="email" required&gt;</code></pre>
+        <p>Elige un tipo de control adecuado, como <code>email</code>, y añade atributos de autocompletado cuando correspondan.</p>
+        <h2>3. Explica los campos y errores</h2>
+        <p>Si un dato tiene un formato esperado, indícalo en texto junto al campo. La validación nativa con <code>required</code> puede ayudar, aunque conviene presentar también mensajes de error específicos y mantenerlos asociados al control.</p>
+        <h2>4. Verifica el recorrido</h2>
+        <ul>
+          <li>Completa el formulario con teclado, sin usar el mouse.</li>
+          <li>Comprueba que cada campo tenga nombre accesible y foco visible.</li>
+          <li>Prueba entradas vacías y formatos inválidos.</li>
+          <li>Confirma que el resultado del envío se anuncie sin mover el foco inesperadamente.</li>
+        </ul>
+        <p>Esta guía es introductoria: los formularios con requisitos particulares necesitan pruebas con sus controles, validaciones y tecnologías de asistencia.</p>
+      </div>
+      <p><a class="btn btn-secondary" href="tutoriales.html">Más tutoriales</a></p>
+    </article>
+  </main>
+  <footer class="main-footer">
+    <div class="footer-inner">
+      <div class="footer-brand"><span class="logo-text footer-brand-name">MiPortal<span>.me</span></span><p class="footer-tagline">Desarrollo web y automatización en español.</p></div>
+      <nav class="footer-nav" aria-label="Explorar"><span class="footer-title">Explorar</span><a href="tutoriales.html">Tutoriales</a><a href="productos.html">Productos</a><a href="automatizaciones-n8n.html">Automatizaciones n8n</a></nav>
+      <nav class="footer-nav" aria-label="Información"><span class="footer-title">Información</span><a href="contacto.html">Contacto</a><a href="politica-de-privacidad.html">Privacidad</a></nav>
+    </div>
+    <p class="footer-copy">&copy; 2026 MiPortal.</p>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/auth-nav.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

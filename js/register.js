@@ -11,7 +11,7 @@
   const errorMessages = document.getElementById('errorMessages');
 
   if (!supabase) {
-    alertRegion.textContent = 'La configuración del registro está pendiente. Completá SUPABASE_URL y SUPABASE_PUBLISHABLE_KEY en Vercel.';
+    alertRegion.textContent = 'El registro no está disponible temporalmente. Contacta con el equipo de MiPortal.';
     alertRegion.classList.add('is-visible');
     form.querySelectorAll('button, input').forEach((input) => {
       input.disabled = true;
@@ -77,12 +77,12 @@
     const confirmation = confirmInput.value;
 
     if (!email || !password || !confirmation) {
-      setFieldError(!email ? emailInput : !password ? passwordInput : confirmInput, 'Completá todos los campos.');
+      setFieldError(!email ? emailInput : !password ? passwordInput : confirmInput, 'Completa todos los campos.');
       return;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setFieldError(emailInput, 'Ingresá un correo electrónico válido.');
+      setFieldError(emailInput, 'Introduce un correo electrónico válido.');
       return;
     }
 
@@ -114,11 +114,11 @@
         return;
       }
 
-      alertRegion.textContent = 'Revisá tu bandeja de entrada para confirmar tu correo y luego iniciá sesión.';
+      alertRegion.textContent = 'Revisa tu bandeja de entrada para confirmar tu correo y luego inicia sesión.';
       alertRegion.classList.add('is-visible');
       form.hidden = true;
     } catch (err) {
-      fail(err.message || 'No se pudo crear la cuenta. Probá nuevamente.');
+      fail(err.message || 'No se pudo crear la cuenta. Vuelve a intentarlo.');
     }
   });
 })();

@@ -15,6 +15,13 @@ test('Daily keeps only existing object items and orders them by ranking', async 
   assert.equal(prepared.length, 2);
 });
 
+test('Daily wrapper class reflects every supported item count without changing items', async () => {
+  const { dailyContentClass } = await import('../js/home-daily-utils.mjs');
+  for (const count of [1, 2, 3, 4, 5]) {
+    assert.equal(dailyContentClass(count), `daily-content daily-content--items-${count}`);
+  }
+});
+
 test('Daily does not invent items when the array is empty or invalid', async () => {
   const { prepareDailyItems } = await import('../js/home-daily-utils.mjs');
 
@@ -92,13 +99,15 @@ test('Daily reads only the newest row and renders exactly its existing items saf
     const walk = (node) => [node, ...node.children.flatMap(walk)];
     const nodes = walk(root);
     assert.equal(nodes.filter((node) => node.tagName === 'article' && node.className.includes('daily-card')).length, 2);
+    assert.ok(nodes.some((node) => node.className === 'daily-content daily-content--items-2'));
     assert.equal(nodes.filter((node) => node.tagName === 'img').length, 1);
     const links = nodes.filter((node) => node.tagName === 'a');
     assert.equal(links.length, 2);
     assert.ok(links.every((link) => link.target === '_blank' && link.rel === 'noopener noreferrer'));
 
     const image = nodes.find((node) => node.tagName === 'img');
-    image.listeners.error();
+    image.naturalWidth = 319;
+    image.listeners.load();
     assert.equal(image.removed, true);
     assert.ok(nodes.some((node) => node.className.includes('daily-image-fallback')));
   } finally {
@@ -181,6 +190,8 @@ test('Daily empty result has its own state and responsive breakpoints are presen
     const css = fs.readFileSync('styles.css', 'utf8');
     assert.match(css, /@media \(max-width: 760px\)[\s\S]*daily-card--featured/);
     assert.match(css, /@media \(max-width: 600px\)[\s\S]*daily-more/);
+    assert.match(css, /\.daily-more\s*\{[^}]*repeat\(auto-fit,\s*minmax\(min\(100%,\s*16rem\),\s*1fr\)\)/);
+    assert.match(css, /\.daily-content--items-2\s+\.daily-more\s*\{\s*grid-template-columns:\s*minmax\(0,\s*1fr\)/);
   } finally {
     global.document = oldDocument;
     global.window = oldWindow;
