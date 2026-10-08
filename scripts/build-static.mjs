@@ -49,15 +49,39 @@ for (const entry of entries) {
 }
 
 const sharedHeader = `<header class="main-header"><div class="header-inner"><div class="logo"><a class="logo-link" href="/" aria-label="MiPortal — Inicio"><span class="logo-mark">MP</span><span class="logo-text">MiPortal<span>.me</span></span></a></div><nav class="main-nav" id="mainNav" aria-label="Navegación principal"><ul><li><a href="/">Inicio</a></li><li><a href="/noticias.html">Noticias</a></li><li><a href="/tutoriales.html">Tutoriales</a></li><li><a href="/recursos.html">Recursos</a></li><li><a href="/buscar.html">Buscar</a></li><li><a href="/productos.html">Productos</a></li><li><a href="/contacto.html">Contacto</a></li><li class="auth-nav" id="auth-nav-item"><a class="nav-login" href="/login.html">Iniciar sesión</a><a class="nav-register" href="/register.html">Registrarse</a></li></ul></nav><button id="themeToggle" class="btn-theme" type="button" aria-label="Cambiar a modo oscuro" aria-pressed="false">◐</button><button class="nav-toggle" id="navToggle" type="button" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="mainNav"><span class="nav-toggle-icon" aria-hidden="true"><span class="nav-toggle-line"></span><span class="nav-toggle-line"></span><span class="nav-toggle-line"></span></span></button></div></header>`;
-const sharedFooter = `<footer class="main-footer"><div class="footer-inner"><div class="footer-brand"><span class="logo-text footer-brand-name">MiPortal<span>.me</span></span><p class="footer-tagline">Desarrollo web, IA y automatización en español.</p></div><nav class="footer-nav" aria-label="Explorar"><span class="footer-title">Explorar</span><a href="/">Inicio</a><a href="/noticias.html">Noticias</a><a href="/tutoriales.html">Tutoriales</a><a href="/recursos.html">Recursos</a><a href="/productos.html">Productos</a></nav><nav class="footer-nav" aria-label="Información y legal"><span class="footer-title">Información</span><a href="/contacto.html">Contacto</a><a href="/sobre-nosotros.html">Sobre nosotros</a><a href="/politica-de-privacidad.html">Privacidad</a><a href="/terminos-y-condiciones.html">Términos</a></nav><a class="footer-newsletter-link" href="/#newsletter">Newsletter</a></div><p class="footer-copy">&copy; 2026 MiPortal. Todos los derechos reservados.</p></footer>`;
+const sharedFooter = `<footer class="main-footer"><div class="footer-inner"><div class="footer-brand"><span class="logo-text footer-brand-name">MiPortal<span>.me</span></span><p class="footer-tagline">Noticias, guías y recursos de tecnología en español.</p></div><nav class="footer-nav" aria-label="Explorar"><span class="footer-title">Explorar</span><a href="/">Inicio</a><a href="/noticias.html">Noticias</a><a href="/tutoriales.html">Tutoriales</a><a href="/recursos.html">Recursos</a><a href="/productos.html">Productos</a></nav><nav class="footer-nav" aria-label="Información"><span class="footer-title">Información</span><a href="/sobre-nosotros.html">Sobre nosotros</a><a href="/contacto.html">Contacto</a><a href="/politica-de-privacidad.html">Privacidad</a><a href="/terminos-y-condiciones.html">Términos</a></nav><a class="footer-newsletter-link" href="/#newsletter">Newsletter</a></div><p class="footer-copy">&copy; 2026 MiPortal. Todos los derechos reservados.</p></footer>`;
+
+const activeRouteOverrides = {
+  'index.html': '/',
+  'noticia.html': '/noticias.html',
+  'tutorial.html': '/tutoriales.html'
+};
 
 for (const file of readdirSync(outDir).filter((name) => name.endsWith('.html'))) {
   const path = outDir + file;
   let html = readFileSync(path, 'utf8');
+  const activeRoute = activeRouteOverrides[file] || `/${file}`;
+  const pageHeader = sharedHeader.replace(
+    /<nav class="main-nav" id="mainNav"[\s\S]*?<\/nav>/,
+    (navigation) => {
+      const routePattern = new RegExp(`<a\\b(?=[^>]*\\bhref="${activeRoute.replaceAll('.', '\\.')}\")[^>]*>`);
+      const matches = [...navigation.matchAll(new RegExp(routePattern.source, 'g'))];
+      if (!matches.length) return navigation;
+      if (matches.length !== 1) throw new Error(`La ruta activa no es única para ${file}`);
+      return navigation.replace(routePattern, (openingTag) => {
+        if (openingTag.includes('aria-current=')) return openingTag;
+        if (/\bclass="[^"]*"/.test(openingTag)) {
+          return openingTag.replace(/\bclass="([^"]*)"/, 'class="$1 active"')
+            .replace(/>$/, ' aria-current="page">');
+        }
+        return openingTag.replace(/>$/, ' class="active" aria-current="page">');
+      });
+    }
+  );
   html = html.replace(/<header class="main-header">[\s\S]*?<\/header>/i, '')
     .replace(/<header class="admin-header">[\s\S]*?<\/header>/i, '')
     .replace(/<footer class="main-footer">[\s\S]*?<\/footer>/i, '')
-    .replace(/(<body\b[^>]*>\s*(?:<a class="skip-link"[^>]*>[\s\S]*?<\/a>)?)/i, `$1${sharedHeader}`)
+    .replace(/(<body\b[^>]*>\s*(?:<a class="skip-link"[^>]*>[\s\S]*?<\/a>)?)/i, `$1${pageHeader}`)
     .replace(/(<\/main>)/i, `$1${sharedFooter}`);
   if (!html.includes('id="themeToggle"')) throw new Error(`No se pudo componer la navegación para ${file}`);
   if (!/<script src="(?:\.\/)?main\.js"><\/script>/.test(html)) {

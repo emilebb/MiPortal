@@ -19,9 +19,21 @@ test('el build genera una navegación y un pie compartidos en todo HTML público
     assert.match(html, /id="themeToggle"/, `${page}: tema`);
     assert.match(html, /id="auth-nav-item"/, `${page}: navegación de cuenta`);
     assert.match(html, /class="main-footer"/, `${page}: footer`);
+    const nav = html.match(/<nav class="main-nav" id="mainNav"[\s\S]*?<\/nav>/)?.[0] || '';
+    const activeLinks = [...nav.matchAll(/<a\b(?=[^>]*\bclass="[^"]*\bactive\b")(?=[^>]*\baria-current="page")[^>]*href="([^"]+)"[^>]*>/g)];
+    const expectedRoute = ({
+      'index.html': '/',
+      'noticia.html': '/noticias.html',
+      'tutorial.html': '/tutoriales.html'
+    })[page] || `/${page}`;
+    const routeLinks = [...nav.matchAll(new RegExp(`<a\\b(?=[^>]*\\bhref="${expectedRoute.replaceAll('.', '\\.')}"[^>]*)[^>]*>`, 'g'))];
+    assert.equal(activeLinks.length, routeLinks.length ? 1 : 0, `${page}: one active link only when the route is in primary navigation`);
+    if (activeLinks.length) assert.equal(activeLinks[0][1], expectedRoute, `${page}: current route`);
     for (const route of ['noticias.html', 'tutoriales.html', 'recursos.html', 'buscar.html', 'productos.html', 'contacto.html']) {
       assert.match(html, new RegExp(`href="/?${route}"`), `${page}: enlace a ${route}`);
     }
+    assert.match(html, /aria-label="Explorar"[\s\S]*?Inicio[\s\S]*?Noticias[\s\S]*?Tutoriales[\s\S]*?Recursos[\s\S]*?Productos/);
+    assert.match(html, /aria-label="Información"[\s\S]*?Sobre nosotros[\s\S]*?Contacto[\s\S]*?Privacidad[\s\S]*?Términos/);
   }
   const detail = readFileSync(new URL('noticia.html', `file://${output}`), 'utf8');
   assert.match(detail, /js\/news-detail\.mjs/);
@@ -33,7 +45,7 @@ test('la búsqueda global se incluye en el sitio y se marca para no indexación'
   assert.match(html, /name="robots" content="noindex,follow"/);
   assert.match(html, /id="globalSearchForm"/);
   assert.match(html, /js\/global-search\.mjs/);
-  assert.match(html, /href="\/buscar\.html">Buscar<\/a>/);
+  assert.match(html, /href="\/buscar\.html"[^>]*>Buscar<\/a>/);
 });
 
 test('el lead magnet conserva el contrato del newsletter y declara que el recurso está pendiente', () => {
