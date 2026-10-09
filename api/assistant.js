@@ -69,6 +69,22 @@ function safePage(value) {
   return path || title ? { ...(path ? { path } : {}), ...(title ? { title } : {}) } : undefined;
 }
 
+function classifyUpstreamError(data, status) {
+  if (status === 401 || status === 403) return 'authentication';
+  if (status === 404) return 'route-not-found';
+  if (status === 408 || status === 504) return 'timeout';
+  const parts = [data?.message, data?.error, data?.name, data?.error?.message]
+    .filter(value => typeof value === 'string').join(' ').toLowerCase();
+  if (/enotfound|eai_again|dns/.test(parts)) return 'dns';
+  if (/certificate|tls|ssl/.test(parts)) return 'tls';
+  if (/timeout|timed out|aborterror/.test(parts)) return 'timeout';
+  if (/credential|header auth|unauthori[sz]ed|forbidden/.test(parts)) return 'authentication';
+  if (/webhook|not found/.test(parts)) return 'route-or-webhook';
+  if (/supabase|postgrest/.test(parts)) return 'data-service';
+  if (status >= 500) return 'upstream-application-5xx';
+  return 'other-upstream-error';
+}
+
 module.exports = async function assistant(req, res) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -137,7 +153,13 @@ module.exports = async function assistant(req, res) {
       path: upstreamUrl.pathname,
       elapsedMs: Date.now() - startedAt,
       validJson,
-      validReply
+      validReply,
+      ...(validReply ? {} : {
+        errorCategory: classifyUpstreamError(data, upstream.status),
+        payloadKeys: data && typeof data === 'object' && !Array.isArray(data)
+          ? Object.keys(data).slice(0, 20) : [],
+        payloadIsArray: Array.isArray(data)
+      })
     });
     if (!validReply) {
       return respond(res, upstream.ok ? 502 : upstream.status, fallback);
