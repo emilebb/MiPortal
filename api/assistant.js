@@ -113,6 +113,8 @@ module.exports = async function assistant(req, res) {
     return respond(res, 503, fallback);
   }
 
+  const upstreamUrl = new URL(UPSTREAM);
+  const startedAt = Date.now();
   try {
     const upstream = await fetch(UPSTREAM, {
       method: 'POST',
@@ -125,12 +127,29 @@ module.exports = async function assistant(req, res) {
       redirect: 'error'
     });
     let data;
-    try { data = await upstream.json(); } catch { data = null; }
-    if (!data || typeof data.reply !== 'string' || !data.reply.trim()) {
+    let validJson = true;
+    try { data = await upstream.json(); } catch { data = null; validJson = false; }
+    const validReply = typeof data?.reply === 'string' && Boolean(data.reply.trim());
+    console.info('[assistant-upstream-diagnostic]', {
+      status: upstream.status,
+      statusText: upstream.statusText,
+      hostname: upstreamUrl.hostname,
+      path: upstreamUrl.pathname,
+      elapsedMs: Date.now() - startedAt,
+      validJson,
+      validReply
+    });
+    if (!validReply) {
       return respond(res, upstream.ok ? 502 : upstream.status, fallback);
     }
     return respond(res, upstream.status, data);
-  } catch {
+  } catch (error) {
+    console.error('[assistant-upstream-diagnostic]', {
+      hostname: upstreamUrl.hostname,
+      path: upstreamUrl.pathname,
+      elapsedMs: Date.now() - startedAt,
+      errorName: error?.name || 'Error'
+    });
     return respond(res, 502, fallback);
   }
 };
