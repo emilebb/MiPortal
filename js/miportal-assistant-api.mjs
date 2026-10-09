@@ -1,6 +1,6 @@
 import { createMockResponse } from './miportal-assistant-mock.mjs';
 
-export const ASSISTANT_CONFIG = Object.freeze({ mockMode: true, endpoint: '', timeoutMs: 15_000 });
+export const ASSISTANT_CONFIG = Object.freeze({ mockMode: false, endpoint: '/api/assistant', timeoutMs: 15_000 });
 export const MAX_MESSAGE_LENGTH = 1000;
 export const FALLBACK_REPLY = 'Ahora mismo no pude procesar tu pregunta. Puedes usar la búsqueda de MiPortal para encontrar lo que necesitas.';
 

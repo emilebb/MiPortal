@@ -35,6 +35,13 @@ test('build injection targets public content pages once and leaves account pages
   assert.equal(injectAssistantAssets(source, 'login.html'), source);
 });
 
+test('assistant same-origin requests remain allowed by injected page CSP without touching Contacto CSP', () => {
+  const noSelf = '<html><head><meta http-equiv="Content-Security-Policy" content="default-src \'self\'; connect-src https://api.rss2json;"></head><body></body></html>';
+  assert.match(injectAssistantAssets(noSelf, 'sobre-nosotros.html'), /connect-src 'self' https:\/\/api\.rss2json/);
+  const contacto = '<html><head><meta http-equiv="Content-Security-Policy" content="default-src \'self\'; connect-src \'self\' https://api.rss2json;"></head><body></body></html>';
+  assert.equal((injectAssistantAssets(contacto, 'contacto.html').match(/connect-src 'self'/g) || []).length, 1);
+});
+
 test('message validation rejects empty content and enforces its character limit', () => {
   assert.throws(() => validateMessage('  '), /mensaje/i);
   assert.equal(validateMessage('  Hola  '), 'Hola');
@@ -55,7 +62,13 @@ test('chat opens, closes with Escape, rejects empty messages, and submits valid 
   await chat.panel.children[2] && chat.panel.children[3].requestSubmit();
   assert.match(chat.panel.children[2].textContent, /Escribe un mensaje/);
   chat.textarea.value = 'noticias';
-  await chat.panel.children[3].requestSubmit();
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: true, json: async () => ({
+    reply: 'Puedes consultar las noticias publicadas en MiPortal.',
+    links: [{ label: 'Ver noticias', url: '/noticias.html' }]
+  }) });
+  try { await chat.panel.children[3].requestSubmit(); }
+  finally { globalThis.fetch = originalFetch; }
   assert.equal(chat.messages.children.at(-2).children[0].textContent, 'noticias');
   assert.equal(chat.messages.children.at(-1).children[0].textContent, 'Puedes consultar las noticias publicadas en MiPortal.');
   assert.equal(chat.messages.children.at(-1).children[1].children[0].children[0].textContent, 'Ver noticias');
@@ -72,9 +85,11 @@ test('response schema and URL policy accept safe links and reject unsafe or malf
   assert.throws(() => validateAssistantResponse({ reply: 4 }, 'https://site.test'));
 });
 
-test('mock mode never fetches; endpoint mode sends the request and validates its response', async () => {
+test('mock stays opt-in; configured endpoint mode sends and validates the request', async () => {
   let called = false;
-  const mock = await requestAssistantReply('hola', 'session', { path: '/', title: 'Home' }, { fetch: () => { called = true; } });
+  const mock = await requestAssistantReply('hola', 'session', { path: '/', title: 'Home' }, {
+    config: { mockMode: true, endpoint: '' }, fetch: () => { called = true; }
+  });
   assert.equal(called, false);
   assert.match(mock.reply, /hola/);
   let request;

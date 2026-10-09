@@ -8,6 +8,15 @@ const ASSISTANT_PAGES = new Set([
 
 export function injectAssistantAssets(html, file) {
   if (!ASSISTANT_PAGES.has(file)) return html;
+  // These public pages use a same-origin assistant API. Preserve their CSP
+  // allowlists and add self only where connect-src currently omits it.
+  html = html.replace(/(<meta\s+http-equiv="Content-Security-Policy"\s+content=")(.*?)(">)/i,
+    (tag, before, policy, after) => {
+      if (!/connect-src\s+[^;]*/i.test(policy)) return tag;
+      const updated = policy.replace(/connect-src\s+([^;]*)/i, (directive, sources) =>
+        /(?:^|\s)'self'(?:\s|$)/.test(sources) ? directive : `connect-src 'self' ${sources}`);
+      return `${before}${updated}${after}`;
+    });
   const stylesheet = '<link rel="stylesheet" href="miportal-assistant.css" data-miportal-assistant="style">';
   const bootstrap = '<script type="module" src="js/miportal-assistant.mjs" data-miportal-assistant="bootstrap"></script>';
   if (!html.includes('data-miportal-assistant="style"')) {
