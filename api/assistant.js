@@ -146,6 +146,15 @@ module.exports = async function assistant(req, res) {
     let validJson = true;
     try { data = await upstream.json(); } catch { data = null; validJson = false; }
     const validReply = typeof data?.reply === 'string' && Boolean(data.reply.trim());
+    const payloadText = data && typeof data === 'object' ? JSON.stringify(data) : '';
+    const errorMessage = typeof data?.message === 'string' ? data.message.trim() : '';
+    const safeErrorMessage = !validReply && errorMessage &&
+      !payloadText.includes(upstreamSecret) &&
+      !/(?:bearer|token|secret|credential|password|api[_ -]?key)\s*[:=]/i.test(errorMessage) &&
+      !/https?:\/\/\S+/i.test(errorMessage) &&
+      !/[A-Za-z0-9_-]{40,}/.test(errorMessage)
+      ? errorMessage.slice(0, 240)
+      : undefined;
     console.info('[assistant-upstream-diagnostic]', {
       status: upstream.status,
       statusText: upstream.statusText,
@@ -158,7 +167,8 @@ module.exports = async function assistant(req, res) {
         errorCategory: classifyUpstreamError(data, upstream.status),
         payloadKeys: data && typeof data === 'object' && !Array.isArray(data)
           ? Object.keys(data).slice(0, 20) : [],
-        payloadIsArray: Array.isArray(data)
+        payloadIsArray: Array.isArray(data),
+        ...(safeErrorMessage ? { safeErrorMessage } : {})
       })
     });
     if (!validReply) {
