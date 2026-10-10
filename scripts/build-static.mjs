@@ -124,9 +124,6 @@ for (const file of readdirSync(outDir).filter((name) => name.endsWith('.html')))
   if (file === 'tutorial.html') {
     html = transformTutorialMarkup(html);
   }
-  if (file === 'productos.html') {
-    html = html.replace('</main>', '<section class="home-section"><article class="card"><div class="card-body"><span class="tag">No disponible · En preparación</span><h2>MiPortal Automation Pack #1</h2><p class="card-description">Concepto de pack futuro: propuestas de automatización para noticias, newsletter, tareas con IA, procesos repetitivos y organización. Contenido y disponibilidad aún por definir; no está a la venta.</p><a class="btn btn-primary" href="/#newsletter">Enterarme de novedades</a></div></article></section></main>');
-  }
   html = injectAssistantAssets(html, file);
   writeFileSync(path, html);
 }
