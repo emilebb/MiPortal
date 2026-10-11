@@ -15,6 +15,7 @@ const entries = [
   'tutoriales.html',
   'tutorial.html',
   'productos.html',
+  'mis-compras.html',
   'automatizaciones-n8n.html',
   'automatizaciones-gratis.html',
   'noticias.html',

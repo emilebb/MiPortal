@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self'; connect-src 'self' https://*.supabase.co; img-src 'self' data: https:; frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'self';">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Tienda digital · Admin MiPortal</title>
+  <link rel="stylesheet" href="../styles.css">
+  <script src="../js/theme-init.js"></script>
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body data-admin-page>
+  <a class="skip-link" href="#main-content">Saltar al contenido</a>
+  <header class="admin-header"><div class="logo-text">MiPortal<span>.me</span> Admin</div><nav aria-label="Navegación del panel"><a href="../productos.html">Ver catálogo</a><a href="./">Recursos</a><button id="logoutButton" type="button">Cerrar sesión</button></nav></header>
+  <main id="main-content" class="admin-container">
+    <div class="admin-toolbar"><div><h1>Tienda digital</h1><p>Gestiona productos, archivos y órdenes. Los archivos se guardan en un bucket privado.</p></div></div>
+    <p id="storeAdminStatus" class="admin-state" role="status" aria-live="polite">Verificando permisos…</p>
+    <section aria-labelledby="digitalProductFormTitle">
+      <h2 id="digitalProductFormTitle">Crear o editar producto</h2>
+      <form id="digitalProductForm" class="admin-form">
+        <input id="productId" type="hidden">
+        <div class="form-group"><label for="productName">Nombre *</label><input id="productName" maxlength="160" required></div>
+        <div class="form-group"><label for="productDescription">Descripción *</label><textarea id="productDescription" maxlength="5000" rows="5" required></textarea></div>
+        <div class="form-group"><label for="productCategory">Categoría *</label><input id="productCategory" maxlength="80" required></div>
+        <div class="form-group"><label for="productPrice">Precio en COP *</label><input id="productPrice" type="number" min="0" step="0.01" required></div>
+        <div class="form-group"><label for="productImage">URL HTTPS de imagen (opcional)</label><input id="productImage" type="url" placeholder="https://…"></div>
+        <div class="form-group"><label for="productVersion">Versión</label><input id="productVersion" maxlength="80"></div>
+        <div class="form-group"><label for="productLicense">Licencia</label><input id="productLicense" maxlength="160"></div>
+        <div class="form-group"><label for="productFeatures">Características (separadas por líneas)</label><textarea id="productFeatures" rows="3"></textarea></div>
+        <div class="form-group"><label for="productTechnologies">Tecnologías (separadas por líneas)</label><textarea id="productTechnologies" rows="3"></textarea></div>
+        <div class="form-group"><label for="productRequirements">Requisitos (separados por líneas)</label><textarea id="productRequirements" rows="3"></textarea></div>
+        <div class="form-check"><input id="productFeatured" type="checkbox"><label for="productFeatured">Destacado</label></div>
+        <div class="form-check"><input id="productNew" type="checkbox"><label for="productNew">Nuevo</label></div>
+        <div class="form-check"><input id="productFree" type="checkbox"><label for="productFree">Gratis (precio cero)</label></div>
+        <div class="form-check"><input id="productPublished" type="checkbox"><label for="productPublished">Publicado</label></div>
+        <p class="hint">Un producto solo se puede publicar cuando tenga al menos un archivo digital activo.</p>
+        <p id="productFormError" class="field-error" role="alert" hidden></p>
+        <div class="form-actions"><button id="saveProduct" type="submit" class="btn btn-primary">Guardar producto</button><button id="newProduct" type="button" class="btn btn-secondary">Nuevo</button></div>
+      </form>
+    </section>
+    <section aria-labelledby="productAdminListTitle"><h2 id="productAdminListTitle">Productos</h2><div id="digitalProductList" class="resource-list"></div></section>
+    <section aria-labelledby="productImageUploadTitle"><h2 id="productImageUploadTitle">Imagen de portada</h2><p>Solo PNG, JPEG, WebP o AVIF de hasta 5 MB. Se guarda en el bucket público exclusivo para imágenes.</p><div class="form-group"><label for="productImageFile">Imagen</label><input id="productImageFile" type="file" accept="image/png,image/jpeg,image/webp,image/avif"></div><button id="uploadProductImage" type="button" class="btn btn-secondary">Subir imagen de portada</button></section>
+    <section aria-labelledby="productFileTitle"><h2 id="productFileTitle">Archivos digitales</h2><p>Máximo 50 MB. ZIP, PDF, EPUB, JSON, texto, Markdown, HTML, CSS o JavaScript. Retirar conserva el archivo anterior para compras ya autorizadas.</p>
+      <div class="form-group"><label for="fileProductSelect">Producto</label><select id="fileProductSelect"><option value="">Selecciona un producto</option></select></div>
+      <div class="form-group"><label for="digitalFile">Archivo</label><input id="digitalFile" type="file" accept=".zip,.pdf,.epub,.json,.txt,.md,.html,.css,.js,.mjs"></div>
+      <button id="uploadDigitalFile" type="button" class="btn btn-primary">Subir archivo privado</button><div id="digitalFileList" class="resource-list"></div>
+    </section>
+    <section aria-labelledby="digitalOrdersTitle"><h2 id="digitalOrdersTitle">Órdenes recientes</h2><div id="digitalOrderList" class="resource-list"></div></section>
+  </main>
+  <div id="toastRegion" class="toast-region" role="status" aria-live="polite"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../supabase-config.js"></script><script src="../js/supabase-client.js"></script><script src="../js/admin/shared.js"></script><script src="../js/admin/digital-products.js"></script>
+</body>
+</html>

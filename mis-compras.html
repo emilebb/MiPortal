@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co; img-src 'self' data: https:; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none';">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Mis compras | MiPortal</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="js/theme-init.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Saltar al contenido</a>
+  <main id="main-content" class="container home-page products-page">
+    <section class="news-hero"><span class="eyebrow">Tienda digital</span><h1>Mis compras</h1><p class="news-hero-lead">Consulta el estado de tus órdenes y accede a tus descargas autorizadas.</p></section>
+    <p id="purchaseStatus" class="product-status" role="status" aria-live="polite">Cargando compras…</p>
+    <section id="purchaseList" class="resource-list" aria-label="Tus compras"></section>
+    <p><a class="read-more" href="/productos.html">Volver al catálogo</a></p>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/my-digital-purchases.js"></script>
+</body>
+</html>

@@ -30,10 +30,9 @@ test('ordena destacados y novedades sin crear productos', () => {
   assert.deepEqual(filterAndSortProducts(rows, { sort: 'newest' }).map((p) => p.id), ['new', 'featured', 'old']);
 });
 
-test('acepta URLs absolutas http(s) y rechaza protocolos inseguros', () => {
+test('acepta imágenes HTTPS y rechaza protocolos no seguros', () => {
   assert.equal(safeImageUrl('https://example.com/imagen.png'), 'https://example.com/imagen.png');
-  assert.equal(safeImageUrl('http://example.com/imagen.png'), 'http://example.com/imagen.png');
-  for (const url of ['javascript:alert(1)', 'data:image/svg+xml,x', '//example.com/img.png', 'no-es-url']) assert.equal(safeImageUrl(url), null);
+  for (const url of ['http://example.com/imagen.png', 'javascript:alert(1)', 'data:image/svg+xml,x', '//example.com/img.png', 'no-es-url']) assert.equal(safeImageUrl(url), null);
 });
 
 test('valida identificadores UUID', () => {
