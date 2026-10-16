@@ -180,3 +180,5 @@ La carpeta local compartida permitió trabajar en una copia completa, rama `code
 **Imágenes:** inventario de 340 entradas públicas, 322 con URL y 18 sin ella. Miniatura de una noticia medida en 120 px y ampliación limitada en la versión local. PNG derivados de marca, sin alterar los SVG originales. Calidad/licencia de cada fotografía y variantes responsive siguen pendientes.
 
 **Próximo hito:** revisar la rama y resolver la cuenta Pro heredada; habilitar acceso a Vercel/n8n, completar sandbox, pruebas de navegador y restauración. Solo después solicitar aprobación concreta para migraciones y producción. No se ha fusionado ni publicado esta implementación.
+
+Resultado final de la fase: 150 pruebas unitarias/integración satisfactorias; cuatro suites de navegador automático bloqueadas. Auditoría técnica de 313 URLs de imagen únicas: 306 con metadatos obtenidos, 233 por debajo de 640 px, siete comprobaciones incompletas y ningún HTTP 404 observado. La revisión visual completa, los derechos y los originales adecuados siguen pendientes.

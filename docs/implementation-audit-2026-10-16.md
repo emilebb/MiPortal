@@ -57,7 +57,7 @@ El tratamiento de reembolsos parciales es conservador: revoca la concesión asoc
 
 ## Pruebas y límites
 
-- Comando reproducible: `npm ci --ignore-scripts`, después `npm run test:unit`. El ejecutor prepara la configuración y el sitio, y corre las suites en serie: antes existía una carrera porque un test reconstruía public mientras otro lo leía.
+- Resultado final: **150 pruebas unitarias y de integración satisfactorias, cero fallos**. Comando reproducible: `npm ci --ignore-scripts`, después `npm run test:unit`. El ejecutor prepara la configuración y el sitio, y corre las suites en serie: antes existía una carrera porque un test reconstruía public mientras otro lo leía.
 - Las pruebas de base usan PGlite 0.5.10, PostgreSQL 18.6 embebido y desechable. Ejecutan SQL, triggers, permisos y RLS reales del motor, pero **no sustituyen una prueba en Supabase/PostgreSQL 17 ni una prueba de concurrencia entre conexiones independientes**.
 - Las API de proveedores se simulan. No se probaron un cobro real, una entrega real de correo ni una llamada real al asistente.
 - `npm run test:browser` contiene cuatro suites. Aquí Chrome termina al arrancar con un error de Crashpad/canalización del entorno restringido. No se marcaron como satisfactorias. Se preparó un transporte de pruebas WebSocket portable; sigue pendiente ejecutarlo en un entorno compatible.
@@ -83,6 +83,8 @@ Vercel enumera mi-portal, pero su configuración y despliegues devolvieron 403 p
 ## Imágenes, diseño, accesibilidad y rendimiento
 
 El inventario CSV contiene 340 entradas públicas: 328 noticias, siete recursos y cinco elementos del Daily más reciente. Son 322 entradas con URL de imagen y 18 sin ella; varias pueden apuntar al mismo archivo. No equivale a 322 imágenes originales verificadas. Derechos, dimensiones y calidad de cada original siguen pendientes.
+
+La comprobación técnica posterior consultó las **313 URLs de imagen únicas** del inventario: obtuvo formato y dimensiones de 306; 233 tienen menos de 640 px de ancho; siete verificaciones quedaron incompletas. No se observó ningún HTTP 404 en esa ejecución. No se interpreta un rechazo HTTP o timeout como prueba de una imagen rota. Tampoco se interpreta una anchura suficiente como licencia, nitidez o pertinencia. El CSV Auditoria-tecnica-imagenes.csv registra el resultado por entrada; no se sustituyeron fotografías ni se almacenaron los originales descargados para el análisis.
 
 La noticia inspeccionada usa una miniatura de un servidor de miniaturas de Google de 120 px. Se mitigó su ampliación. No se presentó una imagen generada como fotografía real de una noticia. Los PNG de marca son conversiones del material SVG existente, conservado en el repositorio.
 
@@ -139,3 +141,5 @@ Diariamente: observar errores de API, pagos sin sincronizar, fallos de workflows
 - Protección de contraseñas: [documentación de Supabase Auth](https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection).
 
 Las correcciones descritas están implementadas en la rama de esta entrega. Las funciones marcadas como pendientes no se declaran terminadas ni verificadas en producción.
+
+El commit local de implementación se identifica en el manifiesto de entrega. Git no tenía autor personal configurado; se utilizó la identidad local de agente Codex, sin cambiar la configuración personal ni atribuir el trabajo a otra persona. La rama no se ha enviado a GitHub.
