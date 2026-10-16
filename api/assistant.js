@@ -1,15 +1,8 @@
+const { createHmac } = require('node:crypto');
+const { isIP } = require('node:net');
+const { verifyUser, databaseConfig } = require('../lib/server-auth');
 const UPSTREAM = 'https://n8n.miportal.me/webhook/miportal-assistant';
 const UPSTREAM_SECRET_ENV = 'N8N_ASSISTANT_WEBHOOK_SECRET';
-const minute = 60 * 1000;
-const hour = 60 * minute;
-const day = 24 * hour;
-const ipMinuteLimit = 5;
-const ipHourLimit = 20;
-const ipDayLimit = 40;
-const sessionDayLimit = 5;
-// Best-effort process-local guard, matching the existing contact/newsletter APIs.
-// It does not store message content and expires request timestamps after 24 h.
-const requestsByKey = new Map();
 const fallback = {
   reply: 'Ahora mismo no pude procesar tu pregunta. Puedes usar la búsqueda de MiPortal para encontrar lo que necesitas.',
   links: [{ label: 'Buscar en MiPortal', url: '/buscar.html' }]
@@ -22,43 +15,11 @@ function respond(res, status, body) {
 
 function clientIp(req) {
   const trusted = req.headers?.['x-vercel-forwarded-for'];
-  if (typeof trusted === 'string') return trusted.split(',')[0].trim().slice(0, 64) || 'unknown';
+  if (typeof trusted === 'string' && isIP(trusted)) return trusted;
+  if (process.env.VERCEL === '1') return null;
   const forwarded = req.headers?.['x-forwarded-for'];
-  if (typeof forwarded === 'string') return forwarded.split(',')[0].trim().slice(0, 64) || 'unknown';
-  return req.socket?.remoteAddress || 'unknown';
-}
-
-function pruneRateData(now) {
-  for (const [key, times] of requestsByKey) {
-    const recent = times.filter(time => time > now - day);
-    if (recent.length) requestsByKey.set(key, recent);
-    else requestsByKey.delete(key);
-  }
-  while (requestsByKey.size > 2048) requestsByKey.delete(requestsByKey.keys().next().value);
-}
-
-function reserveRateLimit(ip, sessionId, now = Date.now()) {
-  pruneRateData(now);
-  const keys = [`ip:${ip}`];
-  if (sessionId) keys.push(`session:${ip}:${sessionId}`);
-  const limits = [ipMinuteLimit, ipHourLimit, ipDayLimit, sessionDayLimit];
-  const windows = [minute, hour, day, day];
-  for (let index = 0; index < keys.length; index++) {
-    const times = requestsByKey.get(keys[index]) || [];
-    for (let windowIndex = 0; windowIndex < windows.length; windowIndex++) {
-      const recent = times.filter(time => time > now - windows[windowIndex]);
-      if (recent.length >= limits[windowIndex]) {
-        const oldest = recent[0];
-        return { allowed: false, retryAfter: Math.max(1, Math.ceil((oldest + windows[windowIndex] - now) / 1000)) };
-      }
-    }
-  }
-  for (const key of keys) {
-    const times = requestsByKey.get(key) || [];
-    times.push(now);
-    requestsByKey.set(key, times);
-  }
-  return { allowed: true };
+  if (typeof forwarded === 'string' && isIP(forwarded.split(',')[0].trim())) return forwarded.split(',')[0].trim();
+  return isIP(req.socket?.remoteAddress || '') ? req.socket.remoteAddress : null;
 }
 
 function safePage(value) {
@@ -99,11 +60,6 @@ module.exports = async function assistant(req, res) {
 
   const sessionId = typeof body.sessionId === 'string' && /^[A-Za-z0-9-]{1,80}$/.test(body.sessionId)
     ? body.sessionId : undefined;
-  const rate = reserveRateLimit(clientIp(req), sessionId);
-  if (!rate.allowed) {
-    res.setHeader('Retry-After', String(rate.retryAfter));
-    return respond(res, 429, { reply: 'Has enviado varias preguntas en poco tiempo. Inténtalo más tarde.', links: [] });
-  }
   const page = safePage(body.page);
 
   // Fail closed until the shared server-to-server credential is configured.
@@ -112,6 +68,34 @@ module.exports = async function assistant(req, res) {
   if (typeof upstreamSecret !== 'string' || upstreamSecret.length < 32) {
     return respond(res, 503, fallback);
   }
+
+  const configured = databaseConfig();
+  const ip = clientIp(req);
+  if (!configured || !process.env.SUPABASE_SECRET_KEY) return respond(res, 503, fallback);
+  if (!ip) return respond(res, 400, { reply: 'No pudimos validar la conexión.', links: [] });
+  let userId = null;
+  if (req.headers?.authorization !== undefined) {
+    const identity = await verifyUser(req);
+    if (identity.status) return respond(res, identity.status, { reply: 'No pudimos verificar tu sesión. Vuelve a iniciar sesión.', links: [] });
+    userId = identity.user.id;
+  } else if (!sessionId) return respond(res, 400, { reply: 'Recarga la página para iniciar una conversación.', links: [] });
+
+  try {
+    const hash = value => createHmac('sha256', upstreamSecret).update(value).digest('hex');
+    const quotaResponse = await fetch(`${configured.database.origin}/rest/v1/rpc/reserve_assistant_request`, {
+      method: 'POST', redirect: 'error', signal: AbortSignal.timeout(3000),
+      headers: { apikey: process.env.SUPABASE_SECRET_KEY,
+        Authorization: `Bearer ${process.env.SUPABASE_SECRET_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_user_id: userId, p_session_hash: userId ? null : hash(`session:${ip}:${sessionId}`), p_ip_hash: hash(`ip:${ip}`) })
+    });
+    if (!quotaResponse.ok) return respond(res, 503, fallback);
+    const quota = await quotaResponse.json();
+    if (quota?.allowed === false) {
+      res.setHeader('Retry-After', String(Math.min(86400, Math.max(1, Number(quota.retry_after) || 60))));
+      return respond(res, 429, { reply: 'Alcanzaste el límite de consultas. Vuelve a intentarlo más tarde.', links: [] });
+    }
+    if (quota?.allowed !== true) return respond(res, 503, fallback);
+  } catch { return respond(res, 503, fallback); }
 
   try {
     const upstream = await fetch(UPSTREAM, {
@@ -134,5 +118,3 @@ module.exports = async function assistant(req, res) {
     return respond(res, 502, fallback);
   }
 };
-
-module.exports.resetRateLimitsForTests = () => requestsByKey.clear();

@@ -36,8 +36,10 @@ const entries = [
   'robots.txt',
   'sitemap.xml',
   'og-image.svg',
+  'og-image.png',
   'favicon.svg',
   'apple-touch-icon.svg',
+  'apple-touch-icon.png',
   'supabase-config.js',
   'js',
   'admin'
@@ -62,6 +64,11 @@ const activeRouteOverrides = {
 for (const file of readdirSync(outDir).filter((name) => name.endsWith('.html'))) {
   const path = outDir + file;
   let html = readFileSync(path, 'utf8');
+  html = html.replaceAll('content="https://www.miportal.me/og-image.svg"',
+    'content="https://www.miportal.me/og-image.png"')
+    .replaceAll('href="/apple-touch-icon.svg"', 'href="/apple-touch-icon.png"');
+  html = html.replaceAll('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"',
+    'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.116.0"');
   const activeRoute = activeRouteOverrides[file] || `/${file}`;
   const pageHeader = sharedHeader.replace(
     /<nav class="main-nav" id="mainNav"[\s\S]*?<\/nav>/,

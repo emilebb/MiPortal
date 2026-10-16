@@ -1,30 +1,14 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { PGlite } from '@electric-sql/pglite';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 
 // Base efímera aislada; nunca se conecta a contenedores o bases existentes.
-test('PostgreSQL: repeatable setup, viewer isolation and admin CRUD', async t => {
-  const name = `miportal-rls-test-${process.pid}`;
-  function docker(args, input) {
-    const result = spawnSync('docker', args, { input, encoding: 'utf8' });
-    assert.equal(result.status, 0, result.stderr || result.stdout);
-    return result.stdout;
-  }
-  docker(['run', '--rm', '-d', '--name', name, '--network', 'none',
-    '-e', 'POSTGRES_HOST_AUTH_METHOD=trust', 'postgres:16-alpine']);
-  t.after(() => docker(['stop', name]));
-  let ready = false;
-  for (let i = 0; i < 60; i++) {
-    const result = spawnSync('docker', ['exec', name, 'pg_isready',
-      '-h', '127.0.0.1', '-U', 'postgres']);
-    if (result.status === 0) { ready = true; break; }
-    await new Promise(resolve => setTimeout(resolve, 500));
-  }
-  assert.ok(ready, 'PostgreSQL must become ready');
-  const sql = input => docker(['exec', '-i', name, 'psql', '-U', 'postgres',
-    '-v', 'ON_ERROR_STOP=1'], input);
-  sql(`
+test('Embedded PostgreSQL: repeatable setup, viewer isolation and admin CRUD', async t => {
+  const db = new PGlite();
+  t.after(() => db.close());
+  const sql = input => db.exec(input);
+  await sql(`
     create role anon nologin;
     create role authenticated nologin;
     create role service_role nologin bypassrls;
@@ -37,19 +21,19 @@ test('PostgreSQL: repeatable setup, viewer isolation and admin CRUD', async t =>
       ('00000000-0000-0000-0000-000000000001', 'admin@example.test', '{}');
   `);
   const schema = await readFile(new URL('../supabase/schema.sql', import.meta.url), 'utf8');
-  sql(schema);
-  sql(`do $$ begin
+  await sql(schema);
+  await sql(`do $$ begin
     if not exists (select 1 from public.profiles where
       id = '00000000-0000-0000-0000-000000000001' and role = 'viewer') then
       raise exception 'Pre-existing auth users need a viewer profile';
     end if;
   end $$;`);
-  sql(schema);
+  await sql(schema);
   const migration = await readFile(new URL(
     '../supabase/migrations/20260917_auth_roles.sql', import.meta.url), 'utf8');
-  sql(migration);
-  sql(migration);
-  sql(`
+  await sql(migration);
+  await sql(migration);
+  await sql(`
     insert into auth.users values
       ('00000000-0000-0000-0000-000000000002', 'viewer@example.test',
        '{"role":"admin"}');

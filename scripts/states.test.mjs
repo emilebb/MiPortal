@@ -1,3 +1,4 @@
+import { chromeSession } from './chrome-test-session.mjs';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { readFile, mkdtemp } from 'node:fs/promises';
@@ -66,35 +67,8 @@ test('resource and news states in Chrome with page CSP', async (t) => {
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(() => server.close());
-  const profile = await mkdtemp(join(tmpdir(), 'portal-states-'));
-  const chrome = spawn(process.env.CHROME_BIN || '/usr/bin/google-chrome', [
-    '--headless=new', '--disable-gpu', '--no-first-run',
-    '--remote-debugging-pipe', `--user-data-dir=${profile}`
-  ], { stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'] });
-  t.after(() => chrome.kill());
-  let sequence = 0;
-  let buffer = '';
-  const waiting = new Map();
-  chrome.stdio[4].on('data', chunk => {
-    buffer += chunk;
-    let end;
-    while ((end = buffer.indexOf('\0')) !== -1) {
-      const message = JSON.parse(buffer.slice(0, end));
-      buffer = buffer.slice(end + 1);
-      waiting.get(message.id)?.(message);
-    }
-  });
-  const send = (method, params = {}, sessionId) => new Promise((resolve, reject) => {
-    const id = ++sequence;
-    const timeout = setTimeout(() => reject(new Error(`Timeout: ${method}`)), 10000);
-    waiting.set(id, message => {
-      clearTimeout(timeout);
-      waiting.delete(id);
-      if (message.error) reject(new Error(JSON.stringify(message.error)));
-      else resolve(message.result);
-    });
-    chrome.stdio[3].write(JSON.stringify({ id, method, params, sessionId }) + '\0');
-  });
+  const { send, close } = await chromeSession();
+  t.after(close);
   const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
   const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
   const evaluate = async expression => {

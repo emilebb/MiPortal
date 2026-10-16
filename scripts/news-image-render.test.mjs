@@ -9,6 +9,7 @@ class FakeElement {
     this.tagName = tagName;
     this.children = [];
     this.listeners = {};
+    this.style = {};
     this.className = '';
     this.classList = {
       add: (name) => {
@@ -68,6 +69,7 @@ test('main article image keeps a valid small image and swaps to the fallback onl
 
   assert.equal(image.src, source);
   assert.equal(image.className, 'news-detail-image');
+  assert.equal(image.style.maxWidth, '119px', 'a thumbnail must not be stretched to full article width');
 
   image.dispatch('error');
   assert.equal(image.src, fallback);

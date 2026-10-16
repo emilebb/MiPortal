@@ -114,6 +114,15 @@ test('non-2xx, invalid JSON, and malformed links reject the backend response', a
   assert.throws(() => validateAssistantResponse({ reply: 'Hola', links: {} }, 'https://site.test'));
 });
 
+test('signed-in assistant requests send the access token and never silently downgrade on an Auth error',async()=>{
+  let headers;
+  const options={auth:{getSession:async()=>({data:{session:{access_token:'fixture-token'}}})},
+    fetch:async(_url,req)=>{headers=req.headers;return {ok:true,json:async()=>({reply:'OK',links:[]})}}};
+  await requestAssistantReply('Hola','session',{},options);
+  assert.equal(headers.Authorization,'Bearer fixture-token');
+  await assert.rejects(requestAssistantReply('Hola','session',{}, {...options,auth:{getSession:async()=>({error:new Error('offline')})}}),/sesión/);
+});
+
 test('network, timeout, and malformed response errors are available for the shared UI fallback', async () => {
   const options = { config: { mockMode: false, endpoint: '/assistant', timeoutMs: 10 }, fetch: async () => { throw new Error('offline'); } };
   await assert.rejects(requestAssistantReply('hola', 'id', {}, options), /offline/);

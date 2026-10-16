@@ -41,6 +41,11 @@ loadLocalEnv();
 
 const url = (process.env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
 const publishableKey = (process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || '').trim();
+let legacyRole;
+try { legacyRole = JSON.parse(Buffer.from(publishableKey.split('.')[1], 'base64url').toString()).role; } catch { /* modern public key */ }
+if (publishableKey.startsWith('sb_secret_') || legacyRole === 'service_role') {
+  throw new Error('Refusing to publish a privileged Supabase key. Use a publishable/anon key.');
+}
 
 const output = `// Archivo GENERADO automáticamente por scripts/generate-config.mjs.
 // NO editar a mano: se regenera en cada build. Los valores provienen de las

@@ -12,7 +12,7 @@ test('Pro copy matches the configured annual Mercado Pago plan and account behav
   assert.match(checkout, /planPrice = 19999/);
   assert.match(checkout, /planCurrency = 'COP'/);
   assert.match(html, /Suscripción anual de COP 19\.999 mediante Mercado Pago/);
-  assert.match(behavior, /ad\.hidden = !isPro/);
+  assert.match(behavior, /ad\.hidden = isPro/);
 });
 
 test('legal pages identify themselves as incomplete drafts and avoid technical placeholder labels', () => {

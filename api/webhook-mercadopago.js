@@ -1,7 +1,7 @@
 // ============================================================================
 // Webhook de Mercado Pago. Cuando un pago se aprueba, confirma el dato contra
 // la API de Mercado Pago (status + monto + external_reference) antes de otorgar
-// el rol 'pro'. La firma v2 solo se exige si MERCADOPAGO_WEBHOOK_SECRET existe.
+// la vigencia Pro, independiente del rol administrativo. Firma obligatoria.
 // ============================================================================
 const { createHmac, timingSafeEqual } = require('node:crypto');
 
@@ -22,6 +22,8 @@ function config() {
   if (!database || database.protocol !== 'https:' || database.pathname !== '/') missing.push('SUPABASE_URL');
   if (!env.SUPABASE_SECRET_KEY) missing.push('SUPABASE_SECRET_KEY');
   if (!env.MERCADOPAGO_ACCESS_TOKEN) missing.push('MERCADOPAGO_ACCESS_TOKEN');
+  if (!env.MERCADOPAGO_WEBHOOK_SECRET) missing.push('MERCADOPAGO_WEBHOOK_SECRET');
+  if (!['test', 'production'].includes(env.MERCADOPAGO_MODE)) missing.push('MERCADOPAGO_MODE');
   return { env, database, missing };
 }
 
@@ -29,19 +31,22 @@ function signatureValid(headers, paymentId, secret) {
   const signature = headers['x-signature'];
   const requestId = headers['x-request-id'];
   if (typeof signature !== 'string' || typeof requestId !== 'string') return false;
-  const parts = Object.fromEntries(signature.split(';').map(pair => pair.split('=')));
+  const entries = signature.split(',').map(pair => pair.trim().split('='));
+  if (entries.some(pair => pair.length !== 2) || new Set(entries.map(pair => pair[0])).size !== entries.length) return false;
+  const parts = Object.fromEntries(entries);
   const ts = parts.ts;
   const received = parts.v1;
-  if (typeof ts !== 'string' || typeof received !== 'string') return false;
+  if (!/^\d{10,13}$/.test(ts || '') || !/^[a-f0-9]{64}$/i.test(received || '')) return false;
   const manifest = `id:${paymentId};request-id:${requestId};ts:${ts};`;
   const expected = createHmac('sha256', secret).update(manifest).digest('hex');
-  return received.length === expected.length &&
-    timingSafeEqual(Buffer.from(received), Buffer.from(expected));
+  return timingSafeEqual(Buffer.from(received, 'hex'), Buffer.from(expected, 'hex'));
 }
 
 function paymentIdFrom(body, url) {
-  const source = body?.data?.id ?? body?.id ?? url?.searchParams?.get('data.id') ?? url?.searchParams?.get('id');
-  return typeof source === 'string' && source !== '' ? source : null;
+  const source = url?.searchParams?.get('data.id');
+  if (typeof source !== 'string' || !/^\d{1,30}$/.test(source)) return null;
+  if (body?.data?.id !== undefined && String(body.data.id) !== source) return null;
+  return source;
 }
 
 function logSafe(message) {
@@ -77,7 +82,7 @@ module.exports = async function handler(req, res) {
     (body.type == null || body.type === 'payment') &&
     (body.action == null || body.action === 'payment.created' || body.action === 'payment.updated');
   if (!isPaymentNotification) return jsonResponse(res, 200, { ok: true });
-  if (!paymentId) return jsonResponse(res, 200, { ok: true });
+  if (!paymentId) return fail(400, 'Identificador de pago no válido.');
 
   const configured = config();
   if (configured.missing.length) {
@@ -85,8 +90,7 @@ module.exports = async function handler(req, res) {
     return fail(500, 'Configuración incompleta.');
   }
 
-  if (configured.env.MERCADOPAGO_WEBHOOK_SECRET &&
-      !signatureValid(req.headers, paymentId, configured.env.MERCADOPAGO_WEBHOOK_SECRET)) {
+  if (!signatureValid(req.headers, paymentId, configured.env.MERCADOPAGO_WEBHOOK_SECRET)) {
     return fail(401, 'Firma no válida.');
   }
 
@@ -110,12 +114,17 @@ module.exports = async function handler(req, res) {
   }
 
   const externalReference = payment?.external_reference;
+  if (String(payment?.id) !== paymentId || payment?.live_mode !== (configured.env.MERCADOPAGO_MODE === 'production')) {
+    return fail(422, 'El pago no corresponde al entorno esperado.');
+  }
   const approved = payment?.status === 'approved';
+  if (payment?.status === 'cancelled' && !payment?.date_approved) return jsonResponse(res, 200, { ok: true });
+  const revoked = ['refunded', 'charged_back', 'cancelled'].includes(payment?.status) || Number(payment?.transaction_amount_refunded) > 0;
   const amountOk = Number(payment?.transaction_amount) === planPrice;
   const currencyOk = payment?.currency_id === planCurrency;
   const referenceOk = typeof externalReference === 'string' && uuidPattern.test(externalReference);
 
-  if (!approved || !amountOk || !currencyOk || !referenceOk) {
+  if ((!approved && !revoked) || !amountOk || !currencyOk || !referenceOk) {
     logSafe(`[webhook-mercadopago] Pago ${paymentId} no habilita el plan: status=${payment?.status}, monto=${payment?.transaction_amount}, moneda=${payment?.currency_id}, ref=${externalReference}`);
     return jsonResponse(res, 200, { ok: true });
   }
@@ -124,12 +133,17 @@ module.exports = async function handler(req, res) {
     p_user_id: externalReference,
     p_payment_id: String(payment.id),
     p_amount: Number(payment.transaction_amount),
-    p_currency: payment.currency_id
+    p_currency: payment.currency_id,
+    p_status: revoked ? 'revoked' : 'approved',
+    p_approved_at: payment.date_approved,
+    p_updated_at: payment.date_last_updated
   };
+  if (!Number.isFinite(Date.parse(payload.p_updated_at)) ||
+      !Number.isFinite(Date.parse(payload.p_approved_at))) return fail(422, 'Fechas del pago no válidas.');
 
   try {
     const response = await fetch(
-      `${configured.database.origin}/rest/v1/rpc/record_pro_payment`, {
+      `${configured.database.origin}/rest/v1/rpc/record_pro_payment_event`, {
         method: 'POST', redirect: 'error',
         headers: { apikey: configured.env.SUPABASE_SECRET_KEY,
           Authorization: `Bearer ${configured.env.SUPABASE_SECRET_KEY}`,

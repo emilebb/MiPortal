@@ -1,3 +1,4 @@
+import { entertainmentReactCollision } from './editorial-relevance.mjs';
 const normalize = value =>
   String(value || '')
     .normalize('NFD')
@@ -34,9 +35,11 @@ const englishWords = new Set([
 ]);
 
 export function classify(text, categories = []) {
-  const signals = normalize(
+  let signals = normalize(
     `${text} ${categories.join(' ')}`
   );
+
+  if (entertainmentReactCollision(signals)) signals=signals.replace(/\breact\b/g,'');
 
   return Object.entries(topics)
     .filter(([, pattern]) => pattern.test(signals))

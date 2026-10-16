@@ -11,3 +11,4 @@ node_modules/
 
 # Build estático que Vercel sirve como Output Directory
 public/
+supabase/.temp/

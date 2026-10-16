@@ -69,6 +69,13 @@ test('classify detecta JavaScript y frameworks', () => {
   );
 });
 
+test('entertainment headlines using react as a verb do not become JavaScript/framework news',()=>{
+  const categories=classify("9-1-1: Nashville actors React To Season 2 Premiere's Biggest Twists");
+  assert.equal(categories.includes('javascript'),false);
+  assert.equal(categories.includes('frameworks'),false);
+  assert.ok(classify('React hooks y componentes para JavaScript').includes('javascript'));
+});
+
 test('classify detecta CSS', () => {
   const categories = classify(
     'CSS Grid, Flexbox y Tailwind'
