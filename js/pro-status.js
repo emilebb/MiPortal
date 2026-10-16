@@ -14,6 +14,12 @@
         status.textContent = 'Inicia sesión con la cuenta utilizada para el pago y vuelve a comprobar la activación.';
         return;
       }
+      const profile = await client.from('profiles').select('role')
+        .eq('id', data.session.user.id).maybeSingle();
+      if (!profile.error && profile.data?.role === 'pro') {
+        status.textContent = 'Tu cuenta conserva sus beneficios Pro. Los espacios publicitarios de MiPortal se ocultan en tu cuenta. No necesitas volver a pagar.';
+        return;
+      }
       const result = await client.rpc('has_active_pro');
       if (result.error) throw result.error;
       status.textContent = result.data === true

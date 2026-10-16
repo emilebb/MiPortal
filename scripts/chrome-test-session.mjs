@@ -53,6 +53,14 @@ export async function chromeSession() {
       const timer=setTimeout(()=>{pending.delete(id);reject(Error(`CDP timeout: ${method}`))},10000);
       pending.set(id,{resolve,reject,timer});socket.send(JSON.stringify({id,method,params,sessionId}));
     });
+    // A running browser process does not prove its sandboxed renderer can run.
+    // Fail once here rather than timing out every assertion in every suite.
+    const {targetId} = await send('Target.createTarget', {url:'about:blank'});
+    try {
+      const {sessionId} = await send('Target.attachToTarget', {targetId,flatten:true});
+      const probe = await send('Runtime.evaluate', {expression:'1+1',returnByValue:true},sessionId);
+      if (probe.result?.value !== 2) throw Error('Browser renderer readiness check failed');
+    } finally { await send('Target.closeTarget', {targetId}).catch(()=>{}); }
     return {send,close};
   } catch(error){await close();throw error}
 }

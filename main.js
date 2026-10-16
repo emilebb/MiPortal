@@ -1,6 +1,11 @@
 const gtmContainerId = 'GTM-MRGDJ643';
 const cookieConsentKey = 'miportal-cookie-consent';
 let gtmLoaded = false;
+const consentStorage = {
+  get() { try { return window.localStorage.getItem(cookieConsentKey); } catch { return null; } },
+  set(value) { try { window.localStorage.setItem(cookieConsentKey, value); } catch { /* Consent applies only to this page. */ } },
+  clear() { try { window.localStorage.removeItem(cookieConsentKey); } catch { /* Storage may be blocked. */ } }
+};
 
 // REVISIÓN JURÍDICA: La configuración de consentimiento debe adaptarse según la jurisdicción aplicable
 // (ej. RGPD en UE, CCPA en California, etc.) y el tipo de datos procesados.
@@ -35,7 +40,7 @@ const initializeGoogleTagManager = () => {
     wait_for_update: 500
   });
 
-  const savedConsent = window.localStorage.getItem(cookieConsentKey);
+  const savedConsent = consentStorage.get();
 
   // Solo cargar GTM si ya hubo consentimiento explícito
   if (savedConsent === 'accepted') {
@@ -77,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   const setupCookieNotice = () => {
-    const savedConsent = localStorage.getItem(cookieConsentKey);
+    const savedConsent = consentStorage.get();
 
     if (savedConsent) {
       // Si ya hay consentimiento, actualizar GTM según la decisión guardada
@@ -112,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const handleConsent = (value) => {
-      localStorage.setItem(cookieConsentKey, value);
+      consentStorage.set(value);
 
       if (value === 'accepted') {
         updateGtmConsent(true);
@@ -150,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
     prefLink.textContent = 'Preferencias de cookies';
     prefLink.addEventListener('click', (e) => {
       e.preventDefault();
-      localStorage.removeItem(cookieConsentKey);
+      consentStorage.clear();
       setupCookieNotice();
     });
 
@@ -200,8 +205,13 @@ document.addEventListener('DOMContentLoaded', () => {
       const { data, error } = await supabase.auth.getSession();
       if (!error && data.session) {
         session = data.session;
+        // Preserve explicit legacy grants until their origin is reconciled.
+        // Read the authenticated user's database profile, never user metadata.
+        const profile = await supabase.from('profiles').select('role')
+          .eq('id', session.user.id).maybeSingle();
+        if (!profile.error && profile.data?.role === 'pro') role = true;
         const { data: active, error: subscriptionError } = await supabase.rpc('has_active_pro');
-        if (!subscriptionError) role = active === true;
+        if (!subscriptionError && role !== true) role = active === true;
       }
     } catch {
       // Sin estado: los botones quedan ocultos y el modo pro inactivo.

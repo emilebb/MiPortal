@@ -143,3 +143,29 @@ Diariamente: observar errores de API, pagos sin sincronizar, fallos de workflows
 Las correcciones descritas están implementadas en la rama de esta entrega. Las funciones marcadas como pendientes no se declaran terminadas ni verificadas en producción.
 
 El commit local de implementación se identifica en el manifiesto de entrega. Git no tenía autor personal configurado; se utilizó la identidad local de agente Codex, sin cambiar la configuración personal ni atribuir el trabajo a otra persona. La rama no se ha enviado a GitHub.
+
+## Continuación: revisión de regresiones y preservación de Pro
+
+- **Corregido en la rama, sin desplegar:** el nuevo front dependía únicamente de `has_active_pro`, que no existe en producción. Eso podía dejar de ocultar anuncios a la cuenta Pro histórica. Ahora se conserva un `profiles.role = pro` leído del perfil propio en Supabase, aunque la nueva función no exista o devuelva false. No se toman beneficios de metadatos editables del usuario. La página de retorno reconoce el beneficio sin afirmar que exista un pago verificado. No se crea, cambia ni elimina ningún registro Pro.
+- **Corregido en la rama:** el bloqueo del almacenamiento del navegador podía lanzar una excepción antes de registrar la inicialización común. La lectura/escritura del consentimiento ahora tolera ese bloqueo, mantiene denegado el seguimiento por defecto y no impide el resto del sitio.
+- **Migración detenida:** se conserva el guard `RECONCILE_LEGACY_PRO_BEFORE_MIGRATION`. El hecho comprobado sigue siendo 1 Pro y 0 pagos; no hay evidencia nueva sobre su origen. No aprobar un cambio de beneficios implícitamente al resolver el origen. No ejecutar el conjunto de migraciones ni `db push`.
+- **Pruebas de navegador:** Chrome fallaba al arrancar Crashpad. Se probó Edge instalado, con perfil temporal, depuración solo en loopback y sandbox intacto. Tras permitir la conexión local, el proceso inicia y acepta comandos del navegador, pero `Runtime.evaluate('1+1')` no recibe respuesta. El bloqueo está ahora localizado en la disponibilidad del renderizador; no demuestra un fallo del producto. Se añadió una sonda previa para evitar decenas de esperas por suite. No se desactivaron restricciones del navegador ni se accedió a perfiles personales. La ejecución completa en un entorno compatible sigue pendiente.
+- **Accesibilidad estática:** 21 HTML compilados con idioma, un landmark principal, sin IDs duplicados y sin imágenes estáticas sin atributo alt. `noticia.html` no contiene H1 inicial: `js/news-detail.mjs` lo crea al cargar la noticia. Esta excepción requiere verificar los estados de carga/error y el árbol accesible en navegador; no se considera certificación WCAG. Quedan teclado, foco, contraste, zoom, lector de pantalla y contenido dinámico.
+- **Rendimiento:** mayor archivo local servido: `styles.css`, 106.557 bytes sin comprimir; `main.js` tenía 20.554 bytes en la compilación inspeccionada. Es tamaño de archivo, no transferencia comprimida ni medición LCP/INP/CLS. No hay resultados nuevos de Lighthouse ni datos reales de campo; no se afirma mejora de puntuación.
+- **Imágenes:** inventario actualizado a partir del diagnóstico ya obtenido, agregando dimensiones, formato, resultado técnico y próxima acción por registro. Son 340 entradas, no 340 originales únicos. Las 233 URL únicas de menos de 640 px siguen requiriendo revisión del tamaño real de uso y originales autorizados; no se sustituyeron fotografías ni se comprobó su licencia por tener URL pública. Siete diagnósticos incompletos no equivalen a siete imágenes rotas.
+- **Accesos:** ver `docs/required-read-access.md` y el documento de entrega `Accesos-lectura-MiPortal.md`. Vercel requiere lectura del proyecto y registros; Supabase requiere evidencia mínima y saneada del origen Pro/logs/backup; n8n requiere exportaciones saneadas y ejecución histórica de cuatro flujos. Ninguno requiere escritura, secretos o ejecutar workflows.
+
+### Puertas verificables antes de producción
+
+1. Documentar el origen Pro y obtener decisión explícita sobre el beneficio, sin modificarlo mientras tanto.
+2. Conseguir las lecturas específicas anteriores y correlacionar despliegue, código y configuración real.
+3. Ejecutar las cuatro suites de navegador en un entorno compatible, sin `--no-sandbox`, y resolver cualquier fallo funcional que aparezca. La CI preparada no cuenta como ejecutada.
+4. Probar migraciones y concurrencia en PostgreSQL 17 aislado con esquema representativo saneado, respaldo/reversión y compatibilidad de API. PGlite no prueba procesos simultáneos ni sustituye esta puerta.
+5. Completar teclado/móvil/contraste, originales de imágenes y mediciones reproducibles de rendimiento; registrar resultados por ruta.
+6. Con autorización separada: plan de publicación coordinada y validación controlada de producción. Los ensayos actuales no prueban cobro, entrega de correo, funcionamiento de n8n ni restauración real de backups.
+
+### Resultado de comprobaciones de esta continuación
+
+154 pruebas unitarias/integración aprobadas, 0 fallos. Cuatro suites de navegador ejecutadas y bloqueadas en la sonda del renderizador (`CDP timeout: Runtime.evaluate`); 0 aprobadas. No se interpretan como pruebas funcionales superadas. `git diff --check` sin errores. El registro del webhook diferencia ahora eventos aprobados y revocados y evita incluir el identificador de la cuenta en el mensaje de éxito.
+
+Los documentos e inventarios de entrega se actualizaron; las imágenes originales, la base de datos productiva y los beneficios existentes permanecen sin cambios. No hubo cobros reales, envíos de correos de prueba a usuarios, ejecución de workflows, migraciones, despliegues ni publicación de la rama.

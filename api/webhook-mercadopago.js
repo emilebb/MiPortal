@@ -156,7 +156,7 @@ module.exports = async function handler(req, res) {
       logSafe(`[webhook-mercadopago] Supabase record_pro_payment respondió ${response.status} — ${detail}`);
       return fail(502, 'La base de datos no confirmó el pago.');
     }
-    logSafe(`[webhook-mercadopago] Pago aprobado ${paymentId} → pro para ${externalReference}`);
+    logSafe(`[webhook-mercadopago] Evento ${payload.p_status} registrado para pago ${paymentId}`);
     return jsonResponse(res, 200, { ok: true });
   } catch (error) {
     logSafe(`[webhook-mercadopago] Error al registrar pago ${paymentId}: ${error?.message ?? error}`);
