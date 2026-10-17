@@ -69,6 +69,13 @@ test('classify detecta JavaScript y frameworks', () => {
   );
 });
 
+test('entertainment headlines using react as a verb do not become JavaScript/framework news',()=>{
+  const categories=classify("9-1-1: Nashville actors React To Season 2 Premiere's Biggest Twists");
+  assert.equal(categories.includes('javascript'),false);
+  assert.equal(categories.includes('frameworks'),false);
+  assert.ok(classify('React hooks y componentes para JavaScript').includes('javascript'));
+});
+
 test('classify detecta CSS', () => {
   const categories = classify(
     'CSS Grid, Flexbox y Tailwind'
@@ -327,7 +334,10 @@ test('loadNews consulta news_articles correctamente', async () => {
 
     limit(value) {
       calls.push(['limit', value]);
-
+      return this;
+    },
+    abortSignal(signal) {
+      assert.ok(signal instanceof AbortSignal);
       return Promise.resolve({
         data: [
           row()
@@ -398,6 +408,9 @@ test('loadNews propaga errores de Supabase', async () => {
     },
 
     limit() {
+      return this;
+    },
+    abortSignal() {
       return Promise.resolve({
         data: null,
         error: expected
@@ -415,4 +428,23 @@ test('loadNews propaga errores de Supabase', async () => {
     () => loadNews({ client }),
     expected
   );
+});
+
+test('loadNews aborts a hanging transport and allows a fresh retry',async()=>{
+  const client={from(){return {select(){return this},eq(){return this},order(){return this},limit(){return this},abortSignal(signal){return new Promise(resolve=>{
+    const fail=()=>resolve({data:null,error:signal.reason});
+    if(signal.aborted)fail();else signal.addEventListener('abort',fail,{once:true});
+  })}}}};
+  const controller=new AbortController();
+  const pending=loadNews({client,signal:controller.signal});
+  controller.abort(new Error('Controlled deadline'));
+  await assert.rejects(pending,/Controlled deadline/);
+  const good={from(){return {select(){return this},eq(){return this},order(){return this},limit(){return this},abortSignal(){return Promise.resolve({data:[row()],error:null})}}}};
+  assert.equal((await loadNews({client:good})).length,1);
+});
+
+test('news rejects credential-bearing destinations and never renders credentials in image URLs',()=>{
+ assert.deepEqual(prepareItems([row({url:'https://trusted.example@other.example/story'})]),[]);
+ const [item]=prepareItems([row({image_url:'https://user:password@example.com/image.jpg'})]);
+ assert.equal(item.image,null);
 });

@@ -25,6 +25,7 @@ const status = document.getElementById('globalSearchStatus');
 const resultsRegion = document.getElementById('globalSearchResults');
 
 let matchingResults = [];
+let searchRevision = 0;
 
 function fromNews(row) {
   if (!row || typeof row.title !== 'string' || !row.title.trim()) return null;
@@ -108,11 +109,13 @@ function render() {
 }
 
 async function runSearch(query) {
+  const revision = ++searchRevision;
   const normalized = normalizeQuery(query);
   queryInput.value = normalized;
   matchingResults = [];
   resultsRegion.replaceChildren();
   if (!hasSearchQuery(normalized)) {
+    form.removeAttribute('aria-busy');
     status.textContent = 'Escribe un término para comenzar la búsqueda.';
     const emptyState = document.createElement('p');
     emptyState.className = 'global-search-empty-state';
@@ -129,11 +132,12 @@ async function runSearch(query) {
         if (!window.MiPortalSupabase) throw new Error('Recursos no disponibles');
         const { data, error } = await window.MiPortalSupabase.from('resources')
           .select('id,title,description,url,category,created_at,updated_at')
-          .eq('published', true).limit(100);
+          .eq('published', true).limit(100).abortSignal(AbortSignal.timeout(10000));
         if (error) throw error;
         return data || [];
       })
     ]);
+    if (revision !== searchRevision) return;
     const [newsOutcome, resourceOutcome] = outcomes;
     matchingResults = [
       ...(newsOutcome.status === 'fulfilled' ? newsOutcome.value.map(fromNews).filter(Boolean) : []),
@@ -150,9 +154,9 @@ async function runSearch(query) {
         : '0 resultados. No se pudieron cargar todos los contenidos; prueba de nuevo más tarde.';
     }
   } catch {
-    status.textContent = '0 resultados. No se pudo completar la búsqueda; prueba de nuevo más tarde.';
+    if (revision === searchRevision) status.textContent = '0 resultados. No se pudo completar la búsqueda; prueba de nuevo más tarde.';
   } finally {
-    form.removeAttribute('aria-busy');
+    if (revision === searchRevision) form.removeAttribute('aria-busy');
   }
 }
 

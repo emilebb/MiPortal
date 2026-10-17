@@ -1,3 +1,4 @@
+import { entertainmentReactCollision } from './editorial-relevance.mjs';
 const normalize = value =>
   String(value || '')
     .normalize('NFD')
@@ -34,9 +35,11 @@ const englishWords = new Set([
 ]);
 
 export function classify(text, categories = []) {
-  const signals = normalize(
+  let signals = normalize(
     `${text} ${categories.join(' ')}`
   );
+
+  if (entertainmentReactCollision(signals)) signals=signals.replace(/\breact\b/g,'');
 
   return Object.entries(topics)
     .filter(([, pattern]) => pattern.test(signals))
@@ -91,6 +94,7 @@ function cleanText(value) {
 function safeUrl(value) {
   try {
     const url = new URL(value);
+    if (url.username || url.password) return null;
 
     if (
       url.protocol !== 'https:' &&
@@ -214,7 +218,8 @@ export function selectItems(
 
 export async function loadNews({
   client = window.MiPortalSupabase,
-  limit = 100
+  limit = 100,
+  signal = AbortSignal.timeout(10000)
 } = {}) {
   if (!client) {
     throw new Error(
@@ -239,7 +244,8 @@ export async function loadNews({
     .order('published_at', {
       ascending: false
     })
-    .limit(limit);
+    .limit(limit)
+    .abortSignal(signal);
 
   if (error) {
     throw error;

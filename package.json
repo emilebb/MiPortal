@@ -12,10 +12,22 @@
     "test:contact": "node --test scripts/contact.test.cjs scripts/contact-browser.test.mjs",
     "test:newsletter": "node --test scripts/newsletter.test.cjs scripts/newsletter-send.test.cjs scripts/admin-publish.test.cjs",
     "test:admin": "node --test scripts/admin-browser.test.mjs",
-    "test:mercadopago": "node --test scripts/mercadopago.test.cjs"
+    "test:mercadopago": "node --test scripts/mercadopago.test.cjs",
+    "test": "node scripts/run-tests.mjs",
+    "test:unit": "node scripts/run-tests.mjs unit",
+    "test:browser": "node scripts/run-tests.mjs browser",
+    "test:db": "node --test scripts/rls.test.mjs scripts/subscriptions.test.mjs",
+    "audit:serve": "node scripts/serve-audit.mjs",
+    "audit:check": "node scripts/check-audit.mjs",
+    "audit:secrets": "node scripts/audit-secrets.cjs"
   },
   "license": "UNLICENSED",
   "dependencies": {
-    "@supabase/supabase-js": "^2.116.0"
+    "@supabase/supabase-js": "2.116.0"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "0.5.10",
+    "axe-core": "4.14.0",
+    "clean-css": "5.3.3"
   }
 }

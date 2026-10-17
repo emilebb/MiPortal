@@ -193,14 +193,14 @@
 }
 
 .btn-primary {
-  border-color: var(--primary-color);
-  background: var(--primary-color);
+  border-color: var(--primary);
+  background: var(--primary);
   color: var(--on-primary);
 }
 
 .btn-primary:hover {
-  background: var(--primary-dark);
-  border-color: var(--primary-dark);
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
   box-shadow: var(--shadow-md);
 }
 

@@ -9,6 +9,7 @@ class FakeElement {
     this.tagName = tagName;
     this.children = [];
     this.listeners = {};
+    this.style = {};
     this.className = '';
     this.classList = {
       add: (name) => {
@@ -43,9 +44,12 @@ test('news card keeps a valid small image, falls back on error, and handles a mi
   const media = createNewsCardMedia({ image: source }, fakeDocument);
   const image = media.children[0];
   image.naturalWidth = 120;
+  image.naturalHeight = 66;
   image.dispatch('load');
 
   assert.equal(image.src, source);
+  assert.equal(image.style.maxWidth, '120px');
+  assert.equal(image.style.maxHeight, '66px');
   assert.equal(image.removed, undefined);
   assert.equal(media.children[0], image);
 
@@ -68,6 +72,7 @@ test('main article image keeps a valid small image and swaps to the fallback onl
 
   assert.equal(image.src, source);
   assert.equal(image.className, 'news-detail-image');
+  assert.equal(image.style.maxWidth, '119px', 'a thumbnail must not be stretched to full article width');
 
   image.dispatch('error');
   assert.equal(image.src, fallback);

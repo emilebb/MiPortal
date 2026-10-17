@@ -54,7 +54,7 @@ test('newsletter API uses mocked Supabase RPC and Resend only', async t => {
 
   const accepted = await run();
   assert.equal(accepted.code, 202);
-  assert.match(accepted.body.message, /¡Gracias! Te has suscrito correctamente/);
+  assert.match(accepted.body.message, /Solicitud guardada/);
   assert.match(accepted.body.message, /correo|confirm/i);
   assert.equal(JSON.stringify(accepted).includes('mock-provider-secret'), false);
   assert.equal(calls.length, 3);
@@ -87,8 +87,8 @@ test('newsletter API reports already confirmed subscriptions with the exact succ
     return response(200, { id: 'mock-email-id' });
   });
   const accepted = await run();
-  assert.equal(accepted.code, 202);
-  assert.equal(accepted.body.message, '¡Gracias! Te has suscrito correctamente.');
+  assert.equal(accepted.code, 200);
+  assert.equal(accepted.body.message, 'Tu suscripción ya está confirmada.');
 });
 
 test('newsletter API rejects hostile requests before any provider call', async t => {
@@ -152,9 +152,9 @@ test('newsletter API maps upstream and provider failures to specific codes', asy
   const cases = [
     { rpc: response(404, 'Could not find the function public.upsert_newsletter_subscriber'), expected: 502, saved: false },
     { rpc: response(503, { message: 'service unavailable' }), expected: 503, saved: false },
-    { rpc: response(200, { allowed: true }), resend: response(401, { message: 'mock-provider-secret' }), expected: 202, saved: true },
-    { rpc: response(200, { allowed: true }), resend: response(429, { message: 'rate limited' }), expected: 202, saved: true },
-    { rpc: response(200, { allowed: true }), resend: response(200, {}), expected: 202, saved: true }
+    { rpc: response(200, { allowed: true }), resend: response(401, { message: 'mock-provider-secret' }), expected: 502, saved: true },
+    { rpc: response(200, { allowed: true }), resend: response(429, { message: 'rate limited' }), expected: 429, saved: true },
+    { rpc: response(200, { allowed: true }), resend: response(200, {}), expected: 502, saved: true }
   ];
   for (const testCase of cases) {
     const calls = [];
@@ -169,7 +169,8 @@ test('newsletter API maps upstream and provider failures to specific codes', asy
     assert.equal(result.code, testCase.expected);
     assert.equal(JSON.stringify(result).includes('mock-provider-secret'), false);
     if (testCase.saved) {
-      assert.match(result.body.message, /suscrito correctamente/);
+      assert.equal(result.body.status, 'pending');
+  assert.match(result.body.error, /no pudimos enviar/);
     } else {
       assert.equal(result.body.error, 'El servicio de suscripción está momentáneamente no disponible. Inténtalo más tarde.');
     }
@@ -188,8 +189,9 @@ test('newsletter API keeps a registered subscription when the welcome email fail
     return response(429, { statusCode: 429, message: 'You have exceeded the rate limit. mock-provider-secret', name: 'RateLimitError' });
   });
   const result = await run();
-  assert.equal(result.code, 202);
-  assert.match(result.body.message, /suscrito correctamente/);
+  assert.equal(result.code, 429);
+  assert.equal(result.body.status, 'pending');
+      assert.match(result.body.error, /no pudimos enviar/);
   assert.equal(JSON.stringify(result).includes('mock-provider-secret'), false);
   assert.match(logs.at(-1), /Resend/);
   assert.equal(JSON.stringify(logs).includes('mock-provider-secret'), false);
@@ -198,7 +200,7 @@ test('newsletter API keeps a registered subscription when the welcome email fail
   spy.mock.restore();
 });
 
-test('welcome email uses a unique idempotency key per subscription request (no HTTP 409)', async t => {
+test('welcome email uses distinct idempotency keys for different ten-minute request windows', async t => {
   withEnv(t);
   let fakeNow = 1000;
   t.mock.method(Date, 'now', () => fakeNow);
@@ -215,7 +217,7 @@ test('welcome email uses a unique idempotency key per subscription request (no H
 
   const first = await run();
   assert.equal(first.code, 202);
-  fakeNow = 2000;
+  fakeNow = 601000;
   const second = await run();
   assert.equal(second.code, 202);
 

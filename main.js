@@ -1,6 +1,11 @@
 const gtmContainerId = 'GTM-MRGDJ643';
 const cookieConsentKey = 'miportal-cookie-consent';
 let gtmLoaded = false;
+const consentStorage = {
+  get() { try { return window.localStorage.getItem(cookieConsentKey); } catch { return null; } },
+  set(value) { try { window.localStorage.setItem(cookieConsentKey, value); } catch { /* Consent applies only to this page. */ } },
+  clear() { try { window.localStorage.removeItem(cookieConsentKey); } catch { /* Storage may be blocked. */ } }
+};
 
 // REVISIÓN JURÍDICA: La configuración de consentimiento debe adaptarse según la jurisdicción aplicable
 // (ej. RGPD en UE, CCPA en California, etc.) y el tipo de datos procesados.
@@ -35,11 +40,11 @@ const initializeGoogleTagManager = () => {
     wait_for_update: 500
   });
 
-  const savedConsent = window.localStorage.getItem(cookieConsentKey);
+  const savedConsent = consentStorage.get();
 
   // Solo cargar GTM si ya hubo consentimiento explícito
-  if (savedConsent === 'accepted' || savedConsent === 'rejected') {
-    updateGtmConsent(savedConsent === 'accepted');
+  if (savedConsent === 'accepted') {
+    updateGtmConsent(true);
     loadGtmScript();
   }
 };
@@ -69,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const getSafeHttpsUrl = (value) => {
     try {
       const url = new URL(value);
+      if (url.username || url.password) return null;
       return url.protocol === 'https:' ? url.href : null;
     } catch {
       return null;
@@ -77,7 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
   const setupCookieNotice = () => {
-    const savedConsent = localStorage.getItem(cookieConsentKey);
+    const savedConsent = consentStorage.get();
 
     if (savedConsent) {
       // Si ya hay consentimiento, actualizar GTM según la decisión guardada
@@ -112,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const handleConsent = (value) => {
-      localStorage.setItem(cookieConsentKey, value);
+      consentStorage.set(value);
 
       if (value === 'accepted') {
         updateGtmConsent(true);
@@ -150,7 +156,7 @@ document.addEventListener('DOMContentLoaded', () => {
     prefLink.textContent = 'Preferencias de cookies';
     prefLink.addEventListener('click', (e) => {
       e.preventDefault();
-      localStorage.removeItem(cookieConsentKey);
+      consentStorage.clear();
       setupCookieNotice();
     });
 
@@ -163,16 +169,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const applyProState = (session, role) => {
     const isLoggedIn = Boolean(session);
-    const isPro = isLoggedIn && role === 'pro';
+    const isPro = isLoggedIn && role === true;
     document.querySelectorAll('.js-pro-checkout').forEach((el) => {
-      el.hidden = !isLoggedIn || isPro;
+      el.hidden = !isLoggedIn || typeof role !== 'boolean' || isPro;
     });
     document.querySelectorAll('.pro-container').forEach((el) => {
       el.hidden = isPro;
     });
     document.body.classList.toggle('pro-mode', isPro);
     document.querySelectorAll('.ad-container, .adsbygoogle').forEach((ad) => {
-      ad.hidden = !isPro;
+      ad.hidden = isPro;
     });
     const homeActions = document.querySelector('.home-actions');
     const existingBadge = homeActions ? homeActions.querySelector('.pro-badge') : null;
@@ -186,7 +192,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  let proRevision = 0;
   const refreshProState = async () => {
+    const revision = ++proRevision;
     const supabase = window.MiPortalSupabase;
     if (!supabase) {
       applyProState(null, null);
@@ -198,17 +206,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const { data, error } = await supabase.auth.getSession();
       if (!error && data.session) {
         session = data.session;
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', session.user.id)
-          .maybeSingle();
-        if (!profileError && profile) role = profile.role;
+        // Preserve explicit legacy grants until their origin is reconciled.
+        // Read the authenticated user's database profile, never user metadata.
+        const profile = await supabase.from('profiles').select('role')
+          .eq('id', session.user.id).maybeSingle();
+        if (!profile.error && profile.data?.role === 'pro') role = true;
+        const { data: active, error: subscriptionError } = await supabase.rpc('has_active_pro');
+        if (!subscriptionError && role !== true) role = active === true;
       }
     } catch {
       // Sin estado: los botones quedan ocultos y el modo pro inactivo.
     }
-    applyProState(session, role);
+    if (revision === proRevision) applyProState(session, role);
   };
 
   const setupProCheckout = () => {
@@ -235,10 +244,13 @@ document.addEventListener('DOMContentLoaded', () => {
         button.disabled = true;
         button.setAttribute('aria-busy', 'true');
         try {
+          if (!button.dataset.checkoutKey) button.dataset.checkoutKey = crypto.randomUUID();
           const response = await fetch('/api/mp-preference', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: session.user.id })
+            headers: { 'Content-Type': 'application/json',
+              Authorization: `Bearer ${session.access_token}`,
+              'Idempotency-Key': button.dataset.checkoutKey },
+            body: JSON.stringify({}), signal: AbortSignal.timeout(20000)
           });
           const result = await response.json().catch(() => ({}));
           if (!response.ok || !result.init_point) {

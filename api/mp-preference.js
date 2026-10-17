@@ -3,6 +3,8 @@
 // external_reference = user_id permite asociar el pago al perfil cuando el
 // webhook notifica el resultado. Devuelve init_point para redirigir al pago.
 // ============================================================================
+const { verifyUser } = require('../lib/server-auth');
+const { createHash } = require('node:crypto');
 const origins = new Set([
   'https://www.miportal.me', 'https://miportal.me',
   'https://mi-portal-seven.vercel.app'
@@ -29,6 +31,8 @@ function config() {
   const env = process.env;
   const missing = [];
   if (!env.MERCADOPAGO_ACCESS_TOKEN) missing.push('MERCADOPAGO_ACCESS_TOKEN');
+  if (!env.MERCADOPAGO_WEBHOOK_SECRET) missing.push('MERCADOPAGO_WEBHOOK_SECRET');
+  if (!['test', 'production'].includes(env.MERCADOPAGO_MODE)) missing.push('MERCADOPAGO_MODE');
   if (env.VERCEL !== '1') missing.push('VERCEL');
   return { env, missing };
 }
@@ -55,10 +59,27 @@ module.exports = async function handler(req, res) {
   const raw = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : req.body;
   let body;
   try { body = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch { return fail(400, 'Datos inválidos.'); }
-  const user_id = body?.user_id;
-  if (typeof user_id !== 'string' || !uuidPattern.test(user_id)) {
-    return fail(400, 'Usuario no válido.');
-  }
+  if (!body || typeof body !== 'object' || Array.isArray(body) ||
+      Object.keys(body).some(key => key !== 'user_id')) return fail(400, 'Datos inválidos.');
+  const identity = await verifyUser(req);
+  if (identity.status) return fail(identity.status,
+    identity.status === 401 ? 'Inicia sesión para continuar.' : 'No pudimos verificar tu sesión.');
+  const user_id = identity.user.id;
+  if (body.user_id !== undefined && body.user_id !== user_id) return fail(403, 'Usuario no autorizado.');
+  const requestKey = req.headers['idempotency-key'];
+  if (typeof requestKey !== 'string' || !uuidPattern.test(requestKey)) return fail(400, 'Solicitud de pago no válida.');
+  const idempotencyKey = createHash('sha256').update(`pro:${user_id}:${requestKey}`).digest('hex');
+
+  try {
+    const readiness = await fetch(`${identity.configured.database.origin}/rest/v1/rpc/has_active_pro`, {
+      method: 'POST', redirect: 'error',
+      headers: { apikey: identity.configured.key, Authorization: identity.header, 'Content-Type': 'application/json' },
+      body: '{}', signal: AbortSignal.timeout(3000)
+    });
+    if (!readiness.ok || typeof await readiness.json() !== 'boolean') {
+      return fail(503, 'Las suscripciones no están disponibles temporalmente.');
+    }
+  } catch { return fail(503, 'Las suscripciones no están disponibles temporalmente.'); }
 
   try {
     const response = await fetch(`${apiBase}/checkout/preferences`, {
@@ -66,7 +87,7 @@ module.exports = async function handler(req, res) {
       headers: {
         Authorization: `Bearer ${configured.env.MERCADOPAGO_ACCESS_TOKEN}`,
         'Content-Type': 'application/json',
-        'X-Idempotency-Key': `preference:${user_id}:${Date.now()}`
+        'X-Idempotency-Key': idempotencyKey
       },
       body: JSON.stringify({
         items: [{

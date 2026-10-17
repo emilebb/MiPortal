@@ -6,8 +6,8 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://api.rss2json.com https://*.supabase.co; img-src 'self' data: https://www.googletagmanager.com; frame-src https://www.googletagmanager.com; object-src 'none'; base-uri 'none'; form-action 'self';">
 
   <!-- SEO Básico -->
-  <title>¡Bienvenido a MiPortal Pro! - MiPortal</title>
-  <meta name="description" content="Gracias por hacerte Pro. Tu pago se procesó correctamente y ya puedes acceder a los beneficios exclusivos de MiPortal Pro.">
+  <title>Estado de tu suscripción | MiPortal</title>
+  <meta name="description" content="Comprueba la activación de tu suscripción MiPortal Pro.">
   <meta name="robots" content="noindex">
   <link rel="canonical" href="https://www.miportal.me/gracias-pro.html">
 
@@ -69,15 +69,14 @@
   <main id="main-content" class="container legal-page">
     <article class="legal-content pro-confirm">
       <p class="eyebrow">MiPortal Pro</p>
-      <h1>¡Gracias por hacerte Pro!</h1>
-      <p>Tu pago se ha procesado con éxito. Ahora tienes acceso a todos los beneficios exclusivos.</p>
+      <h1>Estado de tu suscripción</h1>
+      <p id="proPaymentStatus" role="status" aria-live="polite">La activación se verifica con el servidor. Volver del proveedor de pagos no confirma por sí solo la suscripción.</p>
+      <button id="checkProStatus" type="button" class="btn btn-primary">Comprobar activación</button>
 
       <div class="benefits-box">
-        <h3>Tus Beneficios Pro:</h3>
+        <h2>Beneficio de MiPortal Pro</h2>
         <ul>
-          <li>Acceso a la comunidad privada.</li>
-          <li>Descarga de plantillas y recursos exclusivos.</li>
-          <li>Uso ilimitado de nuestras herramientas web.</li>
+          <li>Suscripción anual para ocultar los espacios publicitarios de MiPortal.</li>
         </ul>
       </div>
 
@@ -119,5 +118,5 @@
   <script src="js/supabase-client.js"></script>
   <script src="js/auth-nav.js"></script>
   <script src="main.js"></script>
-</body>
+<script src="js/pro-status.js"></script></body>
 </html>

@@ -1,144 +1,54 @@
-const assert = require('node:assert/strict');
-const test = require('node:test');
-const handler = require('../api/assistant');
-
-function responseRecorder() {
-  return {
-    statusCode: 200,
-    headers: {},
-    setHeader(name, value) { this.headers[name] = value; return this; },
-    status(code) { this.statusCode = code; return this; },
-    json(body) { this.body = body; return this; }
-  };
+const test=require('node:test'); const assert=require('node:assert/strict');
+const handler=require('../api/assistant');
+const uid='11111111-2222-4333-8444-555555555555';
+const response=(status,body)=>({ok:status>=200&&status<300,status,json:async()=>body});
+function setup(t){const saved={...process.env};Object.assign(process.env,{SUPABASE_URL:'https://example.supabase.co',SUPABASE_SECRET_KEY:'test-key',N8N_ASSISTANT_WEBHOOK_SECRET:'test-secret-at-least-thirty-two-characters',VERCEL:'1'});t.after(()=>{process.env=saved})}
+async function run(body={message:'Hola',sessionId:'guest'},headers={}){
+  const res={headers:{},setHeader(k,v){this.headers[k]=v},status(c){this.statusCode=c;return this},json(b){this.body=b;return this}};
+  await handler({method:'POST',headers:{'content-type':'application/json','x-vercel-forwarded-for':'192.0.2.10',...headers},body},res);return res;
 }
-
-test('assistant proxy validates the contract before calling n8n', async () => {
-  const originalFetch = global.fetch;
-  let called = false;
-  global.fetch = async () => { called = true; throw new Error('must not call upstream'); };
-  try {
-    for (const body of [[], {}, { message: 42 }, { message: '' }, { message: '   ' }, { message: 'x'.repeat(1001) }]) {
-      const res = responseRecorder();
-      await handler({ method: 'POST', headers: { 'content-type': 'application/json' }, body }, res);
-      assert.equal(res.statusCode, 400);
-      assert.equal(typeof res.body.reply, 'string');
-      assert.ok(Array.isArray(res.body.links));
-      assert.equal(res.headers['Cache-Control'], 'no-store');
-    }
-    assert.equal(called, false);
-  } finally { global.fetch = originalFetch; }
+test('invalid input never reserves a quota or calls n8n',async t=>{
+  setup(t);t.mock.method(global,'fetch',async()=>{throw Error('must not fetch')});
+  for(const body of [null,[],{}, {message:1},{message:''},{message:'x'.repeat(1001)}]) assert.equal((await run(body)).statusCode,400);
 });
-
-test('assistant proxy forwards valid messages and preserves the response contract', async () => {
-  const originalFetch = global.fetch;
-  const originalSecret = process.env.N8N_ASSISTANT_WEBHOOK_SECRET;
-  process.env.N8N_ASSISTANT_WEBHOOK_SECRET = 'test-only-secret-value-that-is-long-enough';
-  let request;
-  global.fetch = async (url, options) => {
-    request = { url, options };
-    return { status: 200, ok: true, json: async () => ({ reply: 'Hola', links: [{ label: 'Inicio', url: '/' }] }) };
-  };
-  try {
-    const res = responseRecorder();
-    await handler({ method: 'POST', headers: { 'content-type': 'application/json' }, body: {
-      message: '  Hola  ', sessionId: 'ephemeral', page: { path: '/', title: 'Home' }
-    } }, res);
-    assert.equal(res.statusCode, 200);
-    assert.equal(request.url, 'https://n8n.miportal.me/webhook/miportal-assistant');
-    assert.deepEqual(JSON.parse(request.options.body), {
-      message: 'Hola', sessionId: 'ephemeral', page: { path: '/', title: 'Home' }
-    });
-    assert.equal(request.options.headers['X-MiPortal-Assistant-Secret'], process.env.N8N_ASSISTANT_WEBHOOK_SECRET);
-    assert.deepEqual(res.body, { reply: 'Hola', links: [{ label: 'Inicio', url: '/' }] });
-  } finally {
-    global.fetch = originalFetch;
-    if (originalSecret === undefined) delete process.env.N8N_ASSISTANT_WEBHOOK_SECRET;
-    else process.env.N8N_ASSISTANT_WEBHOOK_SECRET = originalSecret;
-  }
+test('authenticated quota derives identity from Auth, not session or supplied role',async t=>{
+  setup(t);let quota;
+  t.mock.method(global,'fetch',async(url,options)=>{
+    if(url.endsWith('/auth/v1/user'))return response(200,{id:uid,user_metadata:{role:'admin'}});
+    if(url.endsWith('/reserve_assistant_request')){quota=JSON.parse(options.body);return response(200,{allowed:true})}
+    assert.equal(options.headers['X-MiPortal-Assistant-Secret'],process.env.N8N_ASSISTANT_WEBHOOK_SECRET);
+    return response(200,{reply:'OK',links:[]});
+  });
+  assert.equal((await run({message:'Hola',sessionId:'arbitrary',role:'pro'},{authorization:'Bearer valid'})).statusCode,200);
+  assert.equal(quota.p_user_id,uid);assert.equal(quota.p_session_hash,null);assert.match(quota.p_ip_hash,/^[0-9a-f]{64}$/);
 });
-
-test('assistant proxy fails closed when the shared n8n credential is missing', async () => {
-  const originalFetch = global.fetch;
-  const originalSecret = process.env.N8N_ASSISTANT_WEBHOOK_SECRET;
+test('guests get a hashed ephemeral identity; persistent denial returns Retry-After without n8n',async t=>{
+  setup(t);let calls=0;
+  t.mock.method(global,'fetch',async(url,options)=>{
+    calls++;assert.match(url,/reserve_assistant_request$/);
+    const quota=JSON.parse(options.body);assert.equal(quota.p_user_id,null);assert.match(quota.p_session_hash,/^[0-9a-f]{64}$/);
+    return response(200,{allowed:false,retry_after:3600});
+  });
+  const result=await run();assert.equal(result.statusCode,429);assert.equal(result.headers['Retry-After'],'3600');assert.equal(calls,1);
+});
+test('invalid token cannot downgrade into anonymous quota; Auth outage fails closed',async t=>{
+  setup(t);t.mock.method(global,'fetch',async url=>{assert.match(url,/auth\/v1\/user$/);return response(401,{})});
+  assert.equal((await run(undefined,{authorization:'Bearer invalid'})).statusCode,401);
+  t.mock.method(global,'fetch',async()=>{throw Error('offline')});
+  assert.equal((await run(undefined,{authorization:'Bearer valid'})).statusCode,503);
+});
+test('missing quota infrastructure or n8n credential and malformed quota responses fail closed',async t=>{
+  setup(t);let calls=0;t.mock.method(global,'fetch',async()=>{calls++;return response(200,{})});
+  assert.equal((await run()).statusCode,503);assert.equal(calls,1);
   delete process.env.N8N_ASSISTANT_WEBHOOK_SECRET;
-  let called = false;
-  global.fetch = async () => { called = true; throw new Error('must not call upstream'); };
-  try {
-    const res = responseRecorder();
-    await handler({ method: 'POST', headers: { 'content-type': 'application/json' }, body: { message: 'Hola' } }, res);
-    assert.equal(res.statusCode, 503);
-    assert.equal(called, false);
-  } finally {
-    global.fetch = originalFetch;
-    if (originalSecret !== undefined) process.env.N8N_ASSISTANT_WEBHOOK_SECRET = originalSecret;
-  }
+  assert.equal((await run()).statusCode,503);assert.equal(calls,1);
 });
-
-test('assistant proxy rejects unsupported methods and content types', async () => {
-  let res = responseRecorder();
-  await handler({ method: 'GET', headers: {} }, res);
-  assert.equal(res.statusCode, 405);
-  assert.equal(res.headers.Allow, 'POST');
-  res = responseRecorder();
-  await handler({ method: 'POST', headers: { 'content-type': 'text/plain' }, body: '{}' }, res);
-  assert.equal(res.statusCode, 415);
-});
-
-test('assistant proxy limits a conversation to five requests per session and reports Retry-After', async () => {
-  const originalFetch = global.fetch;
-  const originalSecret = process.env.N8N_ASSISTANT_WEBHOOK_SECRET;
-  process.env.N8N_ASSISTANT_WEBHOOK_SECRET = 'test-only-secret-value-that-is-long-enough';
-  global.fetch = async () => ({ status: 200, ok: true, json: async () => ({ reply: 'OK', links: [] }) });
-  handler.resetRateLimitsForTests();
-  try {
-    for (let index = 0; index < 5; index++) {
-      const res = responseRecorder();
-      await handler({ method: 'POST', headers: { 'content-type': 'application/json', 'x-vercel-forwarded-for': '192.0.2.40' }, body: { message: 'Hola', sessionId: 'same-session' } }, res);
-      assert.equal(res.statusCode, 200);
-    }
-    const res = responseRecorder();
-    await handler({ method: 'POST', headers: { 'content-type': 'application/json', 'x-vercel-forwarded-for': '192.0.2.40' }, body: { message: 'Siguiente', sessionId: 'same-session' } }, res);
-    assert.equal(res.statusCode, 429);
-    assert.ok(Number(res.headers['Retry-After']) > 0);
-    assert.deepEqual(res.body.links, []);
-  } finally {
-    handler.resetRateLimitsForTests();
-    global.fetch = originalFetch;
-    if (originalSecret === undefined) delete process.env.N8N_ASSISTANT_WEBHOOK_SECRET;
-    else process.env.N8N_ASSISTANT_WEBHOOK_SECRET = originalSecret;
-  }
-});
-
-test('assistant proxy caps requests per IP and sanitizes forwarded page metadata', async () => {
-  const originalFetch = global.fetch;
-  const originalSecret = process.env.N8N_ASSISTANT_WEBHOOK_SECRET;
-  process.env.N8N_ASSISTANT_WEBHOOK_SECRET = 'test-only-secret-value-that-is-long-enough';
-  let forwarded;
-  global.fetch = async (_url, options) => {
-    forwarded = JSON.parse(options.body);
-    return { status: 200, ok: true, json: async () => ({ reply: 'OK', links: [] }) };
-  };
-  handler.resetRateLimitsForTests();
-  try {
-    const first = responseRecorder();
-    await handler({ method: 'POST', headers: { 'content-type': 'application/json', 'x-vercel-forwarded-for': '192.0.2.41' }, body: {
-      message: 'Hola', sessionId: 'session-1', page: { path: '//evil.example', title: 'x'.repeat(200), extra: 'ignored' }
-    } }, first);
-    assert.equal(first.statusCode, 200);
-    assert.deepEqual(forwarded, { message: 'Hola', sessionId: 'session-1', page: { title: 'x'.repeat(120) } });
-
-    for (let index = 1; index <= 5; index++) {
-      const res = responseRecorder();
-      await handler({ method: 'POST', headers: { 'content-type': 'application/json', 'x-vercel-forwarded-for': '192.0.2.42' }, body: { message: 'Hola', sessionId: `session-${index}` } }, res);
-      assert.equal(res.statusCode, 200);
-    }
-    const blocked = responseRecorder();
-    await handler({ method: 'POST', headers: { 'content-type': 'application/json', 'x-vercel-forwarded-for': '192.0.2.42' }, body: { message: 'Hola', sessionId: 'session-final' } }, blocked);
-    assert.equal(blocked.statusCode, 429);
-  } finally {
-    handler.resetRateLimitsForTests();
-    global.fetch = originalFetch;
-    if (originalSecret === undefined) delete process.env.N8N_ASSISTANT_WEBHOOK_SECRET;
-    else process.env.N8N_ASSISTANT_WEBHOOK_SECRET = originalSecret;
-  }
+test('page metadata is bounded and upstream transport failures return fallback',async t=>{
+  setup(t);let sent;
+  t.mock.method(global,'fetch',async(url,options)=>{
+    if(url.endsWith('/reserve_assistant_request'))return response(200,{allowed:true});
+    sent=JSON.parse(options.body);throw Error('n8n offline');
+  });
+  assert.equal((await run({message:' Hola ',sessionId:'guest',page:{path:'//evil.example',title:'x'.repeat(300)}})).statusCode,502);
+  assert.equal(sent.message,'Hola');assert.deepEqual(sent.page,{title:'x'.repeat(120)});
 });

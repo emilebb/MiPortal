@@ -129,7 +129,7 @@ async function rpc(configured, name, payload) {
 
 async function sendWelcome(configured, to, urls, idempotencyPayload) {
   const { html, text } = buildWelcomeEmail(urls);
-  // Clave de idempotencia ÚNICA por solicitud: deriva del payload firmado
+  // Clave de idempotencia por ventana de solicitud: deriva del payload firmado
   // (hash del correo + expiración), no del correo a secas. Reutilizar la
   // misma clave con un cuerpo distinto (p. ej. otro correo de bienvenida
   // para el mismo email con tokens URL nuevos) hace que Resend responda
@@ -194,7 +194,7 @@ module.exports = async function handler(req, res) {
   try { body = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch { return fail(400, 'Datos inválidos.'); }
   if (!body || typeof body !== 'object' || Array.isArray(body) ||
       Object.keys(body).some(key => !['email', 'website'].includes(key)) ||
-      body.website !== undefined && body.website !== '' || !validEmail(body.email)) {
+      body.website !== undefined && body.website !== '' || !validEmail(typeof body.email === 'string' ? body.email.trim() : body.email)) {
     return fail(400, 'Ingresá un correo válido.');
   }
 
@@ -208,7 +208,8 @@ module.exports = async function handler(req, res) {
 
   const email = body.email.trim().toLowerCase();
   const hash = createHmac('sha256', configured.env.NEWSLETTER_HASH_SECRET).update(email).digest('hex');
-  const payload = `${hash}.${Date.now() + tokenLifetime}`;
+  // A retry within ten minutes keeps identical tokens, content and provider key.
+  const payload = `${hash}.${Math.floor(Date.now() / 600000) * 600000 + tokenLifetime}`;
   const confirmUrl = `https://www.miportal.me/api/newsletter?action=confirm&token=${encodeURIComponent(tokenFor(payload, configured.env.NEWSLETTER_HASH_SECRET))}`;
   const unsubscribeUrl = `https://www.miportal.me/api/newsletter?action=unsubscribe&token=${encodeURIComponent(tokenFor(payload, configured.env.NEWSLETTER_HASH_SECRET))}`;
   try {
@@ -219,14 +220,18 @@ module.exports = async function handler(req, res) {
       return fail(429, 'Demasiados intentos. Probá más tarde.');
     }
     const result = await rpc(configured, 'upsert_newsletter_subscriber', { p_email: email, p_email_hash: hash });
-    try {
-      await sendWelcome(configured, email, { confirmUrl, unsubscribeUrl }, payload);
-    } catch (error) {
+    if (result?.status === 'confirmed') return jsonResponse(res, 200, {
+      status: 'confirmed', message: 'Tu suscripción ya está confirmada.'
+    });
+    try { await sendWelcome(configured, email, { confirmUrl, unsubscribeUrl }, payload); }
+    catch (error) {
       logUpstream(error);
+      res.setHeader('Retry-After', '60');
+      return res.status(upstreamStatus(error)).json({ status: 'pending', retryable: true,
+        error: 'Guardamos tu solicitud, pero no pudimos enviar el correo de confirmación. Vuelve a intentarlo en un minuto.' });
     }
-    return jsonResponse(res, 202, { message: result?.status === 'confirmed'
-      ? '¡Gracias! Te has suscrito correctamente.'
-      : '¡Gracias! Te has suscrito correctamente. Revisá tu correo para confirmar tu suscripción.' });
+    return jsonResponse(res, 202, { status: 'pending', message:
+      'Solicitud guardada. Enviamos el correo de confirmación; confirma tu suscripción desde el enlace.' });
   } catch (error) {
     logUpstream(error);
     return fail(upstreamStatus(error), upstreamMessage(error));

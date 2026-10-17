@@ -1,10 +1,14 @@
+import { chromeSession } from './chrome-test-session.mjs';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { readFile, mkdtemp } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { test } from 'node:test';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
-const root = new URL('../', import.meta.url);
+const root = new URL('../public/', import.meta.url);
+const sdk = new URL('../node_modules/@supabase/supabase-js/dist/umd/supabase.js', import.meta.url);
 // SDK real, transporte HTTP simulado: no usa credenciales ni servicios remotos.
 const transport = `
   window.violations = [];
@@ -44,7 +48,9 @@ test('Chrome: real Supabase SDK persistence, guards, recovery and accessible err
           return;
         }
         if (path === '/sdk.js') {
-          path = '/node_modules/@supabase/supabase-js/dist/umd/supabase.js';
+          res.setHeader('Content-Type', 'text/javascript');
+          res.end(await readFile(sdk));
+          return;
         }
         if (path.endsWith('/')) path += 'index.html';
         if (path === '/js/reset-password.js') {
@@ -54,7 +60,7 @@ test('Chrome: real Supabase SDK persistence, guards, recovery and accessible err
         let content = await readFile(new URL(path.slice(1), root));
         if (path.endsWith('.html')) {
           content = content.toString().replace(
-            /<script src="https:\/\/cdn.jsdelivr.net\/npm\/@supabase\/supabase-js@2"><\/script>/,
+            /<script src="https:\/\/cdn.jsdelivr.net\/npm\/@supabase\/supabase-js@2(?:\.\d+\.\d+)?"><\/script>/,
             '<script src="/fixture.js"></script><script src="/sdk.js"></script>')
             .replace(/<script src="(?:\.\.\/)?supabase-config.js"><\/script>/, '');
           res.setHeader('Content-Type', 'text/html');
@@ -67,36 +73,9 @@ test('Chrome: real Supabase SDK persistence, guards, recovery and accessible err
     });
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     t.after(() => server.close());
-    const profile = await mkdtemp('/tmp/opencode/portal-auth-');
-    const chrome = spawn(process.env.CHROME_BIN || '/usr/bin/google-chrome', [
-      '--headless=new', '--disable-gpu', '--no-first-run',
-      '--remote-debugging-pipe', `--user-data-dir=${profile}`
-    ], { stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'] });
-    t.after(() => chrome.kill());
-    let sequence = 0;
-    let buffer = '';
-    const pending = new Map();
-    chrome.stdio[4].on('data', chunk => {
-      buffer += chunk;
-      let end;
-      while ((end = buffer.indexOf('\0')) !== -1) {
-        const message = JSON.parse(buffer.slice(0, end));
-        buffer = buffer.slice(end + 1);
-        pending.get(message.id)?.(message);
-      }
-    });
-    const send = (method, params = {}, sessionId) => new Promise((resolve, reject) => {
-      const id = ++sequence;
-      const timeout = setTimeout(() => reject(new Error(`Timeout: ${method}`)), 10000);
-      pending.set(id, message => {
-        clearTimeout(timeout);
-        pending.delete(id);
-        if (message.error) reject(new Error(JSON.stringify(message.error)));
-        else resolve(message.result);
-      });
-      chrome.stdio[3].write(JSON.stringify({ id, method, params, sessionId }) + '\0');
-    });
-    const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
+    const { send, close } = await chromeSession();
+  t.after(close);
+  const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
     const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
     const evaluate = async expression => {
       const result = await send('Runtime.evaluate', {

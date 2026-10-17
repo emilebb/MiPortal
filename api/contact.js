@@ -188,7 +188,7 @@ module.exports = async function handler(req, res) {
     }
 
     return res.status(202).json({
-      message: 'Mensaje enviado correctamente. Recibirás la respuesta en tu correo.'
+      message: 'Tu solicitud fue recibida para su procesamiento.'
     });
 
   } catch (error) {

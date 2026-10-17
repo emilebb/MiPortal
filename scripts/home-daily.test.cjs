@@ -30,6 +30,13 @@ test('Daily does not invent items when the array is empty or invalid', async () 
   assert.deepEqual(prepareDailyItems([{ ranking: 1 }, null, 'invalid']), [{ ranking: 1 }]);
 });
 
+test('Daily excludes the confirmed entertainment/react collision without inventing replacements',async()=>{
+  const {prepareDailyItems}=await import('../js/home-daily-utils.mjs');
+  const valid={ranking:2,category:'JavaScript',title:'React 19: hooks y componentes'};
+  const items=prepareDailyItems([{ranking:1,category:'JavaScript',title:"Actors React To Season 2 Premiere's Biggest Twists",summary:'IMDb'},valid]);
+  assert.deepEqual(items,[valid]);
+});
+
 test('Daily external links accept HTTPS only', async () => {
   const { getSafeDailyUrl } = await import('../js/home-daily-utils.mjs');
 
@@ -37,6 +44,7 @@ test('Daily external links accept HTTPS only', async () => {
   assert.equal(getSafeDailyUrl('javascript:alert(1)'), null);
   assert.equal(getSafeDailyUrl('http://example.com/story'), null);
   assert.equal(getSafeDailyUrl('not a URL'), null);
+  assert.equal(getSafeDailyUrl('https://user:password@example.com/story'), null);
 });
 
 test('Daily reads only the newest row and renders exactly its existing items safely', async () => {

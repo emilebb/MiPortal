@@ -43,8 +43,15 @@ export async function requestAssistantReply(message, sessionId, page, options = 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), config.timeoutMs || 15_000);
   try {
+    const headers = { 'Content-Type': 'application/json' };
+    const auth = options.auth || globalThis.window?.MiPortalSupabase?.auth;
+    if (auth) {
+      const { data, error } = await auth.getSession();
+      if (error) throw new Error('No se pudo verificar la sesión.');
+      if (data?.session?.access_token) headers.Authorization = `Bearer ${data.session.access_token}`;
+    }
     const response = await (options.fetch || fetch)(config.endpoint, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: controller.signal,
+      method: 'POST', headers, signal: controller.signal,
       body: JSON.stringify({ message: clean, sessionId, page })
     });
     if (!response.ok) throw new Error(`El endpoint respondió ${response.status}.`);

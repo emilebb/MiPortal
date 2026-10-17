@@ -1,3 +1,4 @@
+import { chromeSession } from './chrome-test-session.mjs';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { readFile, mkdtemp } from 'node:fs/promises';
@@ -6,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 
-const root = new URL('../', import.meta.url);
+const root = new URL('../public/', import.meta.url);
 const mock = `
   window.pending = []; window.calls = []; window.violations = [];
   addEventListener('securitypolicyviolation', e => violations.push(e.violatedDirective));
@@ -53,35 +54,8 @@ test('contact in Chrome: retry, reset, accessibility and actual page CSP', async
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   t.after(() => server.close());
-  const profile = await mkdtemp(join(tmpdir(), 'portal-contact-'));
-  const chrome = spawn(process.env.CHROME_BIN || '/usr/bin/google-chrome', [
-    '--headless=new', '--disable-gpu', '--no-first-run',
-    '--disable-background-networking', '--remote-debugging-pipe',
-    `--user-data-dir=${profile}`
-  ], { stdio: ['ignore', 'ignore', 'ignore', 'pipe', 'pipe'] });
-  t.after(() => chrome.kill());
-  let sequence = 0;
-  let buffer = '';
-  const waiting = new Map();
-  chrome.stdio[4].on('data', chunk => {
-    buffer += chunk;
-    let end;
-    while ((end = buffer.indexOf('\0')) !== -1) {
-      const message = JSON.parse(buffer.slice(0, end));
-      buffer = buffer.slice(end + 1);
-      waiting.get(message.id)?.(message);
-    }
-  });
-  const send = (method, params = {}, sessionId) => new Promise((resolve, reject) => {
-    const id = ++sequence;
-    const timer = setTimeout(() => reject(Error(`Timeout: ${method}`)), 10000);
-    waiting.set(id, message => {
-      clearTimeout(timer); waiting.delete(id);
-      if (message.error) reject(Error(JSON.stringify(message.error)));
-      else resolve(message.result);
-    });
-    chrome.stdio[3].write(JSON.stringify({ id, method, params, sessionId }) + '\0');
-  });
+  const { send, close } = await chromeSession();
+  t.after(close);
   const { targetId } = await send('Target.createTarget', { url: 'about:blank' });
   const { sessionId } = await send('Target.attachToTarget', { targetId, flatten: true });
   await send('Network.enable', {}, sessionId);
