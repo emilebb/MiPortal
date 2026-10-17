@@ -44,6 +44,7 @@ test('Daily external links accept HTTPS only', async () => {
   assert.equal(getSafeDailyUrl('javascript:alert(1)'), null);
   assert.equal(getSafeDailyUrl('http://example.com/story'), null);
   assert.equal(getSafeDailyUrl('not a URL'), null);
+  assert.equal(getSafeDailyUrl('https://user:password@example.com/story'), null);
 });
 
 test('Daily reads only the newest row and renders exactly its existing items safely', async () => {

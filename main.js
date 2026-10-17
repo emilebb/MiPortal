@@ -74,6 +74,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const getSafeHttpsUrl = (value) => {
     try {
       const url = new URL(value);
+      if (url.username || url.password) return null;
       return url.protocol === 'https:' ? url.href : null;
     } catch {
       return null;

@@ -128,9 +128,12 @@ function dateNode(item) {
   node.dateTime = item.date;
 
   if (absolute && relative) {
-    node.setAttribute(
-      'aria-label',
-      `Publicado el ${absolute} (${relative})`
+    // <time> does not consistently support an accessible name override.
+    // Keep the same information as readable content instead.
+    node.replaceChildren(
+      element('span', 'visually-hidden', 'Publicado el '),
+      document.createTextNode(absolute),
+      element('span', 'visually-hidden', ` (${relative})`)
     );
 
     node.title = absolute;

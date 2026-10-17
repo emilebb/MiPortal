@@ -16,7 +16,10 @@
     "test": "node scripts/run-tests.mjs",
     "test:unit": "node scripts/run-tests.mjs unit",
     "test:browser": "node scripts/run-tests.mjs browser",
-    "test:db": "node --test scripts/rls.test.mjs scripts/subscriptions.test.mjs"
+    "test:db": "node --test scripts/rls.test.mjs scripts/subscriptions.test.mjs",
+    "audit:serve": "node scripts/serve-audit.mjs",
+    "audit:check": "node scripts/check-audit.mjs",
+    "audit:secrets": "node scripts/audit-secrets.cjs"
   },
   "license": "UNLICENSED",
   "dependencies": {
@@ -24,6 +27,7 @@
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.10",
+    "axe-core": "4.14.0",
     "clean-css": "5.3.3"
   }
 }

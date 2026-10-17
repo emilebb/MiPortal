@@ -17,6 +17,7 @@ export function dailyContentClass(count) {
 export function getSafeDailyUrl(value) {
   try {
     const url = new URL(value);
+    if (url.username || url.password) return null;
     return url.protocol === 'https:' ? url.href : null;
   } catch {
     return null;

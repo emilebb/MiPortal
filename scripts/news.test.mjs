@@ -442,3 +442,9 @@ test('loadNews aborts a hanging transport and allows a fresh retry',async()=>{
   const good={from(){return {select(){return this},eq(){return this},order(){return this},limit(){return this},abortSignal(){return Promise.resolve({data:[row()],error:null})}}}};
   assert.equal((await loadNews({client:good})).length,1);
 });
+
+test('news rejects credential-bearing destinations and never renders credentials in image URLs',()=>{
+ assert.deepEqual(prepareItems([row({url:'https://trusted.example@other.example/story'})]),[]);
+ const [item]=prepareItems([row({image_url:'https://user:password@example.com/image.jpg'})]);
+ assert.equal(item.image,null);
+});

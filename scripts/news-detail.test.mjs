@@ -27,6 +27,8 @@ test('news detail external URLs allow only HTTP and HTTPS', () => {
   assert.equal(safeNewsUrl('http://example.com/story'), 'http://example.com/story');
   assert.equal(safeNewsUrl('javascript:alert(1)'), null);
   assert.equal(safeNewsUrl('//example.com/story'), null);
+  assert.equal(safeNewsUrl('https://trusted.example@other.example/story'), null);
+  assert.equal(safeNewsUrl('https://user:password@example.com/story'), null);
 });
 
 test('related news excludes the current item, unpublished and incomplete rows, and caps at three', () => {

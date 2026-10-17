@@ -53,3 +53,9 @@ Referencia: [control de acceso oficial de Supabase](https://supabase.com/docs/gu
 Referencia: [roles oficiales de n8n](https://docs.n8n.io/administer/manage-users-and-access/set-permissions-and-roles-rbac/see-available-roles/).
 
 Con estos archivos adjuntos se puede continuar la revisión sin nuevos permisos de escritura. La autorización para desplegar o modificar producción seguirá siendo independiente.
+
+## Actualización de esta fase
+
+Lecturas comprobadas nuevamente: Supabase disponible; Vercel devuelve 403 para el mismo equipo/proyecto; n8n requiere iniciar sesión. No se modificaron permisos. Las instrucciones anteriores siguen siendo el camino mínimo: exportaciones saneadas cuando la integración no pueda restringirse, sin claves ni roles amplios. No se necesita volver a compartir la URL del repositorio, conceder escritura ni crear una cuenta del agente.
+
+Para Pro, el estado y las funciones actuales no acreditan el origen histórico. Conserva el perfil y aporta únicamente evidencia existente. Los metadatos de backup/PITR siguen pendientes de lectura/confirmación del propietario; no pulses Restore.

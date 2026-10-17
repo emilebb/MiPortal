@@ -1,4 +1,4 @@
-> **Estado vigente — 16 de octubre de 2026:** 162 pruebas unitarias/integración aprobadas; cuatro suites de navegador bloqueadas por el entorno. Se corrigieron carga y búsqueda, detalle, iconos y presentación de miniaturas, y se redujo el CSS servido. Pro histórico intacto y migración detenida. **El proyecto todavía no está validado para producción.** Los recuentos anteriores que aparecen más abajo pertenecen a fases previas; prevalece esta actualización y la sección final de verificación.
+> **Estado vigente — fase de validación:** 170 pruebas unitarias/integración aprobadas; cuatro suites CDP bloqueadas. Auditoría axe: 76 escenarios consolidados, 0 violaciones detectadas y 152 resultados incompletos que requieren revisión manual. Pro histórico intacto; migración detenida. **No está validado para producción.** Los recuentos de fases anteriores que aparecen más abajo son históricos.
 # MiPortal.me — evaluación y plan maestro
 
 Fecha: 16 de octubre de 2026. Evaluación pública, acceso de lectura a Supabase y primera implementación local. Las secciones 10 y 11 actualizan el diagnóstico inicial. Consultar también Informe-implementacion-MiPortal.md para pruebas, cambios y bloqueos vigentes.
@@ -261,3 +261,56 @@ El resto del trabajo que depende de configuración externa, derechos de imágene
 - Referencias locales de 21 HTML y sus módulos sin faltantes. Auditoría estática de idioma/H1/main/alt/IDs sin observaciones en HTML inicial; no equivale a validación WCAG ni de contenido dinámico completo.
 - Auditoría de dependencias: 0 vulnerabilidades conocidas informadas. El CSS y los activos permanecen revisables en código; no se aplicó una reestructuración de reglas ni una nueva identidad visual.
 - Evidencias de entrega: `Pruebas-unitarias-integracion.txt`, `Pruebas-navegador.txt`, `Medicion-CSS-local.json`, `Mediciones-responsive-local.json`, `Auditoria-enlaces-locales.json`, `Auditoria-estatica-accesibilidad.json`, `Noticias-local-mejoradas.png`, inventario actualizado y pasos de acceso. No hay despliegue, migración productiva, cobro ni publicación de rama.
+
+## Fase de validación y finalización — estado actual
+
+### Implementado y problemas corregidos
+
+- Contraste insuficiente del botón de acceso/registro en oscuro: el CSS administrativo usaba el color de enlaces claros como fondo. Ahora usa los tokens de relleno de botón, con texto blanco; los escenarios correspondientes ya no producen la violación detectada antes.
+- Nombre accesible del logo: deriva del texto de marca visible y añade el destino Inicio sin sobrescribirlo con una etiqueta discordante. El árbol accesible del navegador integrado muestra «MP MiPortal.me — Inicio».
+- Jerarquía de encabezados: las secciones de privacidad, términos y sobre nosotros pasan de H3 a H2 conservando su tamaño visual; recursos tiene un H2 de sección antes de las tarjetas H3.
+- El ejemplo de código del tutorial admite foco de teclado y tiene un nombre de región y foco visible para desplazarlo en móvil.
+- Las URLs con usuario/contraseña se rechazan en noticias, Daily y recursos para evitar destinos ambiguos o credenciales en enlaces/imágenes.
+- Servidor de auditoría local con axe-core 4.14.0 fijado, datos ficticios, estado anónimo y bloqueo de APIs/escrituras. No se sirve ni se incluye el motor de auditoría en producción. Incluye protección de origen, identificación de ejecución y captura del caso antes de la limpieza de URL de recuperación.
+- Comprobador que rechaza matrices incompletas, repetidas, con errores, ancho/tema incorrectos o desbordamiento. Los resultados incompletos del motor conservan estado de revisión manual.
+
+### Pruebas aprobadas y verificaciones ejecutadas
+
+170 pruebas unitarias/integración aprobadas, sin fallos. Se ejecutaron nuevamente las cuatro suites CDP: las cuatro siguen bloqueadas por el arranque del navegador, antes de sus aserciones. WSL no está instalado y no hay Docker/Podman disponible; no se modificó el sistema ni se redujeron protecciones.
+
+Auditoría axe: 76 escenarios consolidados (19 páginas públicas raíz × 390/1440 px × claro/oscuro), 0 violaciones detectadas, 0 errores finales, sin combinaciones faltantes/duplicadas y sin desbordamiento del documento. Existen 152 resultados incompletos repetidos por escenario que requieren revisión manual; no equivalen a 152 defectos ni permiten declarar conformidad WCAG. Los escenarios son anónimos y ficticios: no certifican administración autenticada, cobros, Auth real, correo, n8n, lector de pantalla, zoom ni móvil físico. Las cuatro suites CDP son pruebas distintas y continúan abiertas.
+
+Trazabilidad: el registro principal posterior a las correcciones conserva cuatro timeouts de instrumentación en recuperación; se corrigió la herramienta (no la limpieza de URL del producto), se repitieron esos cuatro casos y se guardaron sus resultados por separado. El consolidado referencia el registro original y el reensayo. El comprobador final devuelve `manual-review-required` (código 2). No se presenta como aprobación total.
+
+La auditoría inicial detectó cuatro clases de problemas: contraste, nombre visible/accesible, orden de encabezados y desplazamiento sin foco. El JSON inicial, los resultados corregidos y la evidencia visual quedan disponibles.
+
+La búsqueda de patrones conocidos de credenciales en los blobs de texto del historial Git no encontró candidatos. No imprimió valores, no utilizó credenciales y no equivale a una garantía de ausencia de secretos ni a una auditoría completa de seguridad. El informe indica cuántas versiones de texto se inspeccionaron. Las claves/configuración de producción no se exportaron.
+
+### Imágenes y rendimiento
+
+Se prepararon 258 propuestas únicas y trazables: 233 imágenes de baja resolución, 18 entradas sin imagen y siete diagnósticos incompletos. Cada propuesta incluye referencia, fuente, dimensiones, plan responsive orientativo y requisito de autorización/atribución. No se sustituyó ninguna fotografía ni se atribuyeron derechos a una URL pública. Los marcadores de marca y la limitación de ampliación siguen siendo mitigaciones, no originales de alta calidad.
+
+La medición CSS local se mantiene como evidencia de bytes/gzip; no se obtuvo una puntuación Lighthouse ni LCP/INP/CLS de producción. Los fixtures instrumentados con axe no se usan como medición de velocidad real. Quedan originales autorizados, contraste de casos incompletos, zoom, lector real, móvil físico y métricas por ruta.
+
+### Servicios, Pro y riesgos productivos
+
+Vercel vuelve a devolver 403 para `mi-portal` en `emiles-projects-c997f3b7`; no hay CLI con acceso alternativo. n8n continúa en inicio de sesión. Supabase admite lectura y confirma 1 Pro, 1 admin, 2 viewer, 0 pagos y ausencia de pro_subscriptions. No se modificó ningún dato.
+
+La función actual de creación de perfiles asigna viewer; el trigger actual restringe cambios de rol a postgres/service_role. Esto describe el estado actual, no demuestra qué existía al cambiar la cuenta histórica. Se localizó el commit del flujo Pro de 18 de septiembre a las 04:00:45 UTC, anterior a la creación del perfil a las 04:01:53 UTC; la proximidad no demuestra despliegue ni pago. Updated_at a las 04:41:33 UTC tampoco identifica qué campo cambió. El origen permanece sin demostrar y no se supone concesión manual.
+
+La migración Pro sigue detenida y conserva su guard. No se redujeron beneficios. Las APIs nuevas dependen de migraciones/configuración todavía sin validar; publicar parcialmente esta rama puede dejar funcionalidades cerradas por seguridad. Falta PostgreSQL 17 aislado con concurrencia real, sandbox autorizado de proveedores, respaldo/ensayo de restauración, revisión de n8n/Vercel y coordinación de API/base. No ejecutar una migración masiva ni desplegar antes de cerrar esas puertas y obtener autorización.
+
+### Acciones personales imprescindibles
+
+1. Vercel: autorizar únicamente la lectura de `mi-portal` en el equipo correcto si la integración lo permite, o entregar configuración, SHA, logs saneados y nombres/presencia de variables sin valores. No otorgar Developer/Admin para facilitar la auditoría.
+2. n8n: exportar definiciones de contacto, asistente, noticias y Daily, sin pinData, secretos ni datos personales; adjuntar ejecuciones saneadas. No ejecutar flujos.
+3. Pro: aportar evidencia histórica disponible (pago, importación, concesión o cambio de rol) o registros conservados. No modificar el perfil. La decisión de beneficios y la autorización de migración son independientes.
+4. Supabase: entregar solo metadatos de backup/PITR y evidencia de ensayo aislado si existe. La conexión de lectura actual no requiere una nueva clave.
+5. Ejecutar las cuatro suites en otra máquina de pruebas compatible a partir del ZIP, sin publicar la rama, sin claves productivas y sin desactivar sandbox. Devolver el registro y el SHA probado.
+6. Revisar las propuestas de imágenes con originales/derechos, los datos legales y el alcance editorial/comercial pendiente.
+
+Los pasos detallados están en `Accesos-lectura-MiPortal.md`; la auditoría local se reproduce siguiendo `Validacion-local-reproducible.md`. No hubo cobros, migraciones productivas, cambios de permisos, despliegues ni publicación. El proyecto todavía no está validado para producción.
+
+### Revisión adicional de las fechas
+
+El motor marcó como incompleto el uso de `aria-label` en elementos `time`. Se conservó el dato de publicación como contenido textual accesible (prefijo y fecha relativa ocultos solo visualmente), sin sobreescribir el nombre del elemento. Se repitieron los cuatro escenarios de noticias y desapareció ese aviso. El consolidado final combina 68 escenarios del registro principal, cuatro de recuperación y cuatro de noticias; conserva referencias a ambos reensayos y al registro original. Quedan 152 avisos incompletos de contraste y nombres de controles con iconos, repetidos por escenario, que requieren revisión manual. No se declararon aprobados.

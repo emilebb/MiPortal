@@ -94,6 +94,7 @@ function cleanText(value) {
 function safeUrl(value) {
   try {
     const url = new URL(value);
+    if (url.username || url.password) return null;
 
     if (
       url.protocol !== 'https:' &&
