@@ -21,19 +21,23 @@ El comprobador devuelve:
 
 Conservar el JSON original junto con una revisión manual de sus casos incompletos. Un tema, una página o un ancho no se sustituyen por otro escenario repetido.
 
-## Las cuatro suites de navegador
+## Suites de navegador
 
-Continúan requiriendo Chrome/Chromium capaz de arrancar su renderizador y responder a CDP. El entorno actual falla con Chrome, Edge y Headless Shell; WSL no está instalado y no hay Docker/Podman disponible. No se han cambiado componentes del sistema.
+Las suites corren con Chrome/Chromium con sandbox activo y fixtures locales. En la ejecución del 16 de octubre de 2026, `npm run test:browser` aprobó 21/21 pruebas y `npm test` aprobó 191/191. No se usaron cuentas reales, credenciales de producción ni proveedores externos.
 
 Para ejecutarlas sin publicar la rama, copia el ZIP de código a una máquina de pruebas compatible, instala Node 24 y Chrome/Chromium estable, ejecuta `npm ci --ignore-scripts` y `npm test`, con `CHROME_BIN` apuntando al ejecutable existente si no se detecta automáticamente. No añadas `--no-sandbox`. No uses claves productivas. Devuelve el registro completo y el SHA del código probado. Si el navegador no arranca con sus protecciones activas, registra el bloqueo y utiliza otro entorno compatible; no reduzcas sus protecciones.
 
-No es necesario subir cambios a GitHub ni activar CI/despliegues para hacer este ensayo. Cualquier publicación sigue requiriendo autorización.
+No es necesario activar CI/despliegues para repetir el ensayo. Cualquier publicación productiva sigue requiriendo autorización.
 
 ## Resultado vigente de validación
 
-La matriz consolidada tiene 76 escenarios (19 páginas × 2 anchos × 2 temas), sin combinaciones ausentes o duplicadas, sin errores de ejecución finales ni desbordamiento. El motor no detectó violaciones en esos escenarios; conserva 152 resultados `incomplete` que requieren revisión manual. No son 152 defectos distintos ni comprobaciones aprobadas.
+La última matriz local de este checkout tiene 76 escenarios (19 páginas × 2 anchos × 2 temas), sin combinaciones ausentes o duplicadas, errores de ejecución o desbordamiento. El motor no detectó violaciones; conserva 152 resultados `incomplete`, no aprobados. Se agrupan en 76 casos de contraste cuyo fondo usa gradientes y axe no calcula, y 76 revisiones de nombre/etiqueta en el botón de tema y el asistente, que usan iconos visibles y nombres ARIA. Son dos clases repetidas por escenario, no 152 defectos distintos. Aún hace falta comprobar visualmente los contrastes efectivos y probar los controles con lector de pantalla; no se declara conformidad WCAG.
 
-Se conserva el primer registro posterior a las correcciones con cuatro timeouts de instrumentación en recuperación. El producto limpia la URL por seguridad y borraba el identificador del caso. La herramienta ahora lo captura antes de esa limpieza y mantiene un identificador por ejecución para rechazar mensajes de ejecuciones anteriores. No se cambió esa protección del producto. El reensayo específico de los cuatro escenarios de recuperación terminó correctamente y se incorporó al informe consolidado con referencias a los registros originales.
+Artefacto local de esa ejecución: `artifacts/accessibility-current.json` (ignorado por Git). `npm run audit:check` devuelve 2 (`manual-review-required`), con 0 violaciones, 0 casos ausentes/duplicados, 0 errores y 0 desbordamientos.
+
+Otras verificaciones del mismo checkout: `npm audit` encontró 0 vulnerabilidades; `npm run audit:secrets` escaneó 559 archivos, sin candidatos ni revisión pendiente. La revisión de secretos no demuestra que los valores de Vercel sean correctos.
+
+Se conserva como antecedente el registro anterior a esta ejecución, que tuvo cuatro timeouts de instrumentación en recuperación. La herramienta captura el identificador antes de que el producto limpie la URL por seguridad y rechaza mensajes de ejecuciones anteriores. La prueba específica de recuperación terminó correctamente en aquella revisión. Esta ejecución usa un ID nuevo y volvió a completar los 76 casos.
 
 Archivos: `Accesibilidad-axe-ejecucion-principal.json`, `Accesibilidad-axe-retest-recuperacion.json`, `Accesibilidad-axe-local.json` y `Resumen-accesibilidad-axe.json`. El último comprobador devuelve código 2 (revisión manual), no aprobación total.
 

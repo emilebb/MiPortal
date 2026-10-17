@@ -8,7 +8,7 @@ const mock=`
 window.pending=[];window.violations=[];
 addEventListener('securitypolicyviolation',e=>violations.push(e.violatedDirective));
 if(location.search.includes('timeout')) { const timeout=AbortSignal.timeout.bind(AbortSignal); AbortSignal.timeout=()=>timeout(50); }
-if(!location.search.includes('missing'))window.MiPortalSupabase={from(table){let signal;return {
+if(!location.search.includes('missing'))window.MiPortalSupabase={auth:{onAuthStateChange(){}},from(table){let signal;return {
  select(){return this},eq(){return this},order(){return this},limit(){return this},abortSignal(value){signal=value;return this},
  then(resolve){const entry={table,resolve};pending.push(entry);if(signal){const abort=()=>{pending=pending.filter(x=>x!==entry);resolve({error:{message:'Controlled timeout'}})};if(signal.aborted)abort();else signal.addEventListener('abort',abort,{once:true});}}
 }}};

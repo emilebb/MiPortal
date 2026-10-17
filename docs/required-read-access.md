@@ -4,11 +4,11 @@ Alcance: terminar la verificación sin cobros, despliegues, migraciones, ejecuci
 
 | Plataforma y recurso exacto | Lectura necesaria | Para qué | Estado conocido |
 |---|---|---|---|
-| Vercel, proyecto `mi-portal`, equipo `emiles-projects-c997f3b7` | Configuración del proyecto: raíz, framework, órdenes de compilación, versión de Node, regiones y dominios | Verificar que el código y el proceso auditados corresponden al servicio real | Listado de proyectos accesible; detalle y despliegues devolvieron 403 |
-| Mismo proyecto Vercel | Historial y detalle de despliegues, rama/SHA, estado y registros de compilación; registros de funciones con identificadores y datos personales redactados | Correlacionar versión activa y errores con cambios; comprobar origen/proxy del límite por IP | Falta autorización de lectura al proyecto |
-| Mismo proyecto Vercel | Nombres de variables, presencia y entornos asignados; configuración efectiva de headers, protección y caché | Comprobar contratos de configuración sin revelar valores secretos | No leer ni exportar valores de secretos; si la interfaz no separa este permiso, entregar inventario saneado |
-| Supabase `miportal-backend`, ref `lfflmyqjoxntoatbbwtf` | Esquema, migraciones, funciones, triggers, grants, políticas RLS, asesores y estadísticas agregadas | Revisar permisos, compatibilidad y diferencias con el repositorio | Ya disponible en la auditoría anterior; no ampliar a otros proyectos |
-| Mismo Supabase | Fechas y estados de la cuenta Pro afectada y sus registros de pago, mediante consulta específica o exportación saneada; historial de cambios de rol si existe | Aclarar si el beneficio provino de una concesión manual, prueba, importación o pago externo | Solo se comprobó 1 Pro y 0 pagos; el origen sigue sin prueba. No hacen falta correos, documentos, direcciones ni conversaciones |
+| Vercel, proyecto `mi-portal`, equipo `emiles-projects-c997f3b7` | Configuración legible: versión de Node, framework, dominios, protección y despliegues | Correlacionar servicio y checkout | Lectura disponible; Node 24.x, dominio propio verificado, framework reportado `null`, SSO habilitado para previews salvo dominios personalizados |
+| Mismo proyecto Vercel | Historial/detalle de despliegues, rama/SHA, estado y registros de compilación; logs saneados de funciones | Correlacionar versión activa y errores | SHA de producción `1b6eb4b` en `main`; preview del SHA `86c0961` está `READY`. No se leyeron logs de función |
+| Mismo proyecto Vercel | Nombres de variables y entornos asignados, sin valores | Revisar los contratos de configuración | Inventario leído con `decrypt=false`; `MERCADOPAGO_MODE` no aparece. No se leyeron secretos |
+| Supabase `miportal-backend`, ref `lfflmyqjoxntoatbbwtf` | Esquema, migraciones, funciones, triggers, grants, políticas RLS, asesores y estadísticas agregadas | Revisar permisos, compatibilidad y diferencias con el repositorio | Disponible en esta sesión; PostgreSQL 17.6.1; no ampliar a otros proyectos |
+| Mismo Supabase | Estado agregado de roles y registros de pago; historial de cambios de rol si existe | Aclarar el origen de Pro sin leer datos personales | 1 perfil `pro`, 0 filas en `payments`, `pro_subscriptions` no existe; origen sigue sin prueba |
 | Mismo Supabase | Logs saneados de Auth/API/Database en una ventana acordada y metadatos de copias de seguridad/PITR (existencia, última fecha y retención) | Correlacionar fallos y preparar recuperación; no descargar copias ni datos completos | Pendiente; el historial puede no conservar el cambio antiguo |
 | n8n `https://n8n.miportal.me` | Definiciones/exportaciones saneadas de los flujos de contacto, asistente, ingestión de noticias e informe Daily; estado activo, versión, configuración de webhook/respuesta y manejo de errores | Verificar contratos, autenticación entre servicios, imágenes originales y filtro editorial | Solo se alcanzó el inicio de sesión; sin acceso a los flujos |
 | Mismo n8n | Ejecuciones recientes: fecha, resultado, duración, nodo fallido, código de error; entradas/salidas mínimas anonimizadas | Comprobar entrega real y explicar errores sin generar nuevas ejecuciones | Pendiente; no incluir mensajes privados ni respuestas completas del asistente |
@@ -20,15 +20,11 @@ La investigación de Pro debe terminar con evidencia del origen y una decisión 
 
 ## Pasos para completar el acceso sin compartir secretos
 
-Comprobación de esta sesión: Supabase permite consultas de lectura y logs; Vercel mantiene HTTP 403 para el alcance `emiles-projects-c997f3b7`; no hay CLI Vercel disponible. No es necesario volver a conceder acceso general a Supabase. No existe una cuenta o correo del agente que debas invitar.
+Comprobación del 16 de octubre de 2026: Supabase permite lectura; Vercel permite leer el proyecto, previews y nombres de variables con valores cifrados. No se leyeron valores secretos ni logs con datos de usuarios. n8n sigue requiriendo inicio de sesión y no hay conexión autorizada disponible en esta tarea. No hace falta volver a conceder acceso general a Supabase o Vercel ni invitar una cuenta del agente.
 
-### Vercel
+### Vercel — lectura completada; configuración sandbox pendiente
 
-1. Entra en Vercel con tu propia cuenta y selecciona el equipo `emiles-projects-c997f3b7`; abre el proyecto `mi-portal`.
-2. En la configuración de la integración/conexión de Vercel que utilizas con esta aplicación, revisa el equipo y los proyectos autorizados. Si ofrece selección granular, incluye únicamente `mi-portal` y las lecturas de la tabla anterior. No compartas un token en el chat.
-3. Si no ofrece lecturas granulares, no amplíes a escritura: entrega exportaciones saneadas desde Project Settings, Deployments y Logs con los datos indicados. Una reconexión normal puede renovar la autorización del equipo, pero no garantiza corregir este 403 y no justifica permisos adicionales.
-4. Si ya trabajas con un colaborador humano, los roles dependen del plan: Project Viewer está documentado para Enterprise; Pro Viewer ofrece lectura limitada a proyectos/despliegues. No cambies a Developer o Admin para esta auditoría. No crees un colaborador desconocido ni un acceso de equipo amplio para el agente.
-5. Para variables, copia solo nombre, presencia y entorno; oculta valor. Incluye el SHA de producción y errores saneados de compilación/funciones. Después comprobaré nuevamente la lectura del proyecto, sin publicar nada.
+No es necesaria otra concesión de acceso. Antes de activar pagos, confirma desde tu panel que `MERCADOPAGO_MODE` se configure como `test` con credenciales sandbox y que la notificación sandbox esté firmada. No envíes valores de secretos por chat. La variable no aparecía en el inventario leído; no la añadí ni cambié configuración.
 
 Referencia: [roles oficiales de Vercel](https://vercel.com/docs/rbac/access-roles). La disponibilidad y el alcance dependen de tu plan.
 
@@ -56,6 +52,6 @@ Con estos archivos adjuntos se puede continuar la revisión sin nuevos permisos 
 
 ## Actualización de esta fase
 
-Lecturas comprobadas nuevamente: Supabase disponible; Vercel devuelve 403 para el mismo equipo/proyecto; n8n requiere iniciar sesión. No se modificaron permisos. Las instrucciones anteriores siguen siendo el camino mínimo: exportaciones saneadas cuando la integración no pueda restringirse, sin claves ni roles amplios. No se necesita volver a compartir la URL del repositorio, conceder escritura ni crear una cuenta del agente.
+Lecturas comprobadas nuevamente: Supabase disponible; Vercel permite leer el proyecto y sus despliegues; n8n requiere iniciar sesión. No se modificaron permisos. No se necesita volver a compartir la URL del repositorio, conceder escritura ni crear una cuenta del agente.
 
 Para Pro, el estado y las funciones actuales no acreditan el origen histórico. Conserva el perfil y aporta únicamente evidencia existente. Los metadatos de backup/PITR siguen pendientes de lectura/confirmación del propietario; no pulses Restore.
