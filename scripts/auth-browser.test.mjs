@@ -7,7 +7,8 @@ import { test } from 'node:test';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const root = new URL('../', import.meta.url);
+const root = new URL('../public/', import.meta.url);
+const sdk = new URL('../node_modules/@supabase/supabase-js/dist/umd/supabase.js', import.meta.url);
 // SDK real, transporte HTTP simulado: no usa credenciales ni servicios remotos.
 const transport = `
   window.violations = [];
@@ -47,7 +48,9 @@ test('Chrome: real Supabase SDK persistence, guards, recovery and accessible err
           return;
         }
         if (path === '/sdk.js') {
-          path = '/node_modules/@supabase/supabase-js/dist/umd/supabase.js';
+          res.setHeader('Content-Type', 'text/javascript');
+          res.end(await readFile(sdk));
+          return;
         }
         if (path.endsWith('/')) path += 'index.html';
         if (path === '/js/reset-password.js') {
@@ -57,7 +60,7 @@ test('Chrome: real Supabase SDK persistence, guards, recovery and accessible err
         let content = await readFile(new URL(path.slice(1), root));
         if (path.endsWith('.html')) {
           content = content.toString().replace(
-            /<script src="https:\/\/cdn.jsdelivr.net\/npm\/@supabase\/supabase-js@2"><\/script>/,
+            /<script src="https:\/\/cdn.jsdelivr.net\/npm\/@supabase\/supabase-js@2(?:\.\d+\.\d+)?"><\/script>/,
             '<script src="/fixture.js"></script><script src="/sdk.js"></script>')
             .replace(/<script src="(?:\.\.\/)?supabase-config.js"><\/script>/, '');
           res.setHeader('Content-Type', 'text/html');

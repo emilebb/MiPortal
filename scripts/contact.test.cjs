@@ -46,7 +46,7 @@ test('contact API forwards the form to the n8n webhook with validation and bound
       const body = input();
       const response = await run(body);
       assert.equal(response.code, 202);
-      assert.equal(response.body.message, 'Mensaje enviado correctamente. Recibirás la respuesta en tu correo.');
+      assert.equal(response.body.message, 'Tu solicitud fue recibida para su procesamiento.');
       assert.equal(calls.length, 1);
       const sent = calls[0];
       assert.equal(sent.method, 'POST');

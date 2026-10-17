@@ -1,4 +1,5 @@
 import { dailyContentClass, getSafeDailyUrl, prepareDailyItems } from './home-daily-utils.mjs';
+import { preserveImageResolution } from './image-fit.mjs';
 
 const root = document.getElementById('homeDaily');
 
@@ -45,6 +46,7 @@ if (root) {
       image.alt = '';
       image.loading = 'lazy';
       image.decoding = 'async';
+      preserveImageResolution(image);
       image.addEventListener('error', () => {
         media.classList.remove('has-image');
         image.remove();

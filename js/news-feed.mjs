@@ -217,7 +217,8 @@ export function selectItems(
 
 export async function loadNews({
   client = window.MiPortalSupabase,
-  limit = 100
+  limit = 100,
+  signal = AbortSignal.timeout(10000)
 } = {}) {
   if (!client) {
     throw new Error(
@@ -242,7 +243,8 @@ export async function loadNews({
     .order('published_at', {
       ascending: false
     })
-    .limit(limit);
+    .limit(limit)
+    .abortSignal(signal);
 
   if (error) {
     throw error;

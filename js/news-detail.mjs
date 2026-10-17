@@ -152,16 +152,20 @@ async function load() {
   try {
     const { data, error } = await window.MiPortalSupabase.from('news_articles')
       .select('id,url,title,description,image_url,source,published_at,published')
-      .eq('published', true).eq('id', id).limit(1);
+      .eq('published', true).eq('id', id).limit(1).abortSignal(AbortSignal.timeout(10000));
     if (error) throw error;
     const row = Array.isArray(data) ? data[0] : null;
     if (!row) { showState('Noticia no encontrada', 'not-found'); return; }
     renderArticle(row);
     status.remove();
-    const related = await window.MiPortalSupabase.from('news_articles')
-      .select('id,title,source,image_url,published,published_at')
-      .eq('published', true).neq('id', id).order('published_at', { ascending: false }).limit(3);
-    if (!related.error) renderRelated(relatedNews(related.data, id));
+    // Optional related stories cannot turn a successfully loaded article into an error.
+    try {
+      const related = await window.MiPortalSupabase.from('news_articles')
+        .select('id,title,source,image_url,published,published_at')
+        .eq('published', true).neq('id', id).order('published_at', { ascending: false }).limit(3)
+        .abortSignal(AbortSignal.timeout(10000));
+      if (!related.error) renderRelated(relatedNews(related.data, id));
+    } catch { /* Keep the article readable when optional content is unavailable. */ }
   } catch (error) {
     console.error('[news-detail] Error al cargar la noticia:', error);
     showState('No pudimos cargar la noticia. Vuelve a intentarlo más tarde.', 'error');

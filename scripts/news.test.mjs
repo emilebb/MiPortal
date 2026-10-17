@@ -334,7 +334,10 @@ test('loadNews consulta news_articles correctamente', async () => {
 
     limit(value) {
       calls.push(['limit', value]);
-
+      return this;
+    },
+    abortSignal(signal) {
+      assert.ok(signal instanceof AbortSignal);
       return Promise.resolve({
         data: [
           row()
@@ -405,6 +408,9 @@ test('loadNews propaga errores de Supabase', async () => {
     },
 
     limit() {
+      return this;
+    },
+    abortSignal() {
       return Promise.resolve({
         data: null,
         error: expected
@@ -422,4 +428,17 @@ test('loadNews propaga errores de Supabase', async () => {
     () => loadNews({ client }),
     expected
   );
+});
+
+test('loadNews aborts a hanging transport and allows a fresh retry',async()=>{
+  const client={from(){return {select(){return this},eq(){return this},order(){return this},limit(){return this},abortSignal(signal){return new Promise(resolve=>{
+    const fail=()=>resolve({data:null,error:signal.reason});
+    if(signal.aborted)fail();else signal.addEventListener('abort',fail,{once:true});
+  })}}}};
+  const controller=new AbortController();
+  const pending=loadNews({client,signal:controller.signal});
+  controller.abort(new Error('Controlled deadline'));
+  await assert.rejects(pending,/Controlled deadline/);
+  const good={from(){return {select(){return this},eq(){return this},order(){return this},limit(){return this},abortSignal(){return Promise.resolve({data:[row()],error:null})}}}};
+  assert.equal((await loadNews({client:good})).length,1);
 });

@@ -344,6 +344,18 @@ button {
   color: inherit;
 }
 
+/* A <use> instance inherits from its visible SVG, not the hidden sprite root. */
+svg.icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]),
 select,
 textarea {
@@ -1919,7 +1931,9 @@ body.dark-mode .btn-theme .icon-sun {
 
 .card-media {
   position: relative;
-  aspect-ratio: 16 / 9;
+  display: grid;
+  place-items: center;
+  height: clamp(8rem, 22vw, 12rem);
   overflow: hidden;
   border-bottom: 1px solid var(--border-subtle);
   background:

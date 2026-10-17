@@ -1,3 +1,4 @@
+> **Estado vigente — 16 de octubre de 2026:** 162 pruebas unitarias/integración aprobadas; cuatro suites de navegador bloqueadas por el entorno. Se corrigieron carga y búsqueda, detalle, iconos y presentación de miniaturas, y se redujo el CSS servido. Pro histórico intacto y migración detenida. **El proyecto todavía no está validado para producción.** Los recuentos anteriores que aparecen más abajo pertenecen a fases previas; prevalece esta actualización y la sección final de verificación.
 # MiPortal.me — correcciones implementadas y estado verificable
 
 Fecha: 16 de octubre de 2026. Rama local: `codex/miportal-critical-fixes`.
@@ -169,3 +170,45 @@ El commit local de implementación se identifica en el manifiesto de entrega. Gi
 154 pruebas unitarias/integración aprobadas, 0 fallos. Cuatro suites de navegador ejecutadas y bloqueadas en la sonda del renderizador (`CDP timeout: Runtime.evaluate`); 0 aprobadas. No se interpretan como pruebas funcionales superadas. `git diff --check` sin errores. El registro del webhook diferencia ahora eventos aprobados y revocados y evita incluir el identificador de la cuenta en el mensaje de éxito.
 
 Los documentos e inventarios de entrega se actualizaron; las imágenes originales, la base de datos productiva y los beneficios existentes permanecen sin cambios. No hubo cobros reales, envíos de correos de prueba a usuarios, ejecución de workflows, migraciones, despliegues ni publicación de la rama.
+
+## Validación funcional y visual adicional
+
+Estado local de esta continuación (sin publicar):
+
+| Área | Implementado/corregido | Evidencia obtenida | Pendiente externo |
+|---|---|---|---|
+| Noticias y portada | Consulta de noticias cancelable a los 10 s, sin espera indefinida | Prueba de transporte detenido y reintento; carga de 100 noticias observada en navegador integrado | Disponibilidad, latencia y relevancia del flujo de ingestión productivo |
+| Búsqueda general | Respuestas antiguas no reemplazan la consulta vigente; limpiar consulta libera estado ocupado; recursos también tienen timeout | Dos pruebas con respuestas deliberadamente fuera de orden | Prueba de extremo a extremo con servicios/configuración desplegados |
+| Detalle de noticia | H1 inicial para carga/error, timeout del artículo y relacionados; un fallo opcional no oculta la noticia principal | Pruebas de ID inválido, error y fallo de relacionados; estado no encontrado observado en navegador integrado | Metadatos sociales de noticias renderizados en servidor y recuperación de originales de imagen |
+| Contacto | Respuesta 202 informa recepción para procesamiento, sin prometer entrega o respuesta por correo | Pruebas API simuladas; formulario real contra API local 503 conserva campos y muestra error, sin envío a n8n | Autenticación/deduplicación/entrega final del workflow y límites entre instancias |
+| Imágenes | Tarjetas de noticias y Daily limitan dimensiones al original para evitar ampliación; marco de noticias más compacto y centrado; errores conservan fallback | Pruebas de imagen de 120×66 px y fallback; revisión visual local | Obtener originales autorizados; no se ha inventado una foto ni sustituido contenido editorial por IA |
+| Diseño y accesibilidad | Iconos SVG visibles heredan trazo y color; se corrigieron círculos negros en buscar/actualizar; lectura accesible de enlaces internos ya no promete nueva pestaña | Comparación visual antes/después y árbol accesible; menú móvil y Escape con devolución de foco verificados | Contraste exhaustivo, lector de pantalla real, zoom y móvil físico |
+| Compilación y rendimiento | Compactación CSS de nivel 0, sin reordenar reglas, cambiar valores, importar recursos ni reescribir URLs; dependencia de desarrollo fijada `clean-css@5.3.3` | Pruebas de cascada, calc/variables, URLs, licencias y rechazo de CSS inválido; medición de bytes/gzip local | Medición Lighthouse/CWV, compresión/caché efectiva y configuración de Vercel |
+| Navegador automatizado | Las cuatro suites usan HTML compilado; fixtures de noticias migrados de RSS al contrato real de Supabase y a los módulos actuales; SDK local con versión fijada | Sintaxis, grafo de imports y nueva ejecución de las cuatro suites | Las cuatro siguen bloqueadas por el entorno, antes de sus aserciones funcionales |
+| Páginas/catálogo | Verificados 21 HTML y sus referencias locales; no se inventó un catálogo ni se habilitaron ventas | Auditoría estática de enlaces y módulos sin referencias faltantes | Productos y automatizaciones continúan en preparación; definición comercial pendiente |
+| Autenticación, pagos, Pro, newsletter y asistente | Se conservan las correcciones y beneficios históricos anteriores | Suites unitarias/integración locales; bloqueo de migración Pro intacto | Sandbox de pagos autorizado, Auth/recuperación/correo reales con cuentas de prueba, cuota persistente instalada y flujos n8n inspeccionados |
+
+### Investigación Pro: nueva evidencia, sin atribuir un origen
+
+Supabase vuelve a confirmar roles: 1 Pro, 1 admin, 2 viewer; pagos: 0. La cuenta Pro tiene `created_at` 2026-09-18 04:01:53 UTC y `updated_at` 04:41:33 UTC. La última fecha indica actualización del perfil, no demuestra un cambio de rol en ese instante. No existe una fila asociada en `public.user_roles`. Los únicos triggers de profiles observados protegen el rol y actualizan updated_at; no registran auditoría de cambios. La consulta de `auth.audit_log_entries` de 03:50 a 04:50 UTC no devolvió eventos. Los 18 registros Postgres disponibles en esa ventana no aportaron una instrucción UPDATE ni un actor atribuible con los metadatos consultados. Esto no prueba concesión manual, pago ni ausencia de modificaciones históricas. Se necesita evidencia externa o un historial conservado que identifique el cambio. No se tocó la cuenta ni la migración.
+
+### Acceso conectado y alternativas seguras
+
+Vercel sigue devolviendo 403 para el equipo correcto; no hay CLI disponible con credenciales alternativas. n8n redirige a Sign in. La búsqueda de plugins para n8n no devolvió una integración disponible en esta sesión; eso no implica que no exista en otro catálogo. El documento de accesos incluye pasos por plataforma y alternativa de exportaciones saneadas. La documentación oficial advierte que algunos roles Viewer/Read-Only pueden ver credenciales o secretos; no se recomienda conceder esos accesos amplios si una exportación mínima basta.
+
+### Pruebas de navegador: alternativa probada
+
+Se descargó Chrome Headless Shell 151.0.7922.34, revisión Playwright 1234, desde el CDN oficial a una carpeta de herramientas aislada, sin tocar el navegador personal. Las cuatro suites vuelven a ejecutarse, pero el proceso termina con código 2147483651 antes de responder a CDP. También se probó transporte WebSocket alternativo con Edge y continuó el bloqueo de Runtime.evaluate. No se usaron `--no-sandbox`, desactivación de antivirus, perfiles personales, puertos públicos ni cambios de permisos del sistema. La vía restante es ejecutarlas en un entorno compatible aislado; la CI preparada sigue sin ejecutar porque no se ha publicado la rama.
+
+### Límites de la mejora de imágenes y rendimiento
+
+La miniatura sigue siendo una miniatura; limitar su ampliación evita el desenfoque artificial, no recupera detalle perdido. El inventario mantiene pendientes los originales y derechos. La optimización PNG conservó los píxeles y el formato: el icono Apple pasó de 3.453 a 3.443 bytes; el OG de 33.121 bytes se conservó porque el candidato no era menor. No se presenta este ahorro mínimo como una mejora relevante. La reducción CSS se documenta en `Medicion-CSS-local.json`; gzip es una simulación local, no una respuesta medida de Vercel. No hay una puntuación Lighthouse nueva.
+
+### Resultado vigente de esta sesión
+
+- 162 pruebas unitarias/integración aprobadas; 0 fallos. Ocho pruebas más que la entrega anterior. Las cuatro suites de navegador fueron ejecutadas nuevamente y siguen bloqueadas antes de sus aserciones funcionales.
+- 30 comprobaciones de ancho en noticias, contacto, recursos, acceso y productos: 320, 360, 390, 768, 1024 y 1440 px por página, sin desbordamiento horizontal del documento en las mediciones capturadas. Los marcos tienen barra de desplazamiento de 15 px. Es un navegador integrado con iframes, no una prueba en dispositivos físicos; el contador de imágenes es una captura temporal de carga diferida, no un inventario de errores.
+- Contacto local 503: conserva campos y muestra fallo sin afirmar envío. Asistente local 503: muestra alternativa y enlace a búsqueda sin llamar al modelo. Menú móvil: apertura, foco inicial, Escape y devolución de foco observados. Noticia sin ID: estado no encontrado y H1 disponible.
+- Referencias locales de 21 HTML y sus módulos sin faltantes. Auditoría estática de idioma/H1/main/alt/IDs sin observaciones en HTML inicial; no equivale a validación WCAG ni de contenido dinámico completo.
+- Auditoría de dependencias: 0 vulnerabilidades conocidas informadas. El CSS y los activos permanecen revisables en código; no se aplicó una reestructuración de reglas ni una nueva identidad visual.
+- Evidencias de entrega: `Pruebas-unitarias-integracion.txt`, `Pruebas-navegador.txt`, `Medicion-CSS-local.json`, `Mediciones-responsive-local.json`, `Auditoria-enlaces-locales.json`, `Auditoria-estatica-accesibilidad.json`, `Noticias-local-mejoradas.png`, inventario actualizado y pasos de acceso. No hay despliegue, migración productiva, cobro ni publicación de rama.

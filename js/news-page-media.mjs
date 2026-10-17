@@ -1,3 +1,4 @@
+import { preserveImageResolution } from './image-fit.mjs';
 export function createNewsCardMedia(item, documentRef = document) {
   const element = (tag, className, text) => {
     const node = documentRef.createElement(tag);
@@ -17,6 +18,7 @@ export function createNewsCardMedia(item, documentRef = document) {
   image.alt = '';
   image.loading = 'lazy';
   image.decoding = 'async';
+  preserveImageResolution(image);
   image.addEventListener('error', () => {
     image.remove();
     wrapper.append(element('span', 'card-media-mark', 'MP'));

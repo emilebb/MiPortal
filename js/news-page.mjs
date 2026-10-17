@@ -233,7 +233,7 @@ function card(item) {
     element(
       'span',
       'visually-hidden',
-      ` en ${item.source.label} (se abre en una pestaña nueva)`
+      ` en ${item.source.label}${newsDetailUrl(item.id) ? '' : ' (se abre en una pestaña nueva)'}`
     )
   );
 

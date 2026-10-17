@@ -6,6 +6,7 @@
 import { cpSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { composeNewsletterOutput, injectAssistantAssets, transformTutorialMarkup } from './static-build-utils.mjs';
+import { compactCss } from './compact-css.mjs';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const outDir = fileURLToPath(new URL('../public/', import.meta.url));
@@ -138,4 +139,9 @@ for (const file of readdirSync(outDir).filter((name) => name.endsWith('.html')))
   writeFileSync(path, html);
 }
 
+// Only formatting is compacted; cascade order, values and URLs stay intact.
+for (const file of ['styles.css', 'admin/admin.css', 'miportal-assistant.css']) {
+  const path = outDir + file;
+  writeFileSync(path, compactCss(readFileSync(path, 'utf8')));
+}
 console.log(`[build] Sitio estático copiado a public/ (${entries.length} entradas).`);

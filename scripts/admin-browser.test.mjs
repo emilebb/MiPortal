@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-const root = new URL('../', import.meta.url);
+const root = new URL('../public/', import.meta.url);
 const fixtures = ['React', 'Fundamentos', 'Legacy category'].map((category, i) => ({
   id: `fixture-${i}`, title: `Fixture ${category}`, description: 'Fixture description',
   category, url: 'https://example.test/resource', published: i !== 1

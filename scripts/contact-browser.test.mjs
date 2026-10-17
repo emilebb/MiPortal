@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 
-const root = new URL('../', import.meta.url);
+const root = new URL('../public/', import.meta.url);
 const mock = `
   window.pending = []; window.calls = []; window.violations = [];
   addEventListener('securitypolicyviolation', e => violations.push(e.violatedDirective));

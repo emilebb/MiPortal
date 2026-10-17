@@ -23,6 +23,7 @@
     "@supabase/supabase-js": "2.116.0"
   },
   "devDependencies": {
-    "@electric-sql/pglite": "0.5.10"
+    "@electric-sql/pglite": "0.5.10",
+    "clean-css": "5.3.3"
   }
 }
